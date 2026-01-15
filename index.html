@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Speed Vocabulary Quiz - Recovery Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        body {
+            background-color: #0b0e14;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .f1-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .race-card {
+            background: linear-gradient(145deg, #1a1f2e, #111521);
+            border-left: 4px solid #e10600;
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .option-btn:hover {
+            transform: translateX(10px);
+            background-color: #e10600;
+            color: white;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background-color: #333;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #e10600;
+            transition: width 0.3s ease;
+        }
+
+        .checkered-pattern {
+            background-image: linear-gradient(45deg, #222 25%, transparent 25%), 
+                              linear-gradient(-45deg, #222 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #222 75%), 
+                              linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-2xl">
+        <!-- Start Screen -->
+        <div id="start-screen" class="race-card p-8 rounded-lg shadow-2xl text-center">
+            <h1 class="f1-font text-4xl mb-6 font-bold text-white tracking-widest">VOCABULARY GP</h1>
+            <p class="mb-2 text-gray-400">20個の重要動詞をマスターしろ。</p>
+            <p class="mb-8 text-red-500 font-bold">※ミスをすると最後にもう一度出現する「リカバリーモード」搭載</p>
+            <button onclick="quiz.start()" class="f1-font bg-red-600 hover:bg-red-700 text-white px-12 py-4 rounded-full font-bold tracking-tighter uppercase transition-transform active:scale-95">
+                Start Engine
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden race-card p-6 rounded-lg shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <span id="question-number" class="f1-font text-red-500 font-bold">LAP 1 / 20</span>
+                <span id="timer" class="f1-font text-xl text-yellow-400">0.00s</span>
+            </div>
+            <div class="progress-bar mb-8">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+
+            <div class="mb-10 text-center">
+                <p class="text-gray-400 text-sm uppercase tracking-widest mb-2">Meaning of:</p>
+                <h2 id="target-word" class="f1-font text-5xl font-bold text-white mb-4">word</h2>
+            </div>
+
+            <div id="options-container" class="grid gap-4">
+                <!-- Options injected here -->
+            </div>
+
+            <div id="feedback" class="mt-4 text-center h-6 font-bold"></div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden race-card p-8 rounded-lg shadow-2xl text-center">
+            <h2 class="f1-font text-3xl mb-4 font-bold text-white">RACE FINISHED</h2>
+            <div class="checkered-pattern h-12 w-full mb-6 rounded"></div>
+            
+            <div id="score-display" class="text-6xl font-bold text-red-600 mb-2">COMPLETE</div>
+            <p id="rank-text" class="f1-font text-xl mb-8 text-gray-300">P1: WORLD CHAMPION</p>
+
+            <div class="bg-black/30 p-4 rounded mb-8 text-left max-h-48 overflow-y-auto" id="review-list">
+                <!-- Summary -->
+            </div>
+
+            <button onclick="location.reload()" class="f1-font border-2 border-white hover:bg-white hover:text-black text-white px-8 py-3 rounded-full font-bold transition-all">
+                Retry Race
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const wordData = [
+            { w: "proceed", m: "進む、続行する", o: ["停止する", "戻る", "進む、続行する", "延期する"] },
+            { w: "ensure", m: "確実にする", o: ["確実にする", "疑う", "破壊する", "無視する"] },
+            { w: "interpret", m: "解釈する", o: ["拒否する", "解釈する", "忘れる", "隠す"] },
+            { w: "cease", m: "やめる", o: ["始める", "やめる", "続ける", "加速する"] },
+            { w: "ban", m: "禁止する", o: ["許可する", "招待する", "推奨する", "禁止する"] },
+            { w: "obey", m: "従う", o: ["従う", "反抗する", "無視する", "支配する"] },
+            { w: "eliminate", m: "除去する", o: ["追加する", "維持する", "除去する", "育てる"] },
+            { w: "resist", m: "抵抗する", o: ["降伏する", "抵抗する", "受け入れる", "協力する"] },
+            { w: "accompany", m: "同行する", o: ["去る", "同行する", "一人にする", "反対する"] },
+            { w: "commit", m: "約束する、委ねる", o: ["避ける", "否定する", "約束する、委ねる", "解放する"] },
+            { w: "pursue", m: "追求する", o: ["逃げる", "追求する", "諦める", "止まる"] },
+            { w: "demonstrate", m: "証明する", o: ["隠す", "疑う", "証明する", "混乱させる"] },
+            { w: "bet", m: "賭ける", o: ["賭ける", "貯金する", "借りる", "失う"] },
+            { w: "ruin", m: "台無しにする", o: ["建設する", "台無しにする", "改善する", "保存する"] },
+            { w: "threaten", m: "脅す", o: ["守る", "脅す", "助ける", "賞賛する"] },
+            { w: "attach", m: "取り付ける", o: ["引き剥がす", "取り付ける", "捨てる", "壊す"] },
+            { w: "reverse", m: "逆転させる", o: ["維持する", "加速する", "逆転させる", "同意する"] },
+            { w: "restrict", m: "制限する", o: ["解放する", "広げる", "制限する", "無視する"] },
+            { w: "compose", m: "構成する", o: ["分解する", "構成する", "破壊する", "忘れる"] },
+            { w: "lean", m: "傾く", o: ["直立する", "傾く", "座る", "飛ぶ"] }
+        ];
+
+        class VocabularyQuiz {
+            constructor() {
+                this.currentIndex = 0;
+                this.missCount = 0;
+                this.startTime = 0;
+                this.timerInterval = null;
+                this.questions = [];
+                this.missedWordsLog = [];
+            }
+
+            start() {
+                this.questions = [...wordData].sort(() => Math.random() - 0.5);
+                this.currentIndex = 0;
+                this.missCount = 0;
+                this.missedWordsLog = [];
+                
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('result-screen').classList.add('hidden');
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                
+                this.startTime = Date.now();
+                this.startTimer();
+                this.showQuestion();
+            }
+
+            startTimer() {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = (Date.now() - this.startTime) / 1000;
+                    document.getElementById('timer').innerText = elapsed.toFixed(2) + 's';
+                }, 50);
+            }
+
+            showQuestion() {
+                const q = this.questions[this.currentIndex];
+                document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
+                document.getElementById('target-word').innerText = q.w;
+                document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
+                document.getElementById('feedback').innerText = '';
+
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+
+                const shuffledOptions = [...q.o].sort(() => Math.random() - 0.5);
+
+                shuffledOptions.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn w-full text-left p-4 rounded bg-white/5 border border-white/10 hover:border-red-500 font-medium text-lg';
+                    btn.innerText = option;
+                    btn.onclick = () => this.handleAnswer(option, q);
+                    container.appendChild(btn);
+                });
+            }
+
+            handleAnswer(selected, questionObj) {
+                const feedback = document.getElementById('feedback');
+                
+                if (selected === questionObj.m) {
+                    this.currentIndex++;
+                    if (this.currentIndex < this.questions.length) {
+                        this.showQuestion();
+                    } else {
+                        this.finish();
+                    }
+                } else {
+                    this.missCount++;
+                    feedback.innerText = `WRONG: ${questionObj.w} = ${questionObj.m}`;
+                    feedback.className = "mt-4 text-center h-6 font-bold text-red-500";
+                    
+                    if (!this.missedWordsLog.find(item => item.w === questionObj.w)) {
+                        this.missedWordsLog.push({ w: questionObj.w, m: questionObj.m });
+                    }
+
+                    this.questions.push(questionObj);
+                    
+                    const btns = document.querySelectorAll('.option-btn');
+                    btns.forEach(b => b.disabled = true);
+                    
+                    setTimeout(() => {
+                        this.currentIndex++;
+                        this.showQuestion();
+                    }, 1200);
+                }
+            }
+
+            finish() {
+                clearInterval(this.timerInterval);
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('result-screen').classList.remove('hidden');
+
+                const totalTime = (Date.now() - this.startTime) / 1000;
+                
+                let rank = "";
+                if (this.missCount === 0) {
+                    rank = "P1: PERFECT RACE. NO MISTAKES.";
+                    document.getElementById('score-display').style.color = "#4ade80";
+                } else if (this.missCount < 5) {
+                    rank = "P2: GOOD RECOVERY. MINIMAL ERRORS.";
+                } else {
+                    rank = "P10: NEED MORE SIMULATOR TIME.";
+                }
+                
+                document.getElementById('rank-text').innerText = `${rank} - Time: ${totalTime.toFixed(2)}s`;
+
+                const review = document.getElementById('review-list');
+                let summaryHtml = `<div class="mb-4 font-bold text-white uppercase">Final Stats:</div>`;
+                summaryHtml += `<div class="mb-2">Total Laps: ${this.questions.length}</div>`;
+                summaryHtml += `<div class="mb-4">Mistakes: ${this.missCount}</div>`;
+
+                if (this.missedWordsLog.length > 0) {
+                    summaryHtml += '<h3 class="text-red-500 mb-2 font-bold uppercase">Words requiring recovery:</h3>' + 
+                        this.missedWordsLog.map(item => `<div class="mb-1 text-sm"><span class="font-bold text-white">${item.w}</span>: ${item.m}</div>`).join('');
+                } else {
+                    summaryHtml += '<p class="text-green-500 font-bold">Flawless victory.</p>';
+                }
+                review.innerHTML = summaryHtml;
+            }
+        }
+
+        const quiz = new VocabularyQuiz();
+    </script>
+</body>
+</html>
