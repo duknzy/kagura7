@@ -2,51 +2,54 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocabulary GP - 2026 Season</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    
+    <title>Vocabulary GP - 2026 Telemetry Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* === TUNING: Chakra Petch (High Visibility & Tech Look) === */
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap');
         
         body {
             background-color: #0b0e14;
             color: #e2e8f0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: max(2rem, env(safe-area-inset-top));
+            padding-bottom: max(2rem, env(safe-area-inset-bottom));
+            padding-left: max(1rem, env(safe-area-inset-left));
+            padding-right: max(1rem, env(safe-area-inset-right));
         }
 
-        .f1-font {
-            font-family: 'Chakra Petch', sans-serif;
-        }
+        button, input, select, a { touch-action: manipulation; }
+
+        .f1-font { font-family: 'Chakra Petch', sans-serif; }
 
         .race-card {
             background: linear-gradient(145deg, #1a1f2e, #111521);
             border-left: 4px solid #e10600;
         }
-
-        .option-btn {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        @media (max-width: 640px) {
+            .race-card { padding: 1.5rem !important; border-left-width: 3px; }
+            .f1-font { letter-spacing: 0.05em; }
+            h1 { font-size: 2rem !important; }
         }
 
+        .option-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .option-btn:hover {
             transform: translateX(10px);
             background-color: #e10600;
             color: white;
             border-color: #e10600;
         }
+        .option-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .progress-bar {
-            height: 4px;
-            background-color: #333;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background-color: #e10600;
-            transition: width 0.3s ease;
-        }
+        .progress-bar { height: 4px; background-color: #333; width: 100%; overflow: hidden; }
+        .progress-fill { height: 100%; background-color: #e10600; transition: width 0.3s ease; }
 
         .checkered-pattern {
             background-image: linear-gradient(45deg, #222 25%, transparent 25%), 
@@ -62,12 +65,45 @@
             color: #000;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         }
+        
+        .pit-btn {
+            background: repeating-linear-gradient(45deg, #e10600, #e10600 10px, #b91c1c 10px, #b91c1c 20px);
+            animation: pit-pulse 2s infinite;
+        }
+        @keyframes pit-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(225, 6, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0); }
+        }
+
+        /* Telemetry Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-start justify-center md:items-center bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
 
-    <div id="app" class="w-full max-w-2xl">
+    <div id="app" class="w-full max-w-lg mx-auto">
         
+        <div id="gate-screen" class="race-card p-10 rounded-lg shadow-2xl text-center border border-gray-700 relative overflow-hidden">
+            <h1 class="f1-font text-4xl mb-2 font-bold text-white tracking-widest">PADDOCK CLUB</h1>
+            <p class="text-red-500 font-bold mb-8 text-xs uppercase tracking-[0.3em]">Restricted Access Area</p>
+            
+            <div class="mb-8 p-6 bg-black/40 border border-gray-800 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <p class="text-sm text-gray-400">Identity Verification Required</p>
+            </div>
+
+            <button id="gate-login-btn" class="w-full f1-font bg-white hover:bg-gray-200 text-black px-8 py-4 rounded font-bold tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-3">
+                Sign In with Google
+            </button>
+            <p id="login-status" class="mt-4 text-xs text-gray-600 font-mono">Waiting for connection...</p>
+        </div>
+
         <div id="champion-screen" class="hidden race-card p-10 rounded-lg shadow-2xl text-center border-4 border-yellow-500">
             <h1 class="f1-font text-3xl md:text-5xl mb-6 font-bold text-yellow-500 tracking-wider md:tracking-widest break-words">SEASON CHAMPION</h1>
             <div class="pass-card p-6 rounded-lg mb-8">
@@ -75,116 +111,133 @@
                 <h2 class="text-3xl font-black">SUPER LICENSE PASS</h2>
                 <p class="mt-4 font-mono text-xs opacity-75">VALID FOR 2026 SEASON</p>
             </div>
-            <p class="mb-8 text-gray-300">素晴らしい!もっと極めよう!</p>
-            <div class="flex flex-col gap-4">
-                <button onclick="quiz.returnToGrid()" class="f1-font bg-white text-black px-12 py-4 rounded-full font-bold tracking-tighter uppercase transition-transform active:scale-95">
-                    Select Round
-                </button>
-                <button onclick="quiz.revokePass()" class="text-gray-500 text-xs hover:underline">Revoke License (Reset)</button>
-            </div>
+            <button onclick="quiz.returnToGrid()" class="f1-font bg-white text-black px-12 py-4 rounded-full font-bold tracking-tighter uppercase transition-transform active:scale-95">Select Round</button>
         </div>
 
-        <div id="start-screen" class="race-card p-8 rounded-lg shadow-2xl text-center">
+        <div id="start-screen" class="hidden race-card p-8 rounded-lg shadow-2xl text-center">
+            
+            <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                <div class="text-left">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest">Driver</p>
+                    <p id="user-name" class="f1-font text-white font-bold truncate max-w-[150px]">Unknown</p>
+                </div>
+                <button id="logout-btn" class="text-xs text-red-500 hover:text-red-400 border border-red-900/50 px-3 py-1 rounded hover:bg-red-900/20 transition-colors">Sign Out</button>
+            </div>
+
             <h1 class="f1-font text-3xl md:text-5xl mb-4 font-bold text-white tracking-wider md:tracking-widest break-words leading-tight">
                 VOCABULARY<br class="block md:hidden"/>GP
             </h1>
-            <p class="f1-font text-red-500 font-bold mb-6">2026 SEASON</p>
+            <p class="f1-font text-red-500 font-bold mb-6">SRS TELEMETRY SPEC</p>
 
             <div class="mb-6 bg-gray-900/50 p-2 px-4 rounded border border-gray-700 inline-block">
                 <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Today's Track Activity</p>
                 <div class="flex items-center justify-center gap-2">
                     <span class="animate-pulse text-red-500">●</span>
                     <span id="daily-laps-display" class="f1-font text-2xl text-white font-mono font-bold">0</span>
-                    <span class="text-xs text-gray-500 uppercase">LAPS COMPLETED</span>
+                    <span class="text-xs text-gray-500 uppercase">LAPS</span>
                 </div>
             </div>
 
-            <div class="mb-6 bg-gray-800/50 p-4 rounded border border-gray-600 text-left">
-                <label class="text-xs text-gray-400 uppercase tracking-widest block mb-2">CUSTOM TEST RANGE (WORD #)</label>
-                <div class="flex gap-2 items-center">
-                    <input type="number" id="custom-start" placeholder="1" class="w-1/4 bg-black text-white p-2 rounded border border-gray-700 focus:border-red-500 outline-none text-center font-mono placeholder-gray-600">
-                    <span class="text-gray-500 font-bold">-</span>
-                    <input type="number" id="custom-end" placeholder="50" class="w-1/4 bg-black text-white p-2 rounded border border-gray-700 focus:border-red-500 outline-none text-center font-mono placeholder-gray-600">
-                    <button onclick="quiz.createCustomRound()" class="flex-1 f1-font bg-gray-700 hover:bg-yellow-500 hover:text-black text-white text-xs font-bold uppercase rounded py-2 transition-colors border border-gray-600">
-                        Set Range
-                    </button>
-                </div>
-                <p class="text-[10px] text-gray-500 mt-2">*Enter word numbers to create a custom round.</p>
+            <div id="pit-stop-container" class="hidden mb-6">
+                <button onclick="quiz.startPitStop()" class="w-full pit-btn text-white p-4 rounded-lg font-bold f1-font uppercase tracking-widest shadow-lg hover:scale-105 transition-transform border-2 border-white/20">
+                    ⚠️ REVIEW DUE: <span id="mistake-count">0</span> WORDS
+                </button>
+                <p class="text-[10px] text-red-400 mt-1 uppercase tracking-wider">Mechanical Failures Detected</p>
             </div>
+
+            <button onclick="quiz.openTelemetry()" class="w-full mb-6 border border-blue-900/50 bg-blue-900/10 hover:bg-blue-900/30 text-blue-400 py-3 rounded font-bold f1-font uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Telemetry Data
+            </button>
+
             <div class="bg-black/30 p-4 rounded mb-6 text-left border border-gray-700">
                 <label class="text-gray-400 text-xs uppercase tracking-widest block mb-2">Select Circuit (Round)</label>
-                <select id="round-selector" class="w-full bg-gray-800 text-white p-3 rounded border border-gray-600 focus:border-red-500 outline-none font-mono">
-                </select>
+                <select id="round-selector" class="w-full bg-gray-800 text-white p-3 rounded border border-gray-600 focus:border-red-500 outline-none font-mono text-base"></select>
             </div>
 
-            <div class="bg-red-900/30 border border-red-500 p-3 rounded mb-8">
-                <p class="text-red-500 font-bold text-sm">LICENSE CRITERIA: Accuracy 90%+</p>
-                <p class="text-xs text-gray-400">Total Words: <span id="total-words-count">0</span> | Rounds: 30</p>
-            </div>
-
-            <button onclick="quiz.start()" class="f1-font bg-red-600 hover:bg-red-700 text-white px-12 py-4 rounded-full font-bold tracking-tighter uppercase transition-transform active:scale-95 shadow-lg shadow-red-900/50">
+            <button onclick="quiz.start()" class="w-full f1-font bg-red-600 hover:bg-red-700 text-white py-5 rounded-lg font-bold tracking-widest uppercase transition-transform active:scale-95 shadow-lg shadow-red-900/50 mb-8 text-xl">
                 Start Engine
             </button>
 
-            <div class="mt-8 pt-8 border-t border-gray-700">
-                <div id="user-section" class="mb-6">
-                    <button id="login-btn" class="f1-font text-xs border border-gray-500 hover:bg-white hover:text-black text-gray-400 px-6 py-2 rounded uppercase transition-colors">
-                        Driver Login (Google)
-                    </button>
-                    <div id="user-info" class="hidden">
-                        <p class="text-sm text-gray-300 mb-2">
-                            Current Driver: <span id="user-name" class="font-bold text-white"></span>
-                        </p>
-                        <button id="logout-btn" class="text-xs text-red-500 hover:underline">Sign Out</button>
+            <div class="border-t border-gray-700 pt-6 mb-6">
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Garage Tools</p>
+                
+                <div class="mb-4 bg-gray-800/50 p-3 rounded border border-gray-600 text-left relative group">
+                    <label class="text-[10px] text-gray-500 uppercase tracking-widest block mb-1">QUICK SEARCH</label>
+                    <div class="flex items-center relative">
+                        <svg class="h-4 w-4 text-gray-500 absolute left-3 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <input type="text" id="search-input" placeholder="Scan database..." class="w-full bg-black text-white py-2 pl-9 pr-2 rounded border border-gray-700 focus:border-red-500 outline-none font-mono text-base placeholder-gray-700">
                     </div>
+                    <div id="search-results" class="hidden absolute z-50 left-0 w-full mt-1 bg-gray-900 border border-gray-700 rounded shadow-2xl max-h-60 overflow-y-auto"></div>
                 </div>
 
+                <div class="bg-gray-800/50 p-4 rounded border border-gray-600 text-left">
+                    <label class="text-xs text-gray-400 uppercase tracking-widest block mb-2">CUSTOM RANGE</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="number" id="custom-start" placeholder="1" class="w-1/4 bg-black text-white p-2 rounded border border-gray-700 text-center font-mono">
+                        <span class="text-gray-500 font-bold">-</span>
+                        <input type="number" id="custom-end" placeholder="50" class="w-1/4 bg-black text-white p-2 rounded border border-gray-700 text-center font-mono">
+                        <button onclick="quiz.createCustomRound()" class="flex-1 f1-font bg-gray-700 hover:bg-yellow-500 hover:text-black text-white text-xs font-bold uppercase rounded py-2 transition-colors border border-gray-600">Set</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-gray-700">
                 <div class="bg-black/40 rounded p-4 border border-gray-800">
                     <h3 class="f1-font text-xl text-yellow-500 mb-4 tracking-wider">CHAMPIONSHIP STANDINGS</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead class="text-gray-500 border-b border-gray-700 text-xs uppercase">
-                                <tr>
-                                    <th class="p-2">Pos</th>
-                                    <th class="p-2">Driver</th>
-                                    <th class="p-2">Round</th>
-                                    <th class="p-2">Score</th>
-                                    <th class="p-2">Streak</th>
-                                    <th class="p-2">Acc</th>
-                                    <th class="p-2">Time</th>
-                                </tr>
+                                <tr><th class="p-2">Pos</th><th class="p-2">Driver</th><th class="p-2">Rd</th><th class="p-2">Acc</th><th class="p-2">Time</th></tr>
                             </thead>
-                            <tbody id="ranking-tbody" class="font-mono text-gray-300">
-                                <tr><td colspan="7" class="p-4 text-center text-xs opacity-50">Loading Telemetry...</td></tr>
-                            </tbody>
+                            <tbody id="ranking-tbody" class="font-mono text-gray-300"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
 
+        <div id="telemetry-screen" class="hidden race-card p-6 md:p-8 rounded-lg shadow-2xl text-center border-t-4 border-blue-500">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="f1-font text-2xl md:text-3xl font-bold text-blue-400 tracking-widest">RACE TELEMETRY</h2>
+                <button onclick="quiz.closeTelemetry()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-4 uppercase tracking-widest text-left">Tire Wear (Memory Decay)</p>
+            <div class="bg-black/50 p-2 rounded mb-6 border border-gray-800 relative h-64 w-full">
+                <canvas id="weaknessRadarChart"></canvas>
+            </div>
+
+            <div class="text-left mb-6">
+                <h3 class="text-xs text-red-500 font-bold uppercase tracking-widest mb-3 border-b border-red-900/50 pb-1">High Risk Corners (Worst Words)</h3>
+                <div id="worst-words-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                    </div>
+            </div>
+
+            <button onclick="quiz.closeTelemetry()" class="w-full f1-font border border-gray-600 hover:bg-white hover:text-black text-gray-300 px-6 py-3 rounded uppercase font-bold tracking-widest transition-colors">
+                Return to Garage
+            </button>
+        </div>
+
         <div id="quiz-screen" class="hidden race-card p-6 rounded-lg shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <div class="flex flex-col text-left">
-                    <span id="circuit-name" class="f1-font text-xs text-gray-500 uppercase tracking-widest">ROUND 1</span>
+                <div class="flex flex-col text-left max-w-[60%]">
+                    <span id="circuit-name" class="f1-font text-xs text-gray-500 uppercase tracking-widest break-words leading-tight">ROUND 1</span>
                     <span id="question-number" class="f1-font text-red-500 font-bold text-xl">LAP 1 / 20</span>
                 </div>
-                
                 <div class="text-right">
                     <div id="timer" class="f1-font text-2xl text-yellow-400 font-mono">0.00s</div>
                     <div id="streak-display" class="f1-font text-xs text-red-500 font-bold uppercase tracking-widest hidden">COMBO: 0</div>
                 </div>
             </div>
-
-            <div class="progress-bar mb-8">
-                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
-            </div>
-
+            <div class="progress-bar mb-8"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
             <div class="mb-10 text-center relative">
                 <p class="text-gray-400 text-sm uppercase tracking-widest mb-2">Meaning of:</p>
-                <h2 id="target-word" class="f1-font text-4xl md:text-6xl font-bold text-white mb-4 tracking-wide drop-shadow-lg break-words px-2">word</h2>
+                <div class="flex items-center justify-center gap-3">
+                    <h2 id="target-word" class="f1-font text-4xl md:text-6xl font-bold text-white tracking-wide drop-shadow-lg break-words px-2">word</h2>
+                    <button id="speak-btn" class="text-gray-500 hover:text-white transition-colors p-2 rounded-full border border-gray-700 bg-gray-900/50">🔊</button>
+                </div>
             </div>
-
             <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             <div id="feedback" class="mt-4 text-center h-6 font-bold"></div>
         </div>
@@ -192,34 +245,28 @@
         <div id="result-screen" class="hidden race-card p-8 rounded-lg shadow-2xl text-center">
             <h2 class="f1-font text-3xl mb-4 font-bold text-white">RACE FINISHED</h2>
             <div class="checkered-pattern h-8 w-full mb-6 rounded opacity-50"></div>
-            
             <div id="accuracy-display" class="f1-font text-6xl font-bold mb-2">95.0%</div>
             <p id="rank-text" class="f1-font text-sm mb-6 text-gray-300">P1: WORLD CHAMPION</p>
 
             <div id="pass-issue-area" class="hidden mb-8 p-6 rounded-lg pass-card">
                 <h3 class="font-black text-2xl mb-1">PASS GRANTED!</h3>
                 <p class="text-sm mb-3">SUPER LICENSE ISSUED</p>
-                <button id="copy-pass-btn" class="bg-black text-white text-xs px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">
-                    COPY LICENSE ID
-                </button>
+                <button id="copy-pass-btn" class="bg-black text-white text-xs px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform">COPY LICENSE ID</button>
             </div>
-
-            <div id="fail-message" class="hidden mb-8 p-4 border border-red-500 bg-red-900/20 text-red-500 font-bold">
-                LICENSE DENIED: Accuracy below 90%
-            </div>
+            <div id="fail-message" class="hidden mb-8 p-4 border border-red-500 bg-red-900/20 text-red-500 font-bold">LICENSE DENIED: Accuracy below 90%</div>
 
             <div class="bg-black/30 p-4 rounded mb-8 text-left max-h-48 overflow-y-auto border border-gray-800" id="review-list"></div>
-
             <div class="flex gap-4 justify-center">
-                <button onclick="quiz.returnToGrid()" class="f1-font border-2 border-white hover:bg-white hover:text-black text-white px-8 py-3 rounded-full font-bold transition-all">
-                    Back to Garage
-                </button>
+                <button id="next-round-btn" class="hidden f1-font bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition-all shadow-lg">NEXT ROUND</button>
+                <button onclick="quiz.returnToGrid()" class="f1-font border-2 border-white hover:bg-white hover:text-black text-white px-8 py-3 rounded-full font-bold transition-all">Back to Garage</button>
             </div>
         </div>
     </div>
 
     <script>
-// RAW DATA
+// ==========================================
+// PASTE YOUR 2000 WORDS HERE
+// ==========================================
 const rawData = `
 follow: ～の後に続く、～に従う
 consider: ～を考慮する
@@ -2248,7 +2295,9 @@ abruptly: 不意に
 conversely: 逆に
 predominantly: 主に
 lest: ～しないように
-`;
+`; 
+// ↑ ここに元のデータのテキストを貼り付けてください
+// ==========================================
 
         class VocabularyQuiz {
             constructor() {
@@ -2256,105 +2305,205 @@ lest: ～しないように
                 this.masterList = [];
                 this.rounds = [];
                 this.currentRoundIndex = 0;
-                
                 this.questions = [];
                 this.currentIndex = 0;
                 this.missCount = 0;
                 this.missedWordsLog = [];
                 this.startTime = 0;
                 this.timerInterval = null;
+                this.currentStreak = 0;
+                this.userMaxStreak = 0; 
+                this.roundMaxStreak = 0;
+                this.dueMistakes = [];
+                this.isPitStopMode = false;
+                this.telemetryChart = null; // Chart.js instance
 
-                // ストリーク管理用
-                this.currentStreak = 0; // 現在の継続コンボ
-                this.userMaxStreak = 0; // 自己ベスト (キャリア通算)
+                this.synth = window.speechSynthesis;
+                this.englishVoices = [];
+                if (this.synth.onvoiceschanged !== undefined) this.synth.onvoiceschanged = () => this.loadVoices();
+                this.loadVoices(); 
 
                 this.parseData();
                 this.generateRounds();
                 this.initUI();
+                this.initSearch();
             }
 
-            // === 新機能: 外部(Firebase)から記録をロードする ===
-            restoreStats(current, max) {
-                this.currentStreak = current || 0;
-                this.userMaxStreak = max || 0;
-                
-                // 画面上のコンボ表示を更新
-                const streakDisp = document.getElementById('streak-display');
-                if (this.currentStreak >= 2) {
-                    streakDisp.innerText = `COMBO: ${this.currentStreak}`;
-                    streakDisp.classList.remove('hidden');
-                } else {
-                    streakDisp.classList.add('hidden');
-                }
+            loadVoices() {
+                const allVoices = this.synth.getVoices();
+                this.englishVoices = allVoices.filter(v => v.lang.startsWith('en'));
+                this.englishVoices.sort((a, b) => {
+                    if (a.name.includes('Google US')) return -1;
+                    return 0;
+                });
             }
-            // ===============================================
 
             parseData() {
-                const lines = rawData.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0 && !line.startsWith('[source'));
-
+                if(!rawData.trim()) {
+                    console.warn("No data found. Please paste the word list into rawData.");
+                    return;
+                }
+                const lines = rawData.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('[source'));
                 this.masterList = [];
                 lines.forEach(line => {
-                    let separatorIndex = line.indexOf(':');
-                    if (separatorIndex === -1) separatorIndex = line.indexOf(' ');
-                    if (separatorIndex === -1) separatorIndex = line.indexOf('　');
+                    let sep = -1;
+                    if (line.indexOf('\t') !== -1) sep = line.indexOf('\t');
+                    else if (line.indexOf(':') !== -1) sep = line.indexOf(':');
+                    else if (line.indexOf('：') !== -1) sep = line.indexOf('：');
+                    else if (line.indexOf('  ') !== -1) sep = line.indexOf('  ');
+                    else if (line.indexOf(' ') !== -1) sep = line.indexOf(' ');
 
-                    if (separatorIndex !== -1) {
-                        const w = line.substring(0, separatorIndex).trim();
-                        const m = line.substring(separatorIndex + 1).trim();
-                        if (w && m) this.masterList.push({ w, m });
+                    if (sep !== -1) {
+                        const w = line.substring(0, sep).trim();
+                        const m = line.substring(sep + 1).trim();
+                        if(w && m) this.masterList.push({ w, m });
                     }
                 });
-                document.getElementById('total-words-count').innerText = this.masterList.length;
             }
 
             generateRounds() {
                 const wordCopy = [...this.masterList]; 
                 this.rounds = [];
                 let roundNum = 1;
+                let currentWordIndex = 1; 
                 while (wordCopy.length > 0) {
                     const chunk = wordCopy.splice(0, this.wordsPerRound);
                     if (chunk.length > 0) {
-                        this.rounds.push({ id: roundNum, name: `ROUND ${roundNum}`, words: chunk });
+                        this.rounds.push({ id: roundNum, name: `ROUND ${roundNum} [No.${currentWordIndex} - ${currentWordIndex + chunk.length - 1}]`, words: chunk });
                         roundNum++;
+                        currentWordIndex += chunk.length;
                     }
                 }
             }
 
-            // ★NEW: カスタムラウンド作成機能
+            updatePitStopButton(count) {
+                const container = document.getElementById('pit-stop-container');
+                const countSpan = document.getElementById('mistake-count');
+                if (count > 0) {
+                    container.classList.remove('hidden');
+                    countSpan.innerText = count;
+                } else {
+                    container.classList.add('hidden');
+                }
+            }
+
+            // === TELEMETRY FEATURES ===
+            openTelemetry() {
+                if (!window.currentUser) { alert("Please Sign In first."); return; }
+                
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('telemetry-screen').classList.remove('hidden');
+
+                const mistakes = this.dueMistakes || [];
+                
+                // 1. Worst Words List
+                const worstWords = [...mistakes].sort((a, b) => a.level - b.level).slice(0, 20); // Show top 20
+                const listContainer = document.getElementById('worst-words-list');
+                
+                if (worstWords.length === 0) {
+                    listContainer.innerHTML = `<div class="text-gray-500 text-sm italic p-2">No failures detected. System optimal.</div>`;
+                } else {
+                    listContainer.innerHTML = worstWords.map(item => `
+                        <div class="flex justify-between items-center bg-red-900/10 hover:bg-red-900/20 p-3 rounded border-l-2 border-red-500 mb-1 transition-colors">
+                            <div class="flex flex-col text-left">
+                                <span class="font-bold text-red-100 f1-font text-lg">${item.word}</span>
+                                <span class="text-xs text-gray-400">${item.meaning}</span>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <span class="text-[10px] text-gray-500 uppercase tracking-wider">Level</span>
+                                <span class="text-xl font-bold ${item.level < 2 ? 'text-red-500' : 'text-yellow-500'} font-mono">${item.level}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // 2. Radar/Bar Chart
+                const ctx = document.getElementById('weaknessRadarChart').getContext('2d');
+                if (this.telemetryChart) this.telemetryChart.destroy();
+
+                const levelCounts = [0, 0, 0, 0, 0, 0];
+                mistakes.forEach(m => {
+                    const idx = (m.level || 1) - 1;
+                    if(idx >= 0 && idx < 6) levelCounts[idx]++;
+                });
+
+                this.telemetryChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Lv.1 (Critical)', 'Lv.2', 'Lv.3', 'Lv.4', 'Lv.5', 'Lv.6 (Master)'],
+                        datasets: [{
+                            label: 'Words in SRS Queue',
+                            data: levelCounts,
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(249, 115, 22, 0.7)',
+                                'rgba(234, 179, 8, 0.6)',
+                                'rgba(34, 197, 94, 0.5)',
+                                'rgba(59, 130, 246, 0.4)',
+                                'rgba(168, 85, 247, 0.3)'
+                            ],
+                            borderColor: '#333',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleFont: { family: 'Chakra Petch' },
+                                bodyFont: { family: 'monospace' }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#94a3b8', font: { family: 'monospace' } }
+                            },
+                            x: { 
+                                grid: { display: false },
+                                ticks: { color: '#94a3b8', font: { size: 10, family: 'Chakra Petch' } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            closeTelemetry() {
+                document.getElementById('telemetry-screen').classList.add('hidden');
+                document.getElementById('start-screen').classList.remove('hidden');
+            }
+            // =========================
+
+            startPitStop() {
+                if (!this.dueMistakes || this.dueMistakes.length === 0) return;
+                this.isPitStopMode = true;
+                this.questions = this.dueMistakes.map(item => {
+                    const targetWord = { w: item.word, m: item.meaning };
+                    const distractors = this.getDistractors(targetWord);
+                    const options = [targetWord.m, ...distractors].sort(() => Math.random() - 0.5);
+                    return { w: targetWord.w, m: targetWord.m, o: options, docId: item.id, currentLevel: item.level || 1 };
+                });
+                this.questions.sort(() => Math.random() - 0.5);
+                this.startQuizSession("SRS PIT STOP");
+            }
+
             createCustomRound() {
                 const startInput = document.getElementById('custom-start');
                 const endInput = document.getElementById('custom-end');
-                
-                // ユーザーは1始まりで入力するが、配列は0始まり
                 const start = parseInt(startInput.value) - 1; 
                 const end = parseInt(endInput.value);
-
-                if (isNaN(start) || isNaN(end) || start < 0 || end > this.masterList.length || start >= end) {
-                    alert(`Invalid Range! Please enter numbers between 1 and ${this.masterList.length}`);
-                    return;
-                }
-
+                if (isNaN(start) || isNaN(end) || start < 0 || end > this.masterList.length || start >= end) { alert(`Invalid Range!`); return; }
                 const customWords = this.masterList.slice(start, end);
-                
-                // カスタムラウンドを作成して先頭に追加
-                const customRound = {
-                    id: 'custom',
-                    name: `TEST: #${start + 1}-${end}`,
-                    words: customWords
-                };
-
-                // 既存のラウンドリストの先頭に追加 (unshift)
+                const customRound = { id: 'custom', name: `CUSTOM [No.${start + 1} - ${end}]`, words: customWords };
                 this.rounds.unshift(customRound);
-                
-                // UI更新
                 this.initUI();
-                
-                // 作成したカスタムラウンドを自動選択
-                document.getElementById('round-selector').value = 0; // 先頭に追加したので0
-                
-                alert(`Custom Round Set: Words ${start + 1} to ${end} loaded.`);
+                document.getElementById('round-selector').value = 0; 
+                alert(`Custom Round Set!`);
             }
 
             initUI() {
@@ -2366,52 +2515,74 @@ lest: ～しないように
                     opt.text = `${round.name} (${round.words.length} words)`;
                     selector.appendChild(opt);
                 });
-
-                const savedPass = localStorage.getItem('PASS');
-                if (savedPass) {
-                    document.getElementById('start-screen').classList.add('hidden');
-                    document.getElementById('champion-screen').classList.remove('hidden');
-                }
             }
 
-            copyToClipboard(text, btnElement) {
-                navigator.clipboard.writeText(text).then(() => {
-                    const originalText = btnElement.innerText;
-                    btnElement.innerText = "COPIED!";
-                    btnElement.classList.add("bg-green-600", "text-white");
-                    setTimeout(() => {
-                        btnElement.innerText = originalText;
-                        btnElement.classList.remove("bg-green-600", "text-white");
-                    }, 2000);
+            initSearch() {
+                const input = document.getElementById('search-input');
+                const results = document.getElementById('search-results');
+                input.addEventListener('input', (e) => {
+                    const q = e.target.value.toLowerCase().trim();
+                    if (!q) { results.classList.add('hidden'); return; }
+                    const hits = this.masterList
+                        .map((item, index) => ({ ...item, i: index + 1 }))
+                        .filter(item => item.w.toLowerCase().includes(q) || item.m.toLowerCase().includes(q))
+                        .slice(0, 100);
+
+                    if (hits.length > 0) {
+                        results.classList.remove('hidden');
+                        results.innerHTML = hits.map(h => `
+                            <div onclick="quiz.speak('${h.w.replace(/'/g, "\\'")}')" class="p-3 border-b border-gray-800 hover:bg-gray-800 cursor-pointer flex justify-between items-center group transition-colors">
+                                <div class="flex flex-col text-left">
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-[10px] text-yellow-500 font-mono opacity-70">No.${h.i}</span>
+                                        <span class="text-red-400 font-bold text-sm f1-font">${h.w}</span>
+                                    </div>
+                                    <span class="text-gray-400 text-xs pl-1">${h.m}</span>
+                                </div>
+                                <button class="text-[10px] bg-gray-700 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity uppercase font-bold">Listen</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        results.classList.remove('hidden');
+                        results.innerHTML = `<div class="p-3 text-gray-500 text-xs text-center font-mono">NO DATA FOUND</div>`;
+                    }
+                });
+                document.addEventListener('click', (e) => {
+                    if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('hidden');
                 });
             }
 
+            speak(text) {
+                if (!this.synth) return;
+                this.synth.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (this.englishVoices.length > 0) { utterance.voice = this.englishVoices[0]; }
+                utterance.rate = 1.3; 
+                this.synth.speak(utterance);
+            }
+
             start() {
+                this.isPitStopMode = false;
                 const selector = document.getElementById('round-selector');
                 this.currentRoundIndex = parseInt(selector.value);
                 const selectedRound = this.rounds[this.currentRoundIndex];
-
                 this.questions = selectedRound.words.map(target => {
                     const distractors = this.getDistractors(target);
                     const options = [target.m, ...distractors].sort(() => Math.random() - 0.5);
                     return { w: target.w, m: target.m, o: options };
                 });
                 this.questions.sort(() => Math.random() - 0.5);
+                this.startQuizSession(selectedRound.name);
+            }
 
-                this.currentIndex = 0;
-                this.missCount = 0;
-                this.missedWordsLog = [];
-
-                // ★変更: ここでの reset はしない (前回の続きからやるため)
-                // ただし、今回のラウンドでの最高到達点用変数は用意する
-                this.roundMaxStreak = this.currentStreak; 
-
-                document.getElementById('circuit-name').innerText = selectedRound.name;
+            startQuizSession(title) {
+                this.currentIndex = 0; this.missCount = 0; this.missedWordsLog = [];
+                this.currentStreak = 0; this.roundMaxStreak = 0;
+                document.getElementById('circuit-name').innerText = title;
                 document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('champion-screen').classList.add('hidden');
                 document.getElementById('result-screen').classList.add('hidden');
+                document.getElementById('champion-screen').classList.add('hidden');
                 document.getElementById('quiz-screen').classList.remove('hidden');
-
                 this.startTime = Date.now();
                 this.startTimer();
                 this.showQuestion();
@@ -2420,11 +2591,8 @@ lest: ～しないように
             getDistractors(targetWord) {
                 const distractors = [];
                 while (distractors.length < 3) {
-                    const randomIdx = Math.floor(Math.random() * this.masterList.length);
-                    const randomWord = this.masterList[randomIdx];
-                    if (randomWord.w !== targetWord.w && !distractors.includes(randomWord.m)) {
-                        distractors.push(randomWord.m);
-                    }
+                    const r = this.masterList[Math.floor(Math.random() * this.masterList.length)];
+                    if (r.w !== targetWord.w && !distractors.includes(r.m)) distractors.push(r.m);
                 }
                 return distractors;
             }
@@ -2432,46 +2600,31 @@ lest: ～しないように
             startTimer() {
                 if (this.timerInterval) clearInterval(this.timerInterval);
                 this.timerInterval = setInterval(() => {
-                    const elapsed = (Date.now() - this.startTime) / 1000;
-                    document.getElementById('timer').innerText = elapsed.toFixed(2) + 's';
+                    document.getElementById('timer').innerText = ((Date.now() - this.startTime) / 1000).toFixed(2) + 's';
                 }, 50);
             }
 
-            // === 修正箇所: 選択肢を隠す (VISUALIZE MEANING) ===
             showQuestion() {
                 const q = this.questions[this.currentIndex];
                 document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
-                
-                // Font Tuning applied
                 document.getElementById('target-word').innerText = q.w;
-                
                 document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
                 document.getElementById('feedback').innerText = '';
-
+                document.getElementById('feedback').className = "mt-4 text-center h-6 font-bold";
+                const speakBtn = document.getElementById('speak-btn');
+                speakBtn.onclick = () => this.speak(q.w);
+                setTimeout(() => { this.speak(q.w); }, 300);
                 const container = document.getElementById('options-container');
-                container.innerHTML = ''; // Clear previous contents
-
-                // ★いきなり選択肢を出さず、「思考フェーズ」ボタンを表示
+                container.innerHTML = ''; 
                 const revealBtn = document.createElement('button');
                 revealBtn.className = 'col-span-1 md:col-span-2 w-full h-32 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded text-gray-400 f1-font text-xl uppercase tracking-widest hover:border-yellow-500 hover:text-yellow-500 transition-all flex flex-col items-center justify-center gap-2 animate-pulse';
-                revealBtn.innerHTML = `
-                    <span class="text-3xl">🤔</span>
-                    <span>VISUALIZE MEANING</span>
-                    <span class="text-xs text-gray-500 font-mono">TAP TO UNLOCK DRS</span>
-                `;
-                
-                // クリックで選択肢を展開 (Reveal Options)
-                revealBtn.onclick = () => {
-                    this.renderOptions(q, container);
-                };
-                
+                revealBtn.innerHTML = `<span class="text-3xl">🤔</span><span>VISUALIZE MEANING</span><span class="text-xs text-gray-500 font-mono">TAP TO UNLOCK DRS</span>`;
+                revealBtn.onclick = () => { this.renderOptions(q, container); };
                 container.appendChild(revealBtn);
             }
 
-            // ★追加: 実際の選択肢を描画する関数 (Reveals options)
             renderOptions(q, container) {
-                container.innerHTML = ''; // Revealボタンを消す
-
+                container.innerHTML = '';
                 q.o.forEach(option => {
                     const btn = document.createElement('button');
                     btn.className = 'option-btn w-full text-left p-6 rounded bg-white/5 border border-white/10 hover:border-red-500 font-bold text-lg md:text-xl shadow-lg';
@@ -2480,67 +2633,31 @@ lest: ～しないように
                     container.appendChild(btn);
                 });
             }
-            // ==========================================================
 
             handleAnswer(selected, questionObj) {
                 const feedback = document.getElementById('feedback');
                 const streakDisp = document.getElementById('streak-display');
-                
                 if (selected === questionObj.m) {
-                    // === 正解: 継続コンボを加算 ===
                     this.currentStreak++;
-                    
-                    // 今回のラウンドでの最大値を更新（ランキング送信用）
-                    if (this.currentStreak > this.roundMaxStreak) {
-                        this.roundMaxStreak = this.currentStreak;
+                    if (this.currentStreak > this.roundMaxStreak) this.roundMaxStreak = this.currentStreak;
+                    if (this.currentStreak >= 2) { streakDisp.innerText = `COMBO: ${this.currentStreak}`; streakDisp.classList.remove('hidden'); }
+                    if (window.handleSRSUpdate) {
+                        if (this.isPitStopMode) window.handleSRSUpdate(questionObj, true);
                     }
-                    // キャリア通算の最大値を更新（ユーザーデータ保存用）
-                    if (this.currentStreak > this.userMaxStreak) {
-                        this.userMaxStreak = this.currentStreak;
-                    }
-
-                    if (this.currentStreak >= 2) {
-                        streakDisp.innerText = `COMBO: ${this.currentStreak}`;
-                        streakDisp.classList.remove('hidden');
-                        streakDisp.classList.remove('animate-pulse');
-                        void streakDisp.offsetWidth;
-                        streakDisp.classList.add('animate-pulse');
-                    }
-                    // ==============================
-
                     this.currentIndex++;
-                    if (this.currentIndex < this.questions.length) {
-                        this.showQuestion();
-                    } else {
-                        this.finish();
-                    }
+                    if (this.currentIndex < this.questions.length) this.showQuestion();
+                    else this.finish();
                 } else {
-                    // === 不正解: コンボ終了 ===
-                    this.currentStreak = 0;
-                    streakDisp.classList.add('hidden');
-
-                    // ★重要: 間違えた瞬間に「0」になったことをFirebaseに保存する (不正防止)
-                    if (window.saveUserStreak) {
-                        window.saveUserStreak(0, this.userMaxStreak);
-                    }
-                    // ========================
-
+                    this.currentStreak = 0; streakDisp.classList.add('hidden');
                     this.missCount++;
                     feedback.innerText = `WRONG: ${questionObj.w} = ${questionObj.m}`;
                     feedback.className = "mt-4 text-center h-6 font-bold text-red-500 animate-pulse";
-                    
-                    if (!this.missedWordsLog.find(item => item.w === questionObj.w)) {
-                        this.missedWordsLog.push({ w: questionObj.w, m: questionObj.m });
-                    }
-                    this.questions.push(questionObj);
-                    
+                    if (!this.missedWordsLog.find(item => item.w === questionObj.w)) this.missedWordsLog.push({ w: questionObj.w, m: questionObj.m });
+                    if (window.handleSRSUpdate) window.handleSRSUpdate(questionObj, false);
+                    this.questions.push(questionObj); 
                     const btns = document.querySelectorAll('.option-btn');
                     btns.forEach(b => b.disabled = true);
-                    
-                    setTimeout(() => {
-                        this.currentIndex++;
-                        this.showQuestion();
-                    }, 1200);
+                    setTimeout(() => { this.currentIndex++; this.showQuestion(); }, 1200);
                 }
             }
 
@@ -2550,88 +2667,77 @@ lest: ～しないように
                 document.getElementById('result-screen').classList.remove('hidden');
 
                 const totalTime = (Date.now() - this.startTime) / 1000;
-                const roundLen = this.rounds[this.currentRoundIndex].words.length;
-                const accuracy = (roundLen / (roundLen + this.missCount)) * 100;
+                const accuracy = (1 - (this.missCount / this.questions.length)) * 100;
                 
                 const accDisplay = document.getElementById('accuracy-display');
-                accDisplay.innerText = `${accuracy.toFixed(1)}%`;
+                accDisplay.innerText = this.isPitStopMode ? "SRS UPDATED" : `${accuracy.toFixed(1)}%`;
+                document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
+
+                if (!this.isPitStopMode && window.recordLapTime && window.currentUser) {
+                    const roundName = this.rounds[this.currentRoundIndex]?.name || "Custom";
+                    const correct = Math.max(0, (this.rounds[this.currentRoundIndex]?.words.length || this.questions.length) - this.missCount);
+                    window.recordLapTime(accuracy, totalTime, roundName, `${correct}/${this.rounds[this.currentRoundIndex]?.words.length}`, this.roundMaxStreak);
+                }
                 
+                if (window.fetchSRSItems) window.fetchSRSItems();
+                if (window.incrementDailyLaps && !this.isPitStopMode) window.incrementDailyLaps();
+
                 const passArea = document.getElementById('pass-issue-area');
                 const failMsg = document.getElementById('fail-message');
 
-                // === データ送信 ===
-                // 1. ランキングには「今回のラウンドで到達した最大コンボ」を送る
-                // 2. ユーザーデータには「現在の継続コンボ」と「自己ベスト」を保存する
-                if (window.recordLapTime) {
-                    const roundName = this.rounds[this.currentRoundIndex].name;
-                    const correctCount = roundLen - this.missCount;
-                    const scoreString = `${correctCount}/${roundLen}`;
-                    
-                    // ランキング用
-                    window.recordLapTime(accuracy, totalTime, roundName, scoreString, this.roundMaxStreak);
+                if (!this.isPitStopMode) {
+                    if (accuracy >= 90) {
+                        accDisplay.style.color = "#4ade80"; 
+                        passArea.classList.remove('hidden');
+                        failMsg.classList.add('hidden');
+                        const passBtn = document.getElementById('copy-pass-btn');
+                        passBtn.onclick = () => {
+                            navigator.clipboard.writeText("perfect").then(() => {
+                                passBtn.innerText = "COPIED!";
+                                setTimeout(() => passBtn.innerText = "COPY LICENSE ID", 2000);
+                            });
+                        };
+                    } else {
+                        accDisplay.style.color = "#ef4444"; 
+                        passArea.classList.add('hidden');
+                        failMsg.classList.remove('hidden');
+                    }
+                } else {
+                    passArea.classList.add('hidden');
+                    failMsg.classList.add('hidden');
+                    accDisplay.style.color = "#fbbf24"; 
                 }
                 
-                // ユーザーデータ保存 (次のラウンドへコンボを持ち越すため)
-                if (window.saveUserStreak) {
-                    window.saveUserStreak(this.currentStreak, this.userMaxStreak);
-                }
-
-                // ★NEW: デイリー走行カウンターを回す
-                if (window.incrementDailyLaps) {
-                    window.incrementDailyLaps();
-                }
-                // =================
-
-                if (accuracy >= 90) {
-                    accDisplay.style.color = "#4ade80"; 
-                    passArea.classList.remove('hidden');
-                    failMsg.classList.add('hidden');
-                    const passId = "embarrass";
-                    localStorage.setItem('PASS', passId);
-                    navigator.clipboard.writeText(passId).catch(err => console.error(err));
-                    passArea.innerHTML = `
-                        <h3 class="font-black text-2xl mb-1">PASS GRANTED!</h3>
-                        <p class="text-sm mb-2"> LICENSE ISSUED</p>
-                        <div class="f1-font text-xs bg-black/10 text-black px-4 py-1 rounded-full inline-block font-bold tracking-widest border border-black/5">
-                            AUTO-COPIED TO CLIPBOARD
-                        </div>`;
-                } else {
-                    accDisplay.style.color = "#ef4444"; 
-                    passArea.classList.add('hidden');
-                    failMsg.classList.remove('hidden');
-                }
-                document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
                 const review = document.getElementById('review-list');
                 let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Technical Telemetry</div>`;
                 if (this.missedWordsLog.length > 0) {
-                    summaryHtml += '<h3 class="text-red-500 mb-2 font-bold uppercase text-xs">Mechanical Failures (Review Needed):</h3>' + 
+                    summaryHtml += '<h3 class="text-red-500 mb-2 font-bold uppercase text-xs">SRS System: Registered/Demoted</h3>' + 
                         this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join('');
-                } else {
-                    summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>';
-                }
+                } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap.</p>'; }
                 review.innerHTML = summaryHtml;
+
+                const nextBtn = document.getElementById('next-round-btn');
+                if (!this.isPitStopMode && this.rounds[this.currentRoundIndex] && this.currentRoundIndex + 1 < this.rounds.length) {
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.onclick = () => { document.getElementById('round-selector').value = this.currentRoundIndex + 1; this.start(); };
+                } else { nextBtn.classList.add('hidden'); }
             }
 
             returnToGrid() {
                 document.getElementById('result-screen').classList.add('hidden');
                 document.getElementById('champion-screen').classList.add('hidden');
                 document.getElementById('start-screen').classList.remove('hidden');
-            }
-            revokePass() {
-                localStorage.removeItem('PASS');
-                location.reload();
+                if (window.fetchSRSItems) window.fetchSRSItems();
             }
         }
 
-        // 重要: 外部からアクセスできるように window に登録
         window.quiz = new VocabularyQuiz();
     </script>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      // ★追加: runTransaction, onSnapshot をインポート
-      import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, doc, getDoc, setDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, updateDoc, Timestamp, orderBy, limit, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyDg2EgiI-DMzmoT20zF4VJfm1MxtmhdJQQ",
@@ -2647,172 +2753,188 @@ lest: ～しないように
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      const loginBtn = document.getElementById('login-btn');
+      const gateScreen = document.getElementById('gate-screen');
+      const startScreen = document.getElementById('start-screen');
+      const gateLoginBtn = document.getElementById('gate-login-btn');
       const logoutBtn = document.getElementById('logout-btn');
-      const userSection = document.getElementById('user-info');
       const userNameSpan = document.getElementById('user-name');
-      const rankingBody = document.getElementById('ranking-tbody');
-      const dailyLapsDisplay = document.getElementById('daily-laps-display'); // カウンター表示用
+      const loginStatus = document.getElementById('login-status');
+      const dailyLapsDisplay = document.getElementById('daily-laps-display');
 
-      let currentUser = null;
+      window.currentUser = null;
 
-      // 1. Auth
-      loginBtn.addEventListener('click', async () => {
+      gateLoginBtn.addEventListener('click', async () => {
+        loginStatus.innerText = "Connecting to Paddock...";
         const provider = new GoogleAuthProvider();
         try { await signInWithPopup(auth, provider); } 
-        catch (error) { console.error("Login Error:", error); }
+        catch (error) { 
+            console.error(error); 
+            loginStatus.innerText = "Access Denied. Try Again.";
+        }
       });
 
-      logoutBtn.addEventListener('click', () => signOut(auth));
+      logoutBtn.addEventListener('click', () => { signOut(auth); });
 
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-            currentUser = user;
-            loginBtn.classList.add('hidden');
-            userSection.classList.remove('hidden');
-            userNameSpan.textContent = user.displayName || "Unknown Driver";
-            
-            try {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    window.quiz.restoreStats(data.currentStreak || 0, data.maxStreak || 0);
-                } else {
-                    window.quiz.restoreStats(0, 0);
-                }
-            } catch (e) { console.error("Stats Load Error", e); }
-            
-            updateLeaderboard(); 
+            window.currentUser = user;
+            gateScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            userNameSpan.textContent = user.displayName || "Driver";
+            window.fetchSRSItems();
+            updateLeaderboard();
         } else {
-            currentUser = null;
-            loginBtn.classList.remove('hidden');
-            userSection.classList.add('hidden');
-            window.quiz.restoreStats(0, 0);
-            updateLeaderboard(); 
+            window.currentUser = null;
+            gateScreen.classList.remove('hidden');
+            startScreen.classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('champion-screen').classList.add('hidden');
+            document.getElementById('telemetry-screen').classList.add('hidden');
+            loginStatus.innerText = "Waiting for connection...";
+            window.quiz.dueMistakes = [];
+            window.quiz.updatePitStopButton(0);
         }
       });
 
-      // 2. Leaderboard Logic
-      window.recordLapTime = async (accuracy, time, roundName, scoreString, roundMaxStreak) => {
-        if (!currentUser) return; 
+      window.fetchSRSItems = async () => {
+        if (!window.currentUser) return;
         try {
-            await addDoc(collection(db, "leaderboard"), {
-                uid: currentUser.uid,
-                driver: currentUser.displayName,
-                accuracy: parseFloat(accuracy.toFixed(1)),
-                time: parseFloat(time.toFixed(2)),
-                round: roundName,
-                score: scoreString,
-                streak: roundMaxStreak || 0,
-                date: new Date()
+            const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
+            // Fetch ALL items for telemetry, not just due items
+            const snapshot = await getDocs(mistakesRef);
+            const allItems = [];
+            const dueItems = [];
+            const now = Timestamp.now();
+            
+            snapshot.forEach(doc => { 
+                const data = doc.data();
+                const item = { id: doc.id, ...data };
+                allItems.push(item);
+                if (data.nextReview <= now) dueItems.push(item);
             });
-            updateLeaderboard(); 
-        } catch (e) { console.error("Telemetry Error: ", e); }
+            
+            // Due items for Pit Stop
+            window.quiz.dueMistakes = dueItems;
+            window.quiz.updatePitStopButton(dueItems.length);
+
+            // All items for Telemetry (Graph)
+            // Note: We overwrite dueMistakes in quiz class for pit stop but for telemetry we ideally want all.
+            // For simplicity in this version, let's store all items in the quiz object too.
+            window.quiz.allMistakes = allItems; 
+            // Update openTelemetry logic to use window.quiz.allMistakes if available
+            window.quiz.dueMistakes = allItems; // Hack: Let quiz have everything for graph, filter inside StartPitStop if needed? 
+            // Correction: Keep dueMistakes as due only for logic safety, pass allItems separately if we want full history graph.
+            // For now, let's keep it simple: Graph shows ALL registered mistakes.
+            window.quiz.dueMistakes = allItems; 
+            
+            // Recalculate DUE count specifically for button
+            const dueCount = allItems.filter(i => i.nextReview <= now).length;
+            window.quiz.updatePitStopButton(dueCount);
+            
+            // Override startPitStop to only use actually due items
+            const originalStart = window.quiz.startPitStop;
+            window.quiz.startPitStop = function() {
+                 const nowSec = Timestamp.now().seconds;
+                 this.dueMistakes = allItems.filter(i => i.nextReview.seconds <= nowSec);
+                 originalStart.call(this);
+            }
+
+        } catch (e) { console.error("SRS Fetch Error:", e); }
       };
 
-      // 3. User Persistence
-      window.saveUserStreak = async (current, max) => {
-        if (!currentUser) return;
-        try {
-            await setDoc(doc(db, "users", currentUser.uid), {
-                currentStreak: current,
-                maxStreak: max,
-                lastActive: new Date()
+      window.handleSRSUpdate = async (questionObj, isCorrect) => {
+        if (!window.currentUser) return;
+        const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
+        const now = new Date();
+        const safeWordId = btoa(encodeURIComponent(questionObj.w)).replace(/\//g, '_').replace(/\+/g, '-');
+        const docRef = doc(mistakesRef, safeWordId);
+
+        if (!isCorrect) {
+            await setDoc(docRef, {
+                word: questionObj.w,
+                meaning: questionObj.meaning || questionObj.m,
+                level: 1,
+                nextReview: Timestamp.fromDate(now)
             }, { merge: true });
-        } catch (e) { console.error("Save Error:", e); }
-      }
+        } else if (isCorrect && window.quiz.isPitStopMode) {
+            const targetRef = questionObj.docId ? doc(mistakesRef, questionObj.docId) : docRef;
+            const currentLevel = questionObj.currentLevel || 1;
+            const newLevel = currentLevel + 1;
+            let nextDate = new Date();
+            
+            // SRS Intervals
+            if (newLevel === 2) nextDate.setDate(now.getDate() + 1);
+            else if (newLevel === 3) nextDate.setDate(now.getDate() + 3);
+            else if (newLevel === 4) nextDate.setDate(now.getDate() + 7);
+            else if (newLevel === 5) nextDate.setDate(now.getDate() + 14);
+            
+            if (newLevel >= 6) {
+                await updateDoc(targetRef, { level: 6, nextReview: Timestamp.fromDate(new Date("2099-01-01")) });
+            } else {
+                await updateDoc(targetRef, { level: newLevel, nextReview: Timestamp.fromDate(nextDate) });
+            }
+        }
+      };
 
-      // ★新機能: デイリー走行カウンター (Global Daily Counter)
-      // 今日の日付(JST)を取得するヘルパー
-      const getTodayStr = () => new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
+      window.recordLapTime = async (acc, time, round, score, streak) => {
+        if (!window.currentUser) return;
+        await addDoc(collection(db, "leaderboard"), {
+            uid: window.currentUser.uid,
+            driver: window.currentUser.displayName,
+            accuracy: parseFloat(acc.toFixed(1)),
+            time: parseFloat(time.toFixed(2)),
+            round: round,
+            score: score,
+            streak: streak || 0,
+            date: new Date()
+        });
+        updateLeaderboard();
+      };
 
-      // A. カウントアップ関数 (トランザクション使用)
       window.incrementDailyLaps = async () => {
         const statsRef = doc(db, "stats", "daily_global");
-        const todayStr = getTodayStr();
-
+        const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
         try {
             await runTransaction(db, async (transaction) => {
                 const sfDoc = await transaction.get(statsRef);
-                if (!sfDoc.exists()) {
-                    // ドキュメントがない場合は作成
-                    transaction.set(statsRef, { date: todayStr, count: 1 });
-                } else {
+                if (!sfDoc.exists()) { transaction.set(statsRef, { date: todayStr, count: 1 }); }
+                else {
                     const data = sfDoc.data();
-                    if (data.date !== todayStr) {
-                        // 日付が変わっていたらリセット
-                        transaction.update(statsRef, { date: todayStr, count: 1 });
-                    } else {
-                        // 同じ日ならインクリメント
-                        transaction.update(statsRef, { count: data.count + 1 });
-                    }
+                    if (data.date !== todayStr) transaction.update(statsRef, { date: todayStr, count: 1 });
+                    else transaction.update(statsRef, { count: data.count + 1 });
                 }
             });
-            console.log("Track Activity Updated.");
-        } catch (e) {
-            console.error("Counter Error:", e);
-        }
+        } catch (e) { console.error(e); }
       };
 
-      // B. リアルタイム監視 (Monitor)
-      // 誰かが走るたびに、画面の数字が勝手に増えるようにする
-      const statsRef = doc(db, "stats", "daily_global");
-      onSnapshot(statsRef, (doc) => {
+      onSnapshot(doc(db, "stats", "daily_global"), (doc) => {
         if (doc.exists()) {
             const data = doc.data();
-            const todayStr = getTodayStr();
-            // 日付が今日の場合のみカウントを表示、そうでなければ0
-            if (data.date === todayStr) {
-                dailyLapsDisplay.textContent = data.count;
-            } else {
-                dailyLapsDisplay.textContent = 0;
-            }
+            const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
+            dailyLapsDisplay.textContent = (data.date === todayStr) ? data.count : 0;
         }
       });
 
-      // 4. Update Table
       async function updateLeaderboard() {
-        rankingBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-xs opacity-50">Updating Telemetry...</td></tr>';
+        const rankingBody = document.getElementById('ranking-tbody');
+        rankingBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-xs opacity-50">Loading Telemetry...</td></tr>';
         try {
             const q = query(collection(db, "leaderboard"), orderBy("accuracy", "desc"), orderBy("time", "asc"), limit(10));
             const querySnapshot = await getDocs(q);
             rankingBody.innerHTML = "";
-            
-            const headerRow = document.querySelector('thead tr');
-            if(headerRow) {
-                headerRow.innerHTML = `<th class="p-2">Pos</th><th class="p-2">Driver</th><th class="p-2">Round</th><th class="p-2">Score</th><th class="p-2">Streak</th><th class="p-2">Acc</th><th class="p-2">Time</th>`;
-            }
-
-            if (querySnapshot.empty) {
-                rankingBody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-xs">No Data Yet.</td></tr>';
-                return;
-            }
-
+            if (querySnapshot.empty) { rankingBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-xs">No Data Yet.</td></tr>'; return; }
             let rank = 1;
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                const isMe = currentUser && data.uid === currentUser.uid;
+                const isMe = window.currentUser && data.uid === window.currentUser.uid;
                 const rowClass = isMe ? "bg-red-900/30 text-white font-bold" : "border-b border-gray-800";
-                const streakDisplay = data.streak ? `🔥${data.streak}` : "-"; 
-
-                const row = `
-                    <tr class="${rowClass}">
-                        <td class="p-2 text-yellow-500">${rank}</td>
-                        <td class="p-2 truncate max-w-[80px] md:max-w-[150px]">${data.driver}</td>
-                        <td class="p-2 text-xs text-gray-400">${data.round || "-"}</td>
-                        <td class="p-2 font-mono text-xs">${data.score || "-"}</td>
-                        <td class="p-2 font-bold text-orange-500">${streakDisplay}</td>
-                        <td class="p-2 text-green-400">${data.accuracy}%</td>
-                        <td class="p-2 text-gray-500">${data.time}s</td>
-                    </tr>
-                `;
+                const row = `<tr class="${rowClass}"><td class="p-2 text-yellow-500">${rank}</td><td class="p-2 truncate max-w-[80px]">${data.driver}</td><td class="p-2 text-xs text-gray-400">${data.round||"-"}</td><td class="p-2 text-green-400">${data.accuracy}%</td><td class="p-2 text-gray-500">${data.time}s</td></tr>`;
                 rankingBody.innerHTML += row;
                 rank++;
             });
         } catch (error) { console.error("Data Fetch Error:", error); }
       }
-
-      updateLeaderboard();
     </script>
 </body>
 </html>
