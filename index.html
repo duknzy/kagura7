@@ -9,12 +9,12 @@
     <meta name="apple-mobile-web-app-title" content="VocabGP">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5776/5776097.png">
 
-    <title>Vocabulary GP - 2026 Simple Spec</title>
+    <title>Vocabulary GP - 2026 Auto-Copy Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600;800&family=Orbitron:wght@900&display=swap');
         
         :root {
             --f1-red: #e10600;
@@ -72,7 +72,7 @@
             border-top: 4px solid var(--f1-red);
         }
 
-        /* ★ SIMPLE PASS DESIGN ★ */
+        /* SIMPLE PASS BOX */
         .simple-pass-box {
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid #333;
@@ -256,14 +256,14 @@
             <div id="accuracy-display" class="f1-font text-7xl font-bold mb-2 text-white glitch-text">95.0%</div>
             <p id="rank-text" class="f1-font text-sm mb-8 text-gray-400 font-mono">P1: MAX VERSTAPPEN</p>
             
-            <div id="pass-issue-area" class="hidden mb-8 transform transition-all hover:scale-105 cursor-pointer">
+            <div id="pass-issue-area" class="hidden mb-8 transform transition-all hover:scale-105 cursor-pointer active:scale-95">
                 <div class="simple-pass-box">
                     <div class="text-left">
                         <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">SUPER LICENSE</div>
                         <div id="license-id-display" class="f1-font text-2xl text-green-400 font-bold tracking-widest">perfect</div>
                     </div>
-                    <button id="copy-pass-btn" class="bg-gray-800 text-white text-[10px] px-4 py-2 rounded border border-gray-600 uppercase font-bold active:bg-white active:text-black">
-                        ISSUE
+                    <button id="copy-pass-btn" class="bg-gray-800 text-white text-[10px] px-6 py-3 rounded-full border border-gray-600 uppercase font-bold active:bg-white active:text-black animate-pulse">
+                        TAP TO COPY
                     </button>
                 </div>
             </div>
@@ -2337,7 +2337,7 @@ lest: ～しないように
                 this.telemetryChart = null;
                 this.isReverseMode = false;
                 this.isSuddenDeath = false;
-                this.generatedLicenseId = "perfect"; // ★ LOWERCASE FIXED
+                this.generatedLicenseId = "perfect"; // FIXED
                 
                 this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
                 this.synth = window.speechSynthesis;
@@ -2660,19 +2660,26 @@ lest: ～しないように
                 document.getElementById('next-round-btn').classList.add('hidden');
             }
 
-            // ★ AUTO-COPY LOGIC
-            copyLicense() {
+            // ★ AUTO-COPY LOGIC WITH FALLBACK
+            copyLicense(id) {
                 const btn = document.getElementById('copy-pass-btn');
-                navigator.clipboard.writeText(this.generatedLicenseId).then(() => {
-                    btn.innerText = "COPIED!";
-                    btn.classList.add("bg-green-600", "border-green-600");
-                    btn.classList.remove("bg-gray-800");
-                    setTimeout(() => { 
-                        btn.innerText = "ISSUE"; 
-                        btn.classList.remove("bg-green-600", "border-green-600");
-                        btn.classList.add("bg-gray-800");
-                    }, 2500);
-                }).catch(err => { console.error('Failed to copy: ', err); });
+                navigator.clipboard.writeText(id).then(() => {
+                    this.showCopySuccess(btn, id);
+                }).catch(err => {
+                    console.warn("Auto-Copy Failed (User interaction needed):", err);
+                    btn.innerText = "TAP TO COPY"; // Fallback text
+                });
+            }
+
+            showCopySuccess(btn, id) {
+                btn.innerText = "AUTO-COPIED!";
+                btn.classList.add("bg-green-600", "border-green-600");
+                btn.classList.remove("bg-gray-800");
+                setTimeout(() => { 
+                    btn.innerText = "COPY AGAIN"; 
+                    btn.classList.remove("bg-green-600", "border-green-600");
+                    btn.classList.add("bg-gray-800");
+                }, 2500);
             }
 
             generateLicenseId() {
@@ -2706,7 +2713,12 @@ lest: ～しないように
                         failMsg.classList.add('hidden');
                         
                         this.generateLicenseId();
-                        passBtn.onclick = () => this.copyLicense();
+                        
+                        // ★ ATTEMPT AUTO-COPY HERE (SYNC)
+                        this.copyLicense(this.generatedLicenseId);
+                        
+                        // Manual Click Backup
+                        passBtn.onclick = () => this.copyLicense(this.generatedLicenseId);
                         
                     } else { 
                         accDisplay.style.color = "#ef4444"; 
