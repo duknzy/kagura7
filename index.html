@@ -9,19 +9,17 @@
     <meta name="apple-mobile-web-app-title" content="VocabGP">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5776/5776097.png">
 
-    <title>Vocabulary GP - 2026 Gold Spec (Fixed)</title>
+    <title>Vocabulary GP - 2026 Simple Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600;800&family=Orbitron:wght@900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600;800&display=swap');
         
         :root {
             --f1-red: #e10600;
             --rb-navy: #0b0e14;
             --neon-cyan: #00f0ff;
-            --gold-light: #fcf6ba;
-            --gold-dark: #aa771c;
         }
 
         html, body {
@@ -45,7 +43,6 @@
         }
 
         .f1-font { font-family: 'Chakra Petch', sans-serif; }
-        .tech-font { font-family: 'Orbitron', sans-serif; }
 
         .carbon-bg {
             background-image: 
@@ -75,55 +72,18 @@
             border-top: 4px solid var(--f1-red);
         }
 
-        /* ★ SUPER LICENSE CARD DESIGN ★ */
-        .license-card {
-            background: linear-gradient(135deg, #bf953f, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c);
-            border-radius: 12px;
-            padding: 1.5rem;
-            color: #000;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(191, 149, 63, 0.3);
-            border: 1px solid #fff;
-        }
-        
-        .license-card::before {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
-            animation: shine 4s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes shine {
-            0% { transform: translate(-30%, -30%) rotate(0deg); }
-            100% { transform: translate(30%, 30%) rotate(0deg); }
-        }
-
-        .license-header {
+        /* ★ SIMPLE PASS DESIGN ★ */
+        .simple-pass-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: left;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
         }
 
-        .license-photo {
-            width: 60px;
-            height: 70px;
-            background: #000;
-            border: 2px solid #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 2rem;
-        }
-
-        /* Buttons & Inputs */
         .option-btn { 
             transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -297,25 +257,13 @@
             <p id="rank-text" class="f1-font text-sm mb-8 text-gray-400 font-mono">P1: MAX VERSTAPPEN</p>
             
             <div id="pass-issue-area" class="hidden mb-8 transform transition-all hover:scale-105 cursor-pointer">
-                <div class="license-card">
-                    <div class="license-header">
-                        <div class="f1-font font-bold text-lg">FIA SUPER LICENSE</div>
-                        <div class="text-xs font-mono font-bold">2026</div>
+                <div class="simple-pass-box">
+                    <div class="text-left">
+                        <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">SUPER LICENSE</div>
+                        <div id="license-id-display" class="f1-font text-2xl text-green-400 font-bold tracking-widest">perfect</div>
                     </div>
-                    <div class="flex gap-4">
-                        <div class="license-photo">👤</div>
-                        <div class="flex-1 text-left">
-                            <div class="text-[10px] uppercase font-bold text-black/60">Driver</div>
-                            <div id="license-driver-name" class="font-bold text-lg leading-tight mb-1">VERSTAPPEN</div>
-                            <div class="text-[10px] uppercase font-bold text-black/60">License ID</div>
-                            <div id="license-id-display" class="tech-font text-xl tracking-widest font-black">PERFECT</div>
-                        </div>
-                        <div class="flex items-end">
-                            <div class="text-4xl">🏁</div>
-                        </div>
-                    </div>
-                    <button id="copy-pass-btn" class="mt-4 bg-black text-white text-xs px-4 py-2 rounded-full font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors w-full border border-white/20">
-                        ISSUE & COPY ID
+                    <button id="copy-pass-btn" class="bg-gray-800 text-white text-[10px] px-4 py-2 rounded border border-gray-600 uppercase font-bold active:bg-white active:text-black">
+                        ISSUE
                     </button>
                 </div>
             </div>
@@ -2389,7 +2337,7 @@ lest: ～しないように
                 this.telemetryChart = null;
                 this.isReverseMode = false;
                 this.isSuddenDeath = false;
-                this.generatedLicenseId = "PERFECT"; // ★ FIXED ID
+                this.generatedLicenseId = "perfect"; // ★ LOWERCASE FIXED
                 
                 this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
                 this.synth = window.speechSynthesis;
@@ -2718,22 +2666,18 @@ lest: ～しないように
                 navigator.clipboard.writeText(this.generatedLicenseId).then(() => {
                     btn.innerText = "COPIED!";
                     btn.classList.add("bg-green-600", "border-green-600");
-                    btn.classList.remove("bg-black");
+                    btn.classList.remove("bg-gray-800");
                     setTimeout(() => { 
-                        btn.innerText = "ISSUE & COPY ID"; 
+                        btn.innerText = "ISSUE"; 
                         btn.classList.remove("bg-green-600", "border-green-600");
-                        btn.classList.add("bg-black");
+                        btn.classList.add("bg-gray-800");
                     }, 2500);
                 }).catch(err => { console.error('Failed to copy: ', err); });
             }
 
             generateLicenseId() {
-                // FIXED ID AS REQUESTED
-                this.generatedLicenseId = "PERFECT";
+                this.generatedLicenseId = "perfect";
                 document.getElementById('license-id-display').innerText = this.generatedLicenseId;
-                
-                const driverName = window.currentUser ? window.currentUser.displayName : "TEST DRIVER";
-                document.getElementById('license-driver-name').innerText = driverName;
             }
 
             finish() {
