@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Vocabulary GP - 2026 RB Compact</title>
+    <title>Vocabulary GP - 2026 Solo Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -64,6 +64,14 @@
         .accent-cyan { accent-color: var(--neon-cyan); }
         .glitch-text { text-shadow: 2px 0 rgba(255,0,0,0.5), -2px 0 rgba(0,255,255,0.5); }
 
+        /* Tire Strategy Buttons */
+        .tire-btn { opacity: 0.4; transform: scale(0.95); transition: all 0.2s; border-width: 2px; }
+        .tire-btn.active { opacity: 1; transform: scale(1); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        
+        .tire-soft.active { border-color: #ef4444; color: #ef4444; } /* Red */
+        .tire-medium.active { border-color: #eab308; color: #eab308; } /* Yellow */
+        .tire-hard.active { border-color: #f8fafc; color: #f8fafc; } /* White */
+
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -100,14 +108,14 @@
 
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-black/30 p-4 rounded border border-gray-800 text-center">
-                    <p class="text-[10px] text-gray-500 uppercase mb-1">Laps</p>
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">Total Laps</p>
                     <span id="daily-laps-display" class="f1-font text-3xl text-white font-bold">0</span>
                 </div>
                 <div id="tire-status-box" class="bg-black/30 p-4 rounded border border-gray-800 text-center cursor-default transition-colors group relative overflow-hidden">
-                    <p class="text-[10px] text-gray-500 uppercase mb-1">Tire Status</p>
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">Machine Status</p>
                     <span id="mistake-count-display" class="f1-font text-xl text-green-500 font-bold">OPTIMAL</span>
                     <div id="pit-alert-overlay" class="hidden absolute inset-0 bg-red-900/80 flex items-center justify-center backdrop-blur-sm cursor-pointer hover:bg-red-800/90 transition-colors">
-                        <span class="f1-font text-white font-bold animate-pulse">PIT STOP DUE</span>
+                        <span class="f1-font text-white font-bold animate-pulse">REPAIR NEEDED</span>
                     </div>
                 </div>
             </div>
@@ -115,7 +123,7 @@
             <div class="space-y-4">
                 
                 <div>
-                    <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-1 pl-1">Circuit</label>
+                    <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-1 pl-1">Select Circuit</label>
                     <div class="relative">
                         <select id="round-selector" class="w-full bg-black/50 text-white p-3 rounded border border-gray-700 focus:border-red-500 outline-none font-mono text-sm appearance-none cursor-pointer hover:bg-black/70 transition-colors">
                         </select>
@@ -124,7 +132,21 @@
                 </div>
 
                 <div class="bg-gray-900/50 p-3 rounded border border-gray-800">
-                    <div class="flex flex-col gap-2">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-3 pl-1">Tire Compound (Questions)</p>
+                    
+                    <div class="flex justify-between gap-2 mb-4">
+                        <button onclick="quiz.setTireStrategy(10, 'soft')" id="tire-soft" class="tire-btn tire-soft flex-1 bg-black/40 text-gray-400 p-2 rounded border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider hover:bg-gray-800">
+                            🔴 Soft <br><span class="text-[10px] font-mono opacity-70">10 Laps</span>
+                        </button>
+                        <button onclick="quiz.setTireStrategy(20, 'medium')" id="tire-medium" class="tire-btn tire-medium active flex-1 bg-black/40 text-gray-400 p-2 rounded border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider hover:bg-gray-800">
+                            🟡 Med <br><span class="text-[10px] font-mono opacity-70">20 Laps</span>
+                        </button>
+                        <button onclick="quiz.setTireStrategy(50, 'hard')" id="tire-hard" class="tire-btn tire-hard flex-1 bg-black/40 text-gray-400 p-2 rounded border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider hover:bg-gray-800">
+                            ⚪ Hard <br><span class="text-[10px] font-mono opacity-70">50 Laps</span>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col gap-2 border-t border-gray-800 pt-3">
                         <label class="flex items-center justify-between cursor-pointer group">
                             <span class="text-xs font-bold text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
                                 <span class="text-red-500">⚡</span> Q3 QUALIFYING
@@ -150,14 +172,9 @@
                     Start Engine
                 </button>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="quiz.openStandings()" class="border border-gray-700 hover:border-yellow-500 hover:text-yellow-500 text-gray-400 py-3 rounded text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-                        <span>🏆</span> Standings
-                    </button>
-                    <button onclick="quiz.openTelemetry()" class="border border-gray-700 hover:border-blue-500 hover:text-blue-500 text-gray-400 py-3 rounded text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-                        <span>📊</span> Telemetry
-                    </button>
-                </div>
+                <button onclick="quiz.openTelemetry()" class="w-full border border-gray-700 hover:border-blue-500 hover:text-blue-500 text-gray-400 py-3 rounded text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                    <span>📊</span> Telemetry Data
+                </button>
 
                 <div class="pt-4 border-t border-gray-800">
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Garage Tools</p>
@@ -190,23 +207,6 @@
             <div class="text-left mb-4">
                 <h3 class="text-xs text-red-500 font-bold uppercase tracking-widest mb-2">Degradation Report</h3>
                 <div id="worst-words-list" class="space-y-1 max-h-40 overflow-y-auto pr-2"></div>
-            </div>
-        </div>
-
-        <div id="standings-screen" class="hidden race-card p-6 rounded-2xl text-center border-t-4 border-yellow-500">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="f1-font text-2xl font-bold text-yellow-500 tracking-widest">STANDINGS</h2>
-                <button onclick="quiz.closeOverlay('standings-screen')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="text-gray-500 border-b border-gray-700 text-xs uppercase">
-                        <tr><th class="p-2">Pos</th><th class="p-2">Driver</th><th class="p-2">Acc</th><th class="p-2">Time</th></tr>
-                    </thead>
-                    <tbody id="ranking-tbody" class="font-mono text-gray-300">
-                        <tr><td colspan="4" class="p-4 text-center text-xs opacity-50">Loading Data...</td></tr>
-                    </tbody>
-                </table>
             </div>
         </div>
 
@@ -2292,7 +2292,7 @@ lest: ～しないように
 
         class VocabularyQuiz {
             constructor() {
-                this.wordsPerRound = 20;
+                this.wordsPerRound = 20; // Default Medium
                 this.masterList = [];
                 this.rounds = [];
                 this.currentRoundIndex = 0;
@@ -2336,7 +2336,7 @@ lest: ～しないように
                 this.parseData();
                 this.generateRounds();
                 this.initUI();
-                this.initSearch(); // Search Restored
+                this.initSearch();
             }
 
             loadVoices() {
@@ -2371,6 +2371,17 @@ lest: ～しないように
                         if(w && m) this.masterList.push({ w, m });
                     }
                 });
+            }
+
+            // ★ Tire Strategy: Set word count & regenerate rounds
+            setTireStrategy(count, type) {
+                this.wordsPerRound = count;
+                this.generateRounds();
+                this.initUI();
+                
+                // Visual update
+                document.querySelectorAll('.tire-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById(`tire-${type}`).classList.add('active');
             }
 
             generateRounds() {
@@ -2446,7 +2457,7 @@ lest: ～しないように
                     text.classList.add('text-red-500');
                     
                     overlay.classList.remove('hidden');
-                    overlay.querySelector('span').innerText = `PIT STOP: ${count} WORDS`;
+                    overlay.querySelector('span').innerText = `REPAIR: ${count} WORDS`;
                     overlay.onclick = () => this.startPitStop();
                 } else {
                     text.innerText = "OPTIMAL";
@@ -2461,7 +2472,6 @@ lest: ～しないように
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('telemetry-screen').classList.remove('hidden');
                 
-                // Logic (Same as before)
                 const mistakes = this.allMistakes || [];
                 const worstWords = [...mistakes].sort((a, b) => (a.easeFactor || 2.5) - (b.easeFactor || 2.5)).slice(0, 20);
                 const listContainer = document.getElementById('worst-words-list');
@@ -2497,13 +2507,6 @@ lest: ～しないように
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
                 });
-            }
-
-            openStandings() {
-                if (!window.currentUser) { alert("Sign In required."); return; }
-                document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('standings-screen').classList.remove('hidden');
-                updateLeaderboard(); // Trigger fetch
             }
 
             closeOverlay(id) {
@@ -2743,11 +2746,6 @@ lest: ～しないように
                 
                 document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
                 document.getElementById('result-title').innerText = "CHECKERED FLAG";
-
-                if (!this.isPitStopMode && window.recordLapTime && window.currentUser) {
-                    const rName = this.rounds[this.currentRoundIndex].name;
-                    window.recordLapTime(accuracy, totalTime, rName + (this.isReverseMode?"[R]":""), `${this.rounds[this.currentRoundIndex].words.length - this.missCount}/${this.rounds[this.currentRoundIndex].words.length}`, this.roundMaxStreak);
-                }
                 
                 if (window.fetchSRSItems) window.fetchSRSItems();
                 if (window.incrementDailyLaps && !this.isPitStopMode) window.incrementDailyLaps();
@@ -2857,7 +2855,6 @@ lest: ～しないように
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.add('hidden');
             document.getElementById('telemetry-screen').classList.add('hidden');
-            document.getElementById('standings-screen').classList.add('hidden');
             loginStatus.innerText = "Waiting for connection...";
             window.quiz.dueMistakes = [];
             window.quiz.updatePitStopButton(0);
@@ -2933,12 +2930,6 @@ lest: ～しないように
         await setDoc(targetRef, { word: questionObj.w, meaning: questionObj.meaning || questionObj.m, nextReview: Timestamp.fromDate(nextDate), interval: nextInterval, repetitions: nextRepetitions, easeFactor: nextEaseFactor, lastReviewed: Timestamp.fromDate(now) }, { merge: true });
       };
 
-      window.recordLapTime = async (acc, time, round, score, streak) => {
-        if (!window.currentUser) return;
-        await addDoc(collection(db, "leaderboard"), { uid: window.currentUser.uid, driver: window.currentUser.displayName, accuracy: parseFloat(acc.toFixed(1)), time: parseFloat(time.toFixed(2)), round: round, score: score, streak: streak || 0, date: new Date() });
-        updateLeaderboard(); // Update Local View
-      };
-
       window.incrementDailyLaps = async () => {
         const statsRef = doc(db, "stats", "daily_global");
         const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
@@ -2953,26 +2944,6 @@ lest: ～しないように
                 }
             });
         } catch (e) { console.error(e); }
-      };
-
-      window.updateLeaderboard = async () => {
-        const rankingBody = document.getElementById('ranking-tbody');
-        rankingBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs opacity-50">Fetching Telemetry...</td></tr>';
-        try {
-            const q = query(collection(db, "leaderboard"), orderBy("accuracy", "desc"), orderBy("time", "asc"), limit(10));
-            const querySnapshot = await getDocs(q);
-            rankingBody.innerHTML = "";
-            if (querySnapshot.empty) { rankingBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs">No Data.</td></tr>'; return; }
-            let rank = 1;
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const isMe = window.currentUser && data.uid === window.currentUser.uid;
-                const rowClass = isMe ? "bg-red-900/30 text-white font-bold" : "border-b border-gray-800";
-                const row = `<tr class="${rowClass}"><td class="p-2 text-yellow-500">${rank}</td><td class="p-2 truncate max-w-[80px]">${data.driver}</td><td class="p-2 text-green-400">${data.accuracy}%</td><td class="p-2 text-gray-500">${data.time}s</td></tr>`;
-                rankingBody.innerHTML += row;
-                rank++;
-            });
-        } catch (error) { console.error("Ranking Error:", error); }
       };
     </script>
 </body>
