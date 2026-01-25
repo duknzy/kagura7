@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="VocabGP">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5776/5776097.png">
 
-    <title>Vocabulary GP - 2026 App Spec</title>
+    <title>Vocabulary GP - 2026 Stability Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -22,20 +22,26 @@
             --neon-cyan: #00f0ff;
         }
 
-        body {
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Lock the main window */
             background-color: var(--rb-navy);
             color: #e2e8f0;
             font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            /* Safe Area for Notch/Home Bar */
+            /* ★ STABILITY FIXES ★ */
+            touch-action: manipulation; /* Stop double-tap zoom */
+            overscroll-behavior: none;  /* Stop bounce */
+            -webkit-user-select: none;  /* Stop text selection */
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Safe Area Padding */
+        body {
             padding-top: max(1rem, env(safe-area-inset-top));
             padding-bottom: max(1rem, env(safe-area-inset-bottom));
-            /* Disable Selection for App-feel */
-            -webkit-user-select: none;
-            user-select: none;
-            /* Prevent bouncing scroll */
-            overscroll-behavior-y: none;
         }
 
         .f1-font { font-family: 'Chakra Petch', sans-serif; }
@@ -48,9 +54,18 @@
             background-size: cover;
         }
 
-        /* Compact Card */
+        /* Main Container that allows scrolling */
+        #app {
+            height: 100%;
+            overflow-y: auto; /* Scroll inside app div only */
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem;
+            position: relative;
+        }
+
+        /* Card */
         .race-card {
-            background: rgba(23, 28, 38, 0.8);
+            background: rgba(23, 28, 38, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -58,51 +73,48 @@
             border-top: 4px solid var(--f1-red);
         }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
 
         .option-btn { 
-            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            /* No blue highlight on tap */
-            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; /* Crucial for buttons */
         }
-        .option-btn:active { transform: scale(0.98); }
-        .option-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
+        .option-btn:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
         .option-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
         .accent-f1 { accent-color: var(--f1-red); }
         .accent-cyan { accent-color: var(--neon-cyan); }
         .glitch-text { text-shadow: 2px 0 rgba(255,0,0,0.5), -2px 0 rgba(0,255,255,0.5); }
 
-        /* Tire Strategy Buttons */
-        .tire-btn { opacity: 0.4; transform: scale(0.95); transition: all 0.2s; border-width: 2px; -webkit-tap-highlight-color: transparent; }
+        .tire-btn { opacity: 0.4; transform: scale(0.95); transition: all 0.2s; border-width: 2px; }
         .tire-btn.active { opacity: 1; transform: scale(1); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
-        
-        .tire-soft.active { border-color: #ef4444; color: #ef4444; } /* Red */
-        .tire-medium.active { border-color: #eab308; color: #eab308; } /* Yellow */
-        .tire-hard.active { border-color: #f8fafc; color: #f8fafc; } /* White */
+        .tire-soft.active { border-color: #ef4444; color: #ef4444; } 
+        .tire-medium.active { border-color: #eab308; color: #eab308; } 
+        .tire-hard.active { border-color: #f8fafc; color: #f8fafc; } 
+
+        /* Prevent Input Zoom on iOS (Must be 16px+) */
+        input, select { 
+            font-size: 16px !important; 
+            -webkit-user-select: text;
+            user-select: text;
+        }
 
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
-        
-        /* Input Field needs text selection */
-        input { -webkit-user-select: text; user-select: text; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center carbon-bg p-4">
+<body class="carbon-bg">
 
-    <div id="app" class="w-full max-w-2xl relative">
+    <div id="app" class="w-full max-w-2xl mx-auto flex flex-col justify-center">
         
-        <div id="gate-screen" class="race-card p-8 rounded-2xl shadow-2xl text-center relative overflow-hidden animate-slide-in">
+        <div id="gate-screen" class="race-card p-8 rounded-2xl shadow-2xl text-center relative overflow-hidden animate-slide-in my-auto">
             <h1 class="f1-font text-5xl mb-2 font-bold text-white tracking-wider">VOCAB<span class="text-red-600">GP</span></h1>
             <p class="text-gray-400 font-mono text-xs uppercase tracking-[0.4em] mb-12">Scuderia Learning</p>
             <button id="gate-login-btn" class="w-full f1-font bg-white hover:bg-gray-200 text-black px-8 py-4 rounded-xl font-bold tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-3 active:scale-95">
@@ -112,7 +124,7 @@
             <p id="login-status" class="mt-6 text-[10px] text-gray-600 font-mono">System Standby...</p>
         </div>
 
-        <div id="start-screen" class="hidden race-card p-6 rounded-2xl relative z-10 animate-slide-in">
+        <div id="start-screen" class="hidden race-card p-6 rounded-2xl relative z-10 animate-slide-in my-auto">
             
             <div class="flex justify-between items-end mb-6 border-b border-gray-800 pb-4">
                 <div class="text-left">
@@ -140,11 +152,10 @@
             </div>
 
             <div class="space-y-4">
-                
                 <div>
                     <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-1 pl-1">Circuit Selection</label>
                     <div class="relative">
-                        <select id="round-selector" class="w-full bg-black/50 text-white p-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-sm appearance-none cursor-pointer active:bg-black/70 transition-colors">
+                        <select id="round-selector" class="w-full bg-black/50 text-white p-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-base appearance-none cursor-pointer active:bg-black/70 transition-colors">
                         </select>
                         <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500">▼</div>
                     </div>
@@ -152,70 +163,48 @@
 
                 <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
                     <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-3 pl-1">Tire Compound (Length)</p>
-                    
                     <div class="flex justify-between gap-2 mb-4">
-                        <button onclick="quiz.setTireStrategy(10, 'soft')" id="tire-soft" class="tire-btn tire-soft flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">
-                            🔴 Soft <br><span class="text-[10px] font-mono opacity-70">10 Qs</span>
-                        </button>
-                        <button onclick="quiz.setTireStrategy(20, 'medium')" id="tire-medium" class="tire-btn tire-medium active flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">
-                            🟡 Med <br><span class="text-[10px] font-mono opacity-70">20 Qs</span>
-                        </button>
-                        <button onclick="quiz.setTireStrategy(50, 'hard')" id="tire-hard" class="tire-btn tire-hard flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">
-                            ⚪ Hard <br><span class="text-[10px] font-mono opacity-70">50 Qs</span>
-                        </button>
+                        <button onclick="quiz.setTireStrategy(10, 'soft')" id="tire-soft" class="tire-btn tire-soft flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">🔴 Soft<br><span class="text-[10px] opacity-70">10 Qs</span></button>
+                        <button onclick="quiz.setTireStrategy(20, 'medium')" id="tire-medium" class="tire-btn tire-medium active flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">🟡 Med<br><span class="text-[10px] opacity-70">20 Qs</span></button>
+                        <button onclick="quiz.setTireStrategy(50, 'hard')" id="tire-hard" class="tire-btn tire-hard flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">⚪ Hard<br><span class="text-[10px] opacity-70">50 Qs</span></button>
                     </div>
-
                     <div class="flex flex-col gap-3 border-t border-gray-800 pt-3">
                         <label class="flex items-center justify-between cursor-pointer group p-1">
-                            <span class="text-xs font-bold text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
-                                <span class="text-red-500">⚡</span> Q3 QUALIFYING
-                            </span>
+                            <span class="text-xs font-bold text-gray-300 group-hover:text-white transition-colors flex items-center gap-2"><span class="text-red-500">⚡</span> Q3 QUALIFYING</span>
                             <input type="checkbox" id="q3-mode" class="accent-f1 w-5 h-5 cursor-pointer">
                         </label>
                         <label class="flex items-center justify-between cursor-pointer group p-1">
-                            <span class="text-xs font-bold text-gray-300 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
-                                <span class="text-cyan-400">🔄</span> REVERSE GRID
-                            </span>
+                            <span class="text-xs font-bold text-gray-300 group-hover:text-cyan-400 transition-colors flex items-center gap-2"><span class="text-cyan-400">🔄</span> REVERSE GRID</span>
                             <input type="checkbox" id="reverse-mode" class="accent-cyan w-5 h-5 cursor-pointer">
                         </label>
                         <label class="flex items-center justify-between cursor-pointer group p-1">
-                            <span class="text-xs font-bold text-gray-300 group-hover:text-green-400 transition-colors flex items-center gap-2">
-                                <span class="text-green-500">🔊</span> RACE ENGINEER
-                            </span>
+                            <span class="text-xs font-bold text-gray-300 group-hover:text-green-400 transition-colors flex items-center gap-2"><span class="text-green-500">🔊</span> RACE ENGINEER</span>
                             <input type="checkbox" id="audio-mode" class="accent-green-500 w-5 h-5 cursor-pointer" checked>
                         </label>
                     </div>
                 </div>
 
-                <button onclick="quiz.start()" class="w-full f1-font bg-gradient-to-r from-red-600 to-red-700 active:from-red-700 active:to-red-800 text-white py-5 rounded-xl font-bold tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-lg shadow-red-900/30 text-xl border-b-4 border-red-900">
-                    Start Engine
-                </button>
-
-                <button onclick="quiz.openTelemetry()" class="w-full border border-gray-700 active:bg-gray-800 text-gray-400 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-                    <span>📊</span> Telemetry Data
-                </button>
+                <button onclick="quiz.start()" class="w-full f1-font bg-gradient-to-r from-red-600 to-red-700 active:from-red-700 active:to-red-800 text-white py-5 rounded-xl font-bold tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-lg shadow-red-900/30 text-xl border-b-4 border-red-900">Start Engine</button>
+                
+                <button onclick="quiz.openTelemetry()" class="w-full border border-gray-700 active:bg-gray-800 text-gray-400 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2"><span>📊</span> Telemetry Data</button>
 
                 <div class="pt-4 border-t border-gray-800">
                     <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Garage Tools</p>
-                    
                     <div class="mb-3 relative group">
-                        <input type="text" id="search-input" placeholder="Quick Scan (Search)..." class="w-full bg-black text-white p-3 pl-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-sm transition-colors shadow-inner">
+                        <input type="text" id="search-input" placeholder="Quick Scan (Search)..." class="w-full bg-black text-white p-3 pl-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-base transition-colors shadow-inner">
                         <div id="search-results" class="hidden absolute bottom-full left-0 w-full mb-1 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-50"></div>
                     </div>
-
                     <div class="flex items-center gap-2">
-                        <input type="number" id="custom-start" placeholder="1" class="w-16 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-xs font-mono">
+                        <input type="number" id="custom-start" placeholder="1" class="w-16 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-base font-mono">
                         <span class="text-gray-500">-</span>
-                        <input type="number" id="custom-end" placeholder="50" class="w-16 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-xs font-mono">
-                        <button onclick="quiz.createCustomRound()" class="flex-1 bg-gray-800 active:bg-gray-700 text-white text-[10px] font-bold uppercase rounded-lg py-2 border border-gray-600">
-                            Set Custom
-                        </button>
+                        <input type="number" id="custom-end" placeholder="50" class="w-16 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-base font-mono">
+                        <button onclick="quiz.createCustomRound()" class="flex-1 bg-gray-800 active:bg-gray-700 text-white text-[10px] font-bold uppercase rounded-lg py-2 border border-gray-600">Set Custom</button>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div id="telemetry-screen" class="hidden race-card p-6 rounded-2xl text-center border-t-4 border-blue-500 h-full overflow-y-auto">
+        <div id="telemetry-screen" class="hidden race-card p-6 rounded-2xl text-center border-t-4 border-blue-500 h-full overflow-y-auto my-auto">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="f1-font text-2xl font-bold text-blue-400 tracking-widest">TELEMETRY</h2>
                 <button onclick="quiz.closeOverlay('telemetry-screen')" class="text-gray-400 active:text-white text-3xl p-2">&times;</button>
@@ -229,7 +218,7 @@
             </div>
         </div>
 
-        <div id="quiz-screen" class="hidden race-card p-6 rounded-2xl shadow-2xl relative min-h-[500px] flex flex-col justify-between">
+        <div id="quiz-screen" class="hidden race-card p-6 rounded-2xl shadow-2xl relative flex flex-col justify-between my-auto min-h-[500px]">
             <div class="flex justify-between items-start mb-6">
                 <div class="flex flex-col text-left">
                     <span id="circuit-name" class="f1-font text-[10px] text-gray-400 uppercase tracking-widest">ROUND 1</span>
@@ -254,19 +243,13 @@
             <div id="feedback" class="h-8 mt-2 flex items-center justify-center text-sm font-bold tracking-wider uppercase"></div>
         </div>
 
-        <div id="result-screen" class="hidden race-card p-8 rounded-2xl shadow-2xl text-center animate-slide-in">
+        <div id="result-screen" class="hidden race-card p-8 rounded-2xl shadow-2xl text-center animate-slide-in my-auto">
             <h2 id="result-title" class="f1-font text-3xl mb-2 font-bold text-white italic">CHECKERED FLAG</h2>
             <div class="w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 mb-8"></div>
-            
             <div id="accuracy-display" class="f1-font text-7xl font-bold mb-2 text-white glitch-text">95.0%</div>
             <p id="rank-text" class="f1-font text-sm mb-8 text-gray-400 font-mono">P1: MAX VERSTAPPEN</p>
-
-            <div id="fail-message" class="hidden mb-6 p-4 border border-red-500 bg-red-900/20 text-red-500 font-bold text-xs uppercase tracking-widest">
-                Session Stopped: Accuracy Too Low
-            </div>
-
+            <div id="fail-message" class="hidden mb-6 p-4 border border-red-500 bg-red-900/20 text-red-500 font-bold text-xs uppercase tracking-widest">Session Stopped: Accuracy Too Low</div>
             <div class="bg-black/40 p-4 rounded-xl mb-8 text-left max-h-48 overflow-y-auto border border-gray-800" id="review-list"></div>
-
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="quiz.returnToGrid()" class="f1-font border border-gray-600 active:bg-white active:text-black text-white py-4 rounded-xl font-bold transition-all uppercase text-sm">Garage</button>
                 <button id="next-round-btn" class="f1-font bg-red-600 active:bg-red-700 text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-red-900/50 uppercase text-sm">Next Sector</button>
@@ -2309,6 +2292,16 @@ lest: ～しないように
 `;
 // ==========================================
 
+        // ★ PREVENT DOUBLE TAP ZOOM & BOUNCE (ACTIVE SUSPENSION)
+        document.addEventListener('dblclick', function(event) {
+            event.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) { event.preventDefault(); }
+        }, { passive: false });
+
+        // Logic Class
         class VocabularyQuiz {
             constructor() {
                 this.wordsPerRound = 20; 
@@ -2328,19 +2321,13 @@ lest: ～しないように
                 this.allMistakes = []; 
                 this.isPitStopMode = false;
                 this.telemetryChart = null;
-                
-                // Modes
                 this.isReverseMode = false;
                 this.isSuddenDeath = false;
                 
-                // Audio
                 this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
                 this.synth = window.speechSynthesis;
                 this.englishVoices = [];
-                if (this.synth) {
-                    this.synth.onvoiceschanged = () => this.loadVoices();
-                    this.loadVoices();
-                }
+                if (this.synth) { this.synth.onvoiceschanged = () => this.loadVoices(); this.loadVoices(); }
 
                 const audioCheck = document.getElementById('audio-mode');
                 if(audioCheck) {
@@ -2432,50 +2419,30 @@ lest: ～しないように
                 input.addEventListener('input', (e) => {
                     const q = e.target.value.toLowerCase().trim();
                     if (!q) { results.classList.add('hidden'); return; }
-                    const hits = this.masterList
-                        .map((item, index) => ({ ...item, i: index + 1 }))
-                        .filter(item => item.w.toLowerCase().includes(q) || item.m.toLowerCase().includes(q))
-                        .slice(0, 50);
-
+                    const hits = this.masterList.map((item, index) => ({ ...item, i: index + 1 })).filter(item => item.w.toLowerCase().includes(q) || item.m.toLowerCase().includes(q)).slice(0, 50);
                     if (hits.length > 0) {
                         results.classList.remove('hidden');
                         results.innerHTML = hits.map(h => `
                             <div onclick="quiz.speak('${h.w.replace(/'/g, "\\'")}')" class="p-3 border-b border-gray-800 active:bg-gray-800 cursor-pointer flex justify-between items-center group">
-                                <div class="text-left">
-                                    <div class="flex items-baseline gap-2">
-                                        <span class="text-[10px] text-yellow-500 font-mono opacity-70">No.${h.i}</span>
-                                        <span class="text-red-400 font-bold text-xs f1-font">${h.w}</span>
-                                    </div>
-                                    <span class="text-gray-400 text-[10px] pl-1">${h.m}</span>
-                                </div>
+                                <div class="text-left"><div class="flex items-baseline gap-2"><span class="text-[10px] text-yellow-500 font-mono opacity-70">No.${h.i}</span><span class="text-red-400 font-bold text-xs f1-font">${h.w}</span></div><span class="text-gray-400 text-[10px] pl-1">${h.m}</span></div>
                                 <button class="text-[8px] bg-gray-700 text-white px-2 py-1 rounded-full uppercase">Listen</button>
-                            </div>
-                        `).join('');
+                            </div>`).join('');
                     } else {
                         results.classList.remove('hidden');
                         results.innerHTML = `<div class="p-3 text-gray-500 text-[10px] text-center">NO DATA</div>`;
                     }
                 });
-                document.addEventListener('click', (e) => {
-                    if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('hidden');
-                });
+                document.addEventListener('click', (e) => { if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('hidden'); });
             }
 
             updatePitStopButton(count) {
-                const box = document.getElementById('tire-status-box');
                 const text = document.getElementById('mistake-count-display');
                 const overlay = document.getElementById('pit-alert-overlay');
-
                 if (count > 0) {
-                    text.innerText = "CRITICAL";
-                    text.classList.remove('text-green-500');
-                    text.classList.add('text-red-500');
-                    overlay.classList.remove('hidden');
-                    overlay.onclick = () => this.startPitStop();
+                    text.innerText = "CRITICAL"; text.classList.remove('text-green-500'); text.classList.add('text-red-500');
+                    overlay.classList.remove('hidden'); overlay.onclick = () => this.startPitStop();
                 } else {
-                    text.innerText = "OPTIMAL";
-                    text.classList.add('text-green-500');
-                    text.classList.remove('text-red-500');
+                    text.innerText = "OPTIMAL"; text.classList.add('text-green-500'); text.classList.remove('text-red-500');
                     overlay.classList.add('hidden');
                 }
             }
@@ -2484,21 +2451,17 @@ lest: ～しないように
                 if (!window.currentUser) { alert("Sign In required."); return; }
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('telemetry-screen').classList.remove('hidden');
-                
                 const mistakes = this.allMistakes || [];
                 const worstWords = [...mistakes].sort((a, b) => (a.easeFactor || 2.5) - (b.easeFactor || 2.5)).slice(0, 20);
                 const listContainer = document.getElementById('worst-words-list');
-                
                 if (worstWords.length === 0) listContainer.innerHTML = `<div class="text-gray-500 text-xs italic">No degradation.</div>`;
                 else {
                     listContainer.innerHTML = worstWords.map(item => `
                         <div class="flex justify-between items-center bg-gray-900/40 p-3 rounded-lg border-l-2 border-red-500 mb-1">
                             <span class="font-bold text-gray-200 text-xs f1-font">${item.word}</span>
                             <span class="text-[10px] text-gray-500 font-mono">EF:${(item.easeFactor||2.5).toFixed(2)}</span>
-                        </div>
-                    `).join('');
+                        </div>`).join('');
                 }
-
                 const ctx = document.getElementById('weaknessRadarChart').getContext('2d');
                 if (this.telemetryChart) this.telemetryChart.destroy();
                 const buckets = [0, 0, 0, 0, 0];
@@ -2506,18 +2469,9 @@ lest: ～しないように
                     const int = m.interval || 0;
                     if (int <= 1) buckets[0]++; else if (int <= 6) buckets[1]++; else if (int <= 14) buckets[2]++; else if (int <= 30) buckets[3]++; else buckets[4]++;
                 });
-
                 this.telemetryChart = new Chart(ctx, {
                     type: 'bar',
-                    data: {
-                        labels: ['1d', '2-6d', '2w', '1mo', 'Master'],
-                        datasets: [{
-                            data: buckets,
-                            backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'],
-                            borderColor: '#333',
-                            borderWidth: 1
-                        }]
-                    },
+                    data: { labels: ['1d', '2-6d', '2w', '1mo', 'Master'], datasets: [{ data: buckets, backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'], borderColor: '#333', borderWidth: 1 }] },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
                 });
             }
@@ -2529,27 +2483,15 @@ lest: ～しないように
 
             startPitStop() {
                 if (!this.dueMistakes || this.dueMistakes.length === 0) return;
-                this.isPitStopMode = true;
-                this.isReverseMode = false;
-                
+                this.isPitStopMode = true; this.isReverseMode = false;
                 this.questions = this.dueMistakes.map(item => {
                     const targetWord = { w: item.word, m: item.meaning };
                     const distractors = this.getDistractors(targetWord, false);
                     const options = [targetWord.m, ...distractors].sort(() => Math.random() - 0.5);
-                    return { 
-                        w: targetWord.w, m: targetWord.m, 
-                        qText: targetWord.w, aText: targetWord.m,
-                        o: options, 
-                        docId: item.id,
-                        interval: item.interval || 0,
-                        repetitions: item.repetitions || 0,
-                        easeFactor: item.easeFactor || 2.5
-                    };
+                    return { w: targetWord.w, m: targetWord.m, qText: targetWord.w, aText: targetWord.m, o: options, docId: item.id, interval: item.interval || 0, repetitions: item.repetitions || 0, easeFactor: item.easeFactor || 2.5 };
                 });
                 this.questions.sort(() => Math.random() - 0.5);
-
                 this.currentIndex = 0; this.missCount = 0; this.roundMaxStreak = 0; this.missedWordsLog = [];
-                
                 document.getElementById('circuit-name').innerText = "SRS PIT STOP";
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('quiz-screen').classList.remove('hidden');
@@ -2583,16 +2525,9 @@ lest: ～しないように
                 const selector = document.getElementById('round-selector');
                 this.currentRoundIndex = parseInt(selector.value);
                 const selectedRound = this.rounds[this.currentRoundIndex];
-                
                 this.isSuddenDeath = document.getElementById('q3-mode').checked;
                 this.isReverseMode = document.getElementById('reverse-mode').checked;
-
-                if(this.isReverseMode) {
-                    document.getElementById('question-label').innerText = "TRANSLATE TO ENGLISH";
-                } else {
-                    document.getElementById('question-label').innerText = "MEANING OF";
-                }
-
+                if(this.isReverseMode) { document.getElementById('question-label').innerText = "TRANSLATE TO ENGLISH"; } else { document.getElementById('question-label').innerText = "MEANING OF"; }
                 this.questions = selectedRound.words.map(target => {
                     const qText = this.isReverseMode ? target.m : target.w;
                     const aText = this.isReverseMode ? target.w : target.m;
@@ -2601,14 +2536,11 @@ lest: ～しないように
                     return { w: target.w, m: target.m, qText: qText, aText: aText, o: options };
                 });
                 this.questions.sort(() => Math.random() - 0.5);
-                
                 this.currentIndex = 0; this.missCount = 0; this.roundMaxStreak = 0; this.missedWordsLog = [];
-                
                 document.getElementById('circuit-name').innerText = selectedRound.name + (this.isReverseMode ? " [REV]" : "");
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('result-screen').classList.add('hidden');
                 document.getElementById('quiz-screen').classList.remove('hidden');
-                
                 this.startTime = Date.now();
                 this.startTimer();
                 this.showQuestion();
@@ -2629,9 +2561,7 @@ lest: ～しないように
 
             startTimer() {
                 if (this.timerInterval) clearInterval(this.timerInterval);
-                this.timerInterval = setInterval(() => {
-                    document.getElementById('timer').innerText = ((Date.now() - this.startTime) / 1000).toFixed(2) + 's';
-                }, 50);
+                this.timerInterval = setInterval(() => { document.getElementById('timer').innerText = ((Date.now() - this.startTime) / 1000).toFixed(2) + 's'; }, 50);
             }
 
             showQuestion() {
@@ -2639,23 +2569,13 @@ lest: ～しないように
                 document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
                 const targetDisplay = document.getElementById('target-word');
                 targetDisplay.innerText = q.qText;
-
-                if (this.isReverseMode && q.qText.length > 8) {
-                    targetDisplay.className = "f1-font text-3xl font-bold text-white tracking-wide break-words px-2";
-                } else {
-                    targetDisplay.className = "f1-font text-5xl font-bold text-white tracking-wide drop-shadow-lg break-words px-2";
-                }
-
+                if (this.isReverseMode && q.qText.length > 8) { targetDisplay.className = "f1-font text-3xl font-bold text-white tracking-wide break-words px-2"; } 
+                else { targetDisplay.className = "f1-font text-5xl font-bold text-white tracking-wide drop-shadow-lg break-words px-2"; }
                 document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
                 document.getElementById('feedback').innerText = '';
-                
                 const speakBtn = document.getElementById('speak-btn');
                 speakBtn.onclick = () => this.speak(q.w);
-                
-                if (this.isAutoAudio && !this.isReverseMode) {
-                    setTimeout(() => { this.speak(q.w); }, 200);
-                }
-                
+                if (this.isAutoAudio && !this.isReverseMode) { setTimeout(() => { this.speak(q.w); }, 200); }
                 const container = document.getElementById('options-container');
                 container.innerHTML = ''; 
                 const revealBtn = document.createElement('button');
@@ -2680,39 +2600,28 @@ lest: ～しないように
             handleAnswer(selected, q) {
                 const feedback = document.getElementById('feedback');
                 const streakDisp = document.getElementById('streak-display');
-                
                 if (selected === q.aText) {
                     this.currentStreak++;
                     if(this.isReverseMode) this.speak(q.w);
-
                     if (this.currentStreak > this.roundMaxStreak) this.roundMaxStreak = this.currentStreak;
                     if (this.currentStreak > this.userMaxStreak) this.userMaxStreak = this.currentStreak;
-                    if (this.currentStreak >= 2) { 
-                        streakDisp.innerText = `COMBO: ${this.currentStreak}`; 
-                        streakDisp.classList.remove('hidden'); 
-                    }
+                    if (this.currentStreak >= 2) { streakDisp.innerText = `COMBO: ${this.currentStreak}`; streakDisp.classList.remove('hidden'); }
                     if (window.handleSRSUpdate && this.isPitStopMode) window.handleSRSUpdate(q, true);
-                    
                     this.currentIndex++;
                     if (this.currentIndex < this.questions.length) this.showQuestion();
                     else this.finish();
                 } else {
                     if (this.isSuddenDeath) {
-                        this.missCount++;
-                        this.missedWordsLog.push({ w: q.w, m: q.m });
+                        this.missCount++; this.missedWordsLog.push({ w: q.w, m: q.m });
                         if (window.handleSRSUpdate) window.handleSRSUpdate(q, false);
-                        this.triggerRedFlag(q);
-                        return;
+                        this.triggerRedFlag(q); return;
                     }
-                    this.currentStreak = 0; 
-                    streakDisp.classList.add('hidden');
+                    this.currentStreak = 0; streakDisp.classList.add('hidden');
                     this.missCount++;
                     feedback.innerText = `WRONG: ${q.w} = ${q.m}`;
                     feedback.className = "mt-4 text-center h-6 font-bold text-red-500 animate-pulse";
-                    
                     if (!this.missedWordsLog.find(item => item.w === q.w)) this.missedWordsLog.push({ w: q.w, m: q.m });
                     if (window.handleSRSUpdate) window.handleSRSUpdate(q, false);
-                    
                     this.questions.push(q);
                     const btns = document.querySelectorAll('.option-btn');
                     btns.forEach(b => b.disabled = true);
@@ -2724,17 +2633,12 @@ lest: ～しないように
                 clearInterval(this.timerInterval);
                 document.getElementById('quiz-screen').classList.add('hidden');
                 document.getElementById('result-screen').classList.remove('hidden');
-                
                 const accDisplay = document.getElementById('accuracy-display');
-                accDisplay.innerText = "DNF";
-                accDisplay.classList.add('text-red-600', 'glitch-text');
-                
+                accDisplay.innerText = "DNF"; accDisplay.classList.add('text-red-600', 'glitch-text');
                 document.getElementById('rank-text').innerText = `CRASHED ON LAP ${this.currentIndex + 1}`;
                 document.getElementById('result-title').innerText = "RED FLAG SESSION";
-                
                 document.getElementById('fail-message').classList.remove('hidden');
                 document.getElementById('fail-message').innerText = "Q3 ELIMINATED: SESSION ABORTED";
-                
                 document.getElementById('review-list').innerHTML = `
                     <div class="text-xs text-red-500 uppercase font-bold mb-2">Crash Site</div>
                     <div class="p-4 bg-red-900/20 border border-red-500 rounded"><div class="text-2xl text-white font-bold">${failedWord.w}</div><div class="text-sm text-gray-400">${failedWord.m}</div></div>`;
@@ -2745,42 +2649,24 @@ lest: ～しないように
                 clearInterval(this.timerInterval);
                 document.getElementById('quiz-screen').classList.add('hidden');
                 document.getElementById('result-screen').classList.remove('hidden');
-
                 const totalTime = (Date.now() - this.startTime) / 1000;
                 const accuracy = Math.max(0, 100 - (this.missCount * 5)); 
-                
                 const accDisplay = document.getElementById('accuracy-display');
                 accDisplay.classList.remove('text-red-600', 'glitch-text');
                 accDisplay.innerText = this.isPitStopMode ? "UPDATED" : `${accuracy.toFixed(1)}%`;
-                
                 document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
                 document.getElementById('result-title').innerText = "CHECKERED FLAG";
-                
                 if (window.fetchSRSItems) window.fetchSRSItems();
                 if (window.incrementDailyLaps && !this.isPitStopMode) window.incrementDailyLaps();
-
                 const failMsg = document.getElementById('fail-message');
                 if (!this.isPitStopMode) {
-                    if (accuracy >= 90) {
-                        accDisplay.style.color = "#4ade80"; 
-                        failMsg.classList.add('hidden');
-                    } else {
-                        accDisplay.style.color = "#ef4444"; 
-                        failMsg.classList.remove('hidden');
-                        failMsg.innerText = "ACCURACY BELOW 90%: LICENSE DENIED";
-                    }
-                } else {
-                    failMsg.classList.add('hidden');
-                    accDisplay.style.color = "#fbbf24"; 
-                }
-                
+                    if (accuracy >= 90) { accDisplay.style.color = "#4ade80"; failMsg.classList.add('hidden'); } 
+                    else { accDisplay.style.color = "#ef4444"; failMsg.classList.remove('hidden'); failMsg.innerText = "ACCURACY BELOW 90%: LICENSE DENIED"; }
+                } else { failMsg.classList.add('hidden'); accDisplay.style.color = "#fbbf24"; }
                 const review = document.getElementById('review-list');
                 let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Lap Analysis</div>`;
-                if (this.missedWordsLog.length > 0) {
-                    summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join('');
-                } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
+                if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
                 review.innerHTML = summaryHtml;
-
                 const nextBtn = document.getElementById('next-round-btn');
                 if (!this.isPitStopMode && this.rounds[this.currentRoundIndex].id !== 'custom' && this.currentRoundIndex + 1 < this.rounds.length) {
                     nextBtn.classList.remove('hidden');
