@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Vocabulary GP - 2026 RB Spec</title>
+    <title>Vocabulary GP - 2026 RB Compact</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -22,14 +22,12 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            /* Safe Area */
             padding-top: max(1rem, env(safe-area-inset-top));
             padding-bottom: max(1rem, env(safe-area-inset-bottom));
         }
 
         .f1-font { font-family: 'Chakra Petch', sans-serif; }
 
-        /* Background */
         .carbon-bg {
             background-image: 
                 linear-gradient(rgba(11, 14, 20, 0.9), rgba(11, 14, 20, 0.95)),
@@ -37,23 +35,19 @@
             background-attachment: fixed;
         }
 
-        /* Card Styling (Original Compact Design) */
+        /* Compact Card */
         .race-card {
             background: rgba(23, 28, 38, 0.7);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border-top: 4px solid var(--f1-red); /* The Signature Red Line */
+            border-top: 4px solid var(--f1-red);
         }
-        
-        .race-card.reverse-active { border-top-color: var(--neon-cyan); }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
 
-        /* Buttons */
         .option-btn { 
             transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -66,18 +60,15 @@
         }
         .option-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* Checkbox Custom */
         .accent-f1 { accent-color: var(--f1-red); }
         .accent-cyan { accent-color: var(--neon-cyan); }
+        .glitch-text { text-shadow: 2px 0 rgba(255,0,0,0.5), -2px 0 rgba(0,255,255,0.5); }
 
-        /* Animations */
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
-        
-        .glitch-text { text-shadow: 2px 0 rgba(255,0,0,0.5), -2px 0 rgba(0,255,255,0.5); }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center carbon-bg p-4">
@@ -96,7 +87,7 @@
 
         <div id="start-screen" class="hidden race-card p-6 md:p-8 rounded-lg relative z-10 animate-slide-in">
             
-            <div class="flex justify-between items-end mb-8 border-b border-gray-800 pb-4">
+            <div class="flex justify-between items-end mb-6 border-b border-gray-800 pb-4">
                 <div class="text-left">
                     <div class="flex items-center gap-2 mb-1">
                         <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -104,12 +95,12 @@
                     </div>
                     <p id="user-name" class="f1-font text-2xl text-white font-bold truncate max-w-[200px]">TEST DRIVER</p>
                 </div>
-                <button id="logout-btn" class="text-[10px] text-red-500 hover:text-white border border-red-900/50 hover:bg-red-600 px-3 py-1 rounded transition-colors uppercase tracking-wider">Box Box (Sign Out)</button>
+                <button id="logout-btn" class="text-[10px] text-red-500 hover:text-white border border-red-900/50 hover:bg-red-600 px-3 py-1 rounded transition-colors uppercase tracking-wider">Box Box</button>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-black/30 p-4 rounded border border-gray-800 text-center">
-                    <p class="text-[10px] text-gray-500 uppercase mb-1">Today's Laps</p>
+                    <p class="text-[10px] text-gray-500 uppercase mb-1">Laps</p>
                     <span id="daily-laps-display" class="f1-font text-3xl text-white font-bold">0</span>
                 </div>
                 <div id="tire-status-box" class="bg-black/30 p-4 rounded border border-gray-800 text-center cursor-default transition-colors group relative overflow-hidden">
@@ -121,59 +112,67 @@
                 </div>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-4">
                 
-                <div class="text-left">
-                    <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-2 pl-1">Select Circuit</label>
+                <div>
+                    <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-1 pl-1">Circuit</label>
                     <div class="relative">
-                        <select id="round-selector" class="w-full bg-black/50 text-white p-4 rounded border border-gray-700 focus:border-red-500 outline-none font-mono text-sm appearance-none cursor-pointer hover:bg-black/70 transition-colors">
+                        <select id="round-selector" class="w-full bg-black/50 text-white p-3 rounded border border-gray-700 focus:border-red-500 outline-none font-mono text-sm appearance-none cursor-pointer hover:bg-black/70 transition-colors">
                         </select>
                         <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500">▼</div>
                     </div>
                 </div>
 
-                <div class="bg-gray-900/50 p-4 rounded border border-gray-800">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-4 text-left">Race Strategy</p>
-                    
-                    <div class="flex flex-col gap-3">
+                <div class="bg-gray-900/50 p-3 rounded border border-gray-800">
+                    <div class="flex flex-col gap-2">
                         <label class="flex items-center justify-between cursor-pointer group">
                             <span class="text-xs font-bold text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
-                                <span class="text-red-500">⚡</span> Q3 QUALIFYING (1 Miss = Out)
+                                <span class="text-red-500">⚡</span> Q3 QUALIFYING
                             </span>
                             <input type="checkbox" id="q3-mode" class="accent-f1 w-4 h-4 cursor-pointer">
                         </label>
-
                         <label class="flex items-center justify-between cursor-pointer group">
                             <span class="text-xs font-bold text-gray-300 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
-                                <span class="text-cyan-400">🔄</span> REVERSE GRID (JP ➔ EN)
+                                <span class="text-cyan-400">🔄</span> REVERSE GRID
                             </span>
                             <input type="checkbox" id="reverse-mode" class="accent-cyan w-4 h-4 cursor-pointer">
                         </label>
-
-                         <label class="flex items-center justify-between cursor-pointer group">
+                        <label class="flex items-center justify-between cursor-pointer group">
                             <span class="text-xs font-bold text-gray-300 group-hover:text-green-400 transition-colors flex items-center gap-2">
-                                <span class="text-green-500">🔊</span> RACE ENGINEER (AUTO-AUDIO)
+                                <span class="text-green-500">🔊</span> RACE ENGINEER
                             </span>
                             <input type="checkbox" id="audio-mode" class="accent-green-500 w-4 h-4 cursor-pointer" checked>
                         </label>
                     </div>
                 </div>
 
-                <button onclick="quiz.start()" class="w-full f1-font bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-5 rounded font-bold tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-lg shadow-red-900/30 text-xl border-b-4 border-red-900">
+                <button onclick="quiz.start()" class="w-full f1-font bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-4 rounded font-bold tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-lg shadow-red-900/30 text-xl border-b-4 border-red-900">
                     Start Engine
                 </button>
 
-                <button onclick="quiz.openTelemetry()" class="w-full border border-gray-700 hover:border-gray-500 hover:bg-gray-800 text-gray-400 py-3 rounded text-xs font-bold uppercase tracking-widest transition-colors">
-                    Telemetry Data
-                </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="quiz.openStandings()" class="border border-gray-700 hover:border-yellow-500 hover:text-yellow-500 text-gray-400 py-3 rounded text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                        <span>🏆</span> Standings
+                    </button>
+                    <button onclick="quiz.openTelemetry()" class="border border-gray-700 hover:border-blue-500 hover:text-blue-500 text-gray-400 py-3 rounded text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                        <span>📊</span> Telemetry
+                    </button>
+                </div>
 
                 <div class="pt-4 border-t border-gray-800">
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Garage Tools</p>
+                    
+                    <div class="mb-3 relative group">
+                        <input type="text" id="search-input" placeholder="Quick Scan (Search)..." class="w-full bg-black text-white p-2 pl-3 rounded border border-gray-700 focus:border-red-500 outline-none font-mono text-xs transition-colors">
+                        <div id="search-results" class="hidden absolute bottom-full left-0 w-full mb-1 bg-gray-900 border border-gray-700 rounded shadow-2xl max-h-48 overflow-y-auto z-50"></div>
+                    </div>
+
                     <div class="flex items-center gap-2">
                         <input type="number" id="custom-start" placeholder="1" class="w-16 bg-black text-white p-2 rounded border border-gray-700 text-center text-xs font-mono">
                         <span class="text-gray-500">-</span>
                         <input type="number" id="custom-end" placeholder="50" class="w-16 bg-black text-white p-2 rounded border border-gray-700 text-center text-xs font-mono">
                         <button onclick="quiz.createCustomRound()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white text-[10px] font-bold uppercase rounded py-2 border border-gray-600">
-                            Custom Sector
+                            Set Custom
                         </button>
                     </div>
                 </div>
@@ -181,18 +180,33 @@
         </div>
         
         <div id="telemetry-screen" class="hidden race-card p-6 rounded-2xl text-center border-t-4 border-blue-500">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="f1-font text-2xl font-bold text-cyan-400 tracking-widest">TELEMETRY</h2>
-                <button onclick="quiz.closeTelemetry()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="f1-font text-2xl font-bold text-blue-400 tracking-widest">TELEMETRY</h2>
+                <button onclick="quiz.closeOverlay('telemetry-screen')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
-            
-            <div class="bg-black/50 p-4 rounded mb-6 border border-gray-800 h-64 w-full relative">
+            <div class="bg-black/50 p-2 rounded mb-4 border border-gray-800 h-56 w-full relative">
                 <canvas id="weaknessRadarChart"></canvas>
             </div>
+            <div class="text-left mb-4">
+                <h3 class="text-xs text-red-500 font-bold uppercase tracking-widest mb-2">Degradation Report</h3>
+                <div id="worst-words-list" class="space-y-1 max-h-40 overflow-y-auto pr-2"></div>
+            </div>
+        </div>
 
-            <div class="text-left mb-6">
-                <h3 class="text-xs text-red-500 font-bold uppercase tracking-widest mb-2">High Degradation (Review Needed)</h3>
-                <div id="worst-words-list" class="space-y-1 max-h-48 overflow-y-auto pr-2"></div>
+        <div id="standings-screen" class="hidden race-card p-6 rounded-2xl text-center border-t-4 border-yellow-500">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="f1-font text-2xl font-bold text-yellow-500 tracking-widest">STANDINGS</h2>
+                <button onclick="quiz.closeOverlay('standings-screen')" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-gray-500 border-b border-gray-700 text-xs uppercase">
+                        <tr><th class="p-2">Pos</th><th class="p-2">Driver</th><th class="p-2">Acc</th><th class="p-2">Time</th></tr>
+                    </thead>
+                    <tbody id="ranking-tbody" class="font-mono text-gray-300">
+                        <tr><td colspan="4" class="p-4 text-center text-xs opacity-50">Loading Data...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -207,11 +221,9 @@
                     <div id="streak-display" class="f1-font text-[10px] text-green-500 font-bold uppercase tracking-widest hidden">PURPLE SECTOR</div>
                 </div>
             </div>
-
             <div class="w-full bg-gray-800 h-1 mb-8 rounded-full overflow-hidden">
                 <div id="progress-fill" class="bg-gradient-to-r from-red-600 to-yellow-500 h-full w-0 transition-all duration-300"></div>
             </div>
-
             <div class="flex-grow flex flex-col items-center justify-center mb-8 relative">
                 <div class="absolute -top-6 text-gray-500 text-[10px] uppercase tracking-widest" id="question-label">Target</div>
                 <h2 id="target-word" class="f1-font text-4xl md:text-5xl font-bold text-white tracking-wide drop-shadow-xl break-words px-2 text-center transition-all"></h2>
@@ -219,7 +231,6 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
                 </button>
             </div>
-
             <div id="options-container" class="grid grid-cols-1 gap-3"></div>
             <div id="feedback" class="h-8 mt-2 flex items-center justify-center text-sm font-bold tracking-wider uppercase"></div>
         </div>
@@ -2325,6 +2336,7 @@ lest: ～しないように
                 this.parseData();
                 this.generateRounds();
                 this.initUI();
+                this.initSearch(); // Search Restored
             }
 
             loadVoices() {
@@ -2388,6 +2400,41 @@ lest: ～しないように
                 });
             }
 
+            initSearch() {
+                const input = document.getElementById('search-input');
+                const results = document.getElementById('search-results');
+                input.addEventListener('input', (e) => {
+                    const q = e.target.value.toLowerCase().trim();
+                    if (!q) { results.classList.add('hidden'); return; }
+                    const hits = this.masterList
+                        .map((item, index) => ({ ...item, i: index + 1 }))
+                        .filter(item => item.w.toLowerCase().includes(q) || item.m.toLowerCase().includes(q))
+                        .slice(0, 50);
+
+                    if (hits.length > 0) {
+                        results.classList.remove('hidden');
+                        results.innerHTML = hits.map(h => `
+                            <div onclick="quiz.speak('${h.w.replace(/'/g, "\\'")}')" class="p-2 border-b border-gray-800 hover:bg-gray-800 cursor-pointer flex justify-between items-center group">
+                                <div class="text-left">
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-[10px] text-yellow-500 font-mono opacity-70">No.${h.i}</span>
+                                        <span class="text-red-400 font-bold text-xs f1-font">${h.w}</span>
+                                    </div>
+                                    <span class="text-gray-400 text-[10px] pl-1">${h.m}</span>
+                                </div>
+                                <button class="text-[8px] bg-gray-700 text-white px-1 rounded opacity-0 group-hover:opacity-100 uppercase">Listen</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        results.classList.remove('hidden');
+                        results.innerHTML = `<div class="p-2 text-gray-500 text-[10px] text-center">NO DATA</div>`;
+                    }
+                });
+                document.addEventListener('click', (e) => {
+                    if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('hidden');
+                });
+            }
+
             updatePitStopButton(count) {
                 const box = document.getElementById('tire-status-box');
                 const text = document.getElementById('mistake-count-display');
@@ -2409,23 +2456,22 @@ lest: ～しないように
                 }
             }
 
-            // === TELEMETRY ===
             openTelemetry() {
                 if (!window.currentUser) { alert("Sign In required."); return; }
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('telemetry-screen').classList.remove('hidden');
-
+                
+                // Logic (Same as before)
                 const mistakes = this.allMistakes || [];
                 const worstWords = [...mistakes].sort((a, b) => (a.easeFactor || 2.5) - (b.easeFactor || 2.5)).slice(0, 20);
                 const listContainer = document.getElementById('worst-words-list');
                 
-                if (worstWords.length === 0) {
-                    listContainer.innerHTML = `<div class="text-gray-500 text-xs italic">No degradation detected.</div>`;
-                } else {
+                if (worstWords.length === 0) listContainer.innerHTML = `<div class="text-gray-500 text-xs italic">No degradation.</div>`;
+                else {
                     listContainer.innerHTML = worstWords.map(item => `
                         <div class="flex justify-between items-center bg-gray-900/40 p-2 rounded border-l-2 border-red-500 mb-1">
-                            <span class="font-bold text-gray-200 text-sm f1-font">${item.word}</span>
-                            <span class="text-xs text-gray-500 font-mono">EF:${(item.easeFactor||2.5).toFixed(2)}</span>
+                            <span class="font-bold text-gray-200 text-xs f1-font">${item.word}</span>
+                            <span class="text-[10px] text-gray-500 font-mono">EF:${(item.easeFactor||2.5).toFixed(2)}</span>
                         </div>
                     `).join('');
                 }
@@ -2453,8 +2499,15 @@ lest: ～しないように
                 });
             }
 
-            closeTelemetry() {
-                document.getElementById('telemetry-screen').classList.add('hidden');
+            openStandings() {
+                if (!window.currentUser) { alert("Sign In required."); return; }
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('standings-screen').classList.remove('hidden');
+                updateLeaderboard(); // Trigger fetch
+            }
+
+            closeOverlay(id) {
+                document.getElementById(id).classList.add('hidden');
                 document.getElementById('start-screen').classList.remove('hidden');
             }
 
@@ -2519,7 +2572,7 @@ lest: ～しないように
                 this.isReverseMode = document.getElementById('reverse-mode').checked;
 
                 // Visual Styling
-                const card = document.querySelector('.race-card'); // Not specific enough if multiple, but works here
+                const card = document.querySelector('.race-card'); 
                 if(this.isReverseMode) {
                     document.getElementById('quiz-screen').style.borderTop = "4px solid #00f0ff";
                     document.getElementById('question-label').innerText = "TRANSLATE TO ENGLISH";
@@ -2789,7 +2842,6 @@ lest: ～しないように
             userNameSpan.textContent = user.displayName || "TEST DRIVER";
             window.fetchSRSItems();
             
-            // Daily Laps Listener
             onSnapshot(doc(db, "stats", "daily_global"), (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
@@ -2805,6 +2857,7 @@ lest: ～しないように
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.add('hidden');
             document.getElementById('telemetry-screen').classList.add('hidden');
+            document.getElementById('standings-screen').classList.add('hidden');
             loginStatus.innerText = "Waiting for connection...";
             window.quiz.dueMistakes = [];
             window.quiz.updatePitStopButton(0);
@@ -2877,13 +2930,13 @@ lest: ～しないように
         if (targetIndex > -1) cachedData[targetIndex] = { ...cachedData[targetIndex], ...newItemData }; else cachedData.push(newItemData);
         localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
 
-        // Async Write
         await setDoc(targetRef, { word: questionObj.w, meaning: questionObj.meaning || questionObj.m, nextReview: Timestamp.fromDate(nextDate), interval: nextInterval, repetitions: nextRepetitions, easeFactor: nextEaseFactor, lastReviewed: Timestamp.fromDate(now) }, { merge: true });
       };
 
       window.recordLapTime = async (acc, time, round, score, streak) => {
         if (!window.currentUser) return;
         await addDoc(collection(db, "leaderboard"), { uid: window.currentUser.uid, driver: window.currentUser.displayName, accuracy: parseFloat(acc.toFixed(1)), time: parseFloat(time.toFixed(2)), round: round, score: score, streak: streak || 0, date: new Date() });
+        updateLeaderboard(); // Update Local View
       };
 
       window.incrementDailyLaps = async () => {
@@ -2900,6 +2953,26 @@ lest: ～しないように
                 }
             });
         } catch (e) { console.error(e); }
+      };
+
+      window.updateLeaderboard = async () => {
+        const rankingBody = document.getElementById('ranking-tbody');
+        rankingBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs opacity-50">Fetching Telemetry...</td></tr>';
+        try {
+            const q = query(collection(db, "leaderboard"), orderBy("accuracy", "desc"), orderBy("time", "asc"), limit(10));
+            const querySnapshot = await getDocs(q);
+            rankingBody.innerHTML = "";
+            if (querySnapshot.empty) { rankingBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-xs">No Data.</td></tr>'; return; }
+            let rank = 1;
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const isMe = window.currentUser && data.uid === window.currentUser.uid;
+                const rowClass = isMe ? "bg-red-900/30 text-white font-bold" : "border-b border-gray-800";
+                const row = `<tr class="${rowClass}"><td class="p-2 text-yellow-500">${rank}</td><td class="p-2 truncate max-w-[80px]">${data.driver}</td><td class="p-2 text-green-400">${data.accuracy}%</td><td class="p-2 text-gray-500">${data.time}s</td></tr>`;
+                rankingBody.innerHTML += row;
+                rank++;
+            });
+        } catch (error) { console.error("Ranking Error:", error); }
       };
     </script>
 </body>
