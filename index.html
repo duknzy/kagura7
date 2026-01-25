@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="VocabGP">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5776/5776097.png">
 
-    <title>Vocabulary GP - 2026 Aero Spec</title>
+    <title>Vocabulary GP - 2026 Final Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -25,7 +25,7 @@
         html, body {
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Lock main window */
+            overflow: hidden; 
             background-color: var(--rb-navy);
             color: #e2e8f0;
             font-family: 'Inter', sans-serif;
@@ -58,16 +58,11 @@
             -webkit-overflow-scrolling: touch;
             padding: 1rem;
             position: relative;
-            
-            /* ★ AERO UPDATE: HIDE SCROLLBAR ★ */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         
-        /* ★ HIDE SCROLLBAR FOR CHROME, SAFARI, OPERA ★ */
-        #app::-webkit-scrollbar {
-            display: none;
-        }
+        #app::-webkit-scrollbar { display: none; }
 
         .race-card {
             background: rgba(23, 28, 38, 0.85);
@@ -96,6 +91,12 @@
         .tire-soft.active { border-color: #ef4444; color: #ef4444; } 
         .tire-medium.active { border-color: #eab308; color: #eab308; } 
         .tire-hard.active { border-color: #f8fafc; color: #f8fafc; } 
+
+        .pass-card {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
 
         input, select { 
             font-size: 16px !important; 
@@ -248,7 +249,17 @@
             <div class="w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 mb-8"></div>
             <div id="accuracy-display" class="f1-font text-7xl font-bold mb-2 text-white glitch-text">95.0%</div>
             <p id="rank-text" class="f1-font text-sm mb-8 text-gray-400 font-mono">P1: MAX VERSTAPPEN</p>
+            
+            <div id="pass-issue-area" class="hidden mb-8 p-6 rounded-xl pass-card shadow-lg transform transition-all hover:scale-105">
+                <h3 class="f1-font text-2xl font-bold mb-1 text-black">SUPER LICENSE</h3>
+                <p class="text-xs font-mono mb-4 text-black opacity-80">ACCESS GRANTED</p>
+                <button id="copy-pass-btn" class="bg-black text-white text-xs px-6 py-3 rounded-full font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors w-full">
+                    COPY ID
+                </button>
+            </div>
+
             <div id="fail-message" class="hidden mb-6 p-4 border border-red-500 bg-red-900/20 text-red-500 font-bold text-xs uppercase tracking-widest">Session Stopped: Accuracy Too Low</div>
+            
             <div class="bg-black/40 p-4 rounded-xl mb-8 text-left max-h-48 overflow-y-auto border border-gray-800" id="review-list"></div>
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="quiz.returnToGrid()" class="f1-font border border-gray-600 active:bg-white active:text-black text-white py-4 rounded-xl font-bold transition-all uppercase text-sm">Garage</button>
@@ -2292,16 +2303,9 @@ lest: ～しないように
 `;
 // ==========================================
 
-        // ★ PREVENT DOUBLE TAP ZOOM & BOUNCE (ACTIVE SUSPENSION)
-        document.addEventListener('dblclick', function(event) {
-            event.preventDefault();
-        }, { passive: false });
+        document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
+        document.addEventListener('touchmove', function(event) { if (event.scale !== 1) { event.preventDefault(); } }, { passive: false });
 
-        document.addEventListener('touchmove', function(event) {
-            if (event.scale !== 1) { event.preventDefault(); }
-        }, { passive: false });
-
-        // Logic Class
         class VocabularyQuiz {
             constructor() {
                 this.wordsPerRound = 20; 
@@ -2645,6 +2649,20 @@ lest: ～しないように
                 document.getElementById('next-round-btn').classList.add('hidden');
             }
 
+            // ★ RESTORED: Copy Pass Logic
+            copyToClipboard(text, btnElement) {
+                navigator.clipboard.writeText(text).then(() => { 
+                    btnElement.innerText = "COPIED!";
+                    btnElement.classList.add("bg-green-600", "border-green-600");
+                    btnElement.classList.remove("bg-black");
+                    setTimeout(() => { 
+                        btnElement.innerText = "COPY ID"; 
+                        btnElement.classList.remove("bg-green-600", "border-green-600");
+                        btnElement.classList.add("bg-black");
+                    }, 2000);
+                }).catch(err => { console.error('Failed to copy: ', err); });
+            }
+
             finish() {
                 clearInterval(this.timerInterval);
                 document.getElementById('quiz-screen').classList.add('hidden');
@@ -2656,13 +2674,34 @@ lest: ～しないように
                 accDisplay.innerText = this.isPitStopMode ? "UPDATED" : `${accuracy.toFixed(1)}%`;
                 document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
                 document.getElementById('result-title').innerText = "CHECKERED FLAG";
+                
                 if (window.fetchSRSItems) window.fetchSRSItems();
                 if (window.incrementDailyLaps && !this.isPitStopMode) window.incrementDailyLaps();
+
+                // ★ Logic to show Pass Button
+                const passArea = document.getElementById('pass-issue-area');
                 const failMsg = document.getElementById('fail-message');
+                const passBtn = document.getElementById('copy-pass-btn');
+
                 if (!this.isPitStopMode) {
-                    if (accuracy >= 90) { accDisplay.style.color = "#4ade80"; failMsg.classList.add('hidden'); } 
-                    else { accDisplay.style.color = "#ef4444"; failMsg.classList.remove('hidden'); failMsg.innerText = "ACCURACY BELOW 90%: LICENSE DENIED"; }
-                } else { failMsg.classList.add('hidden'); accDisplay.style.color = "#fbbf24"; }
+                    if (accuracy >= 90) { 
+                        accDisplay.style.color = "#4ade80"; 
+                        passArea.classList.remove('hidden');
+                        failMsg.classList.add('hidden');
+                        const licenseId = `perfect`; // Can be dynamic
+                        passBtn.onclick = () => this.copyToClipboard(licenseId, passBtn);
+                    } else { 
+                        accDisplay.style.color = "#ef4444"; 
+                        passArea.classList.add('hidden');
+                        failMsg.classList.remove('hidden'); 
+                        failMsg.innerText = "ACCURACY BELOW 90%: LICENSE DENIED"; 
+                    }
+                } else { 
+                    failMsg.classList.add('hidden'); 
+                    passArea.classList.add('hidden');
+                    accDisplay.style.color = "#fbbf24"; 
+                }
+                
                 const review = document.getElementById('review-list');
                 let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Lap Analysis</div>`;
                 if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
