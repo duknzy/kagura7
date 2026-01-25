@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-title" content="VocabGP">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5776/5776097.png">
 
-    <title>Vocabulary GP - 2026 Stability Spec</title>
+    <title>Vocabulary GP - 2026 Aero Spec</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -25,20 +25,18 @@
         html, body {
             height: 100%;
             width: 100%;
-            overflow: hidden; /* Lock the main window */
+            overflow: hidden; /* Lock main window */
             background-color: var(--rb-navy);
             color: #e2e8f0;
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
-            /* ★ STABILITY FIXES ★ */
-            touch-action: manipulation; /* Stop double-tap zoom */
-            overscroll-behavior: none;  /* Stop bounce */
-            -webkit-user-select: none;  /* Stop text selection */
+            touch-action: manipulation;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Safe Area Padding */
         body {
             padding-top: max(1rem, env(safe-area-inset-top));
             padding-bottom: max(1rem, env(safe-area-inset-bottom));
@@ -54,16 +52,23 @@
             background-size: cover;
         }
 
-        /* Main Container that allows scrolling */
         #app {
             height: 100%;
-            overflow-y: auto; /* Scroll inside app div only */
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 1rem;
             position: relative;
+            
+            /* ★ AERO UPDATE: HIDE SCROLLBAR ★ */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+        
+        /* ★ HIDE SCROLLBAR FOR CHROME, SAFARI, OPERA ★ */
+        #app::-webkit-scrollbar {
+            display: none;
         }
 
-        /* Card */
         .race-card {
             background: rgba(23, 28, 38, 0.85);
             backdrop-filter: blur(12px);
@@ -73,15 +78,11 @@
             border-top: 4px solid var(--f1-red);
         }
 
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
-
         .option-btn { 
             transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            touch-action: manipulation; /* Crucial for buttons */
+            touch-action: manipulation;
         }
         .option-btn:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
         .option-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
@@ -96,7 +97,6 @@
         .tire-medium.active { border-color: #eab308; color: #eab308; } 
         .tire-hard.active { border-color: #f8fafc; color: #f8fafc; } 
 
-        /* Prevent Input Zoom on iOS (Must be 16px+) */
         input, select { 
             font-size: 16px !important; 
             -webkit-user-select: text;
