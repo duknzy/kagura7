@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Vocabulary GP - 2026 Telemetry + SM2 Spec</title>
+    <title>Vocabulary GP - 2026 Hybrid Spec (Cached)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -14,7 +14,6 @@
             background-color: #0b0e14;
             color: #e2e8f0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Safe Area for Mobile */
             padding-top: max(1rem, env(safe-area-inset-top));
             padding-bottom: max(1rem, env(safe-area-inset-bottom));
             padding-left: max(1rem, env(safe-area-inset-left));
@@ -29,7 +28,6 @@
             border-left: 4px solid #e10600;
         }
 
-        /* Scrollbar styling for Telemetry */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
@@ -114,7 +112,7 @@
             <h1 class="f1-font text-3xl md:text-5xl mb-4 font-bold text-white tracking-wider md:tracking-widest break-words leading-tight">
                 VOCABULARY<br class="block md:hidden"/>GP
             </h1>
-            <p class="f1-font text-red-500 font-bold mb-6">SRS CLOUD SPEC (SM-2)</p>
+            <p class="f1-font text-red-500 font-bold mb-6">HYBRID SPEC (CACHED)</p>
 
             <div class="mb-6 bg-gray-900/50 p-2 px-4 rounded border border-gray-700 inline-block">
                 <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Today's Track Activity</p>
@@ -150,16 +148,6 @@
             <div class="border-t border-gray-700 pt-6 mb-6">
                 <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-4">Garage Tools</p>
                 
-                <div class="mb-4 bg-gray-800/50 p-3 rounded border border-gray-600 flex justify-between items-center">
-                    <label class="text-[10px] text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
-                        RACE ENGINEER (AUTO-AUDIO)
-                    </label>
-                    <button id="audio-toggle-btn" onclick="quiz.toggleAutoAudio()" class="f1-font text-xs font-bold px-4 py-1 rounded border transition-colors bg-green-900/30 text-green-400 border-green-600">
-                        ON
-                    </button>
-                </div>
-
                 <div class="mb-4 bg-gray-800/50 p-3 rounded border border-gray-600 text-left relative group">
                     <label class="text-[10px] text-gray-500 uppercase tracking-widest block mb-1">QUICK SEARCH</label>
                     <div class="flex items-center relative">
@@ -291,7 +279,7 @@
 
     <script>
 // ==========================================
-// PASTE YOUR 2000 WORDS HERE
+// ★重要★ ここに 2000語のデータ を貼り付けてください
 // ==========================================
 const rawData = `
 follow: ～の後に続く、～に従う
@@ -2340,13 +2328,9 @@ lest: ～しないように
                 this.userMaxStreak = 0;
                 this.roundMaxStreak = 0;
                 this.dueMistakes = [];
-                this.allMistakes = []; 
+                this.allMistakes = []; // Store ALL SRS items for Telemetry
                 this.isPitStopMode = false;
                 this.telemetryChart = null;
-
-                // Audio Settings
-                this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false'; // Default to True
-                this.updateAudioToggleUI();
 
                 // Audio
                 this.synth = window.speechSynthesis;
@@ -2360,24 +2344,6 @@ lest: ～しないように
                 this.generateRounds();
                 this.initUI();
                 this.initSearch(); 
-            }
-
-            toggleAutoAudio() {
-                this.isAutoAudio = !this.isAutoAudio;
-                localStorage.setItem('vocab_auto_audio', this.isAutoAudio);
-                this.updateAudioToggleUI();
-            }
-
-            updateAudioToggleUI() {
-                const btn = document.getElementById('audio-toggle-btn');
-                if (!btn) return;
-                if (this.isAutoAudio) {
-                    btn.innerText = "ON";
-                    btn.className = "f1-font text-xs font-bold px-4 py-1 rounded border transition-colors bg-green-900/30 text-green-400 border-green-600";
-                } else {
-                    btn.innerText = "OFF";
-                    btn.className = "f1-font text-xs font-bold px-4 py-1 rounded border transition-colors bg-red-900/30 text-red-400 border-red-600";
-                }
             }
 
             loadVoices() {
@@ -2447,8 +2413,10 @@ lest: ～しないように
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('telemetry-screen').classList.remove('hidden');
 
+                // Use allMistakes (Full History)
                 const mistakes = this.allMistakes || [];
                 
+                // 1. Worst Words List (Sort by Ease Factor ASC = Hardest)
                 const worstWords = [...mistakes]
                     .sort((a, b) => (a.easeFactor || 2.5) - (b.easeFactor || 2.5))
                     .slice(0, 20);
@@ -2459,6 +2427,7 @@ lest: ～しないように
                     listContainer.innerHTML = `<div class="text-gray-500 text-sm italic p-2">No failures detected. System optimal.</div>`;
                 } else {
                     listContainer.innerHTML = worstWords.map(item => {
+                        // Calculate color based on Ease Factor (Lower is redder)
                         const ef = item.easeFactor || 2.5;
                         const borderColor = ef < 1.5 ? 'border-red-500' : (ef < 2.0 ? 'border-yellow-500' : 'border-blue-500');
                         return `
@@ -2475,9 +2444,11 @@ lest: ～しないように
                     `}).join('');
                 }
 
+                // 2. Bar Chart based on Interval (Retention Buckets)
                 const ctx = document.getElementById('weaknessRadarChart').getContext('2d');
                 if (this.telemetryChart) this.telemetryChart.destroy();
 
+                // Buckets: 1d (Danger), 2-6d (Soft), 7-14d (Med), 15-30d (Hard), 30d+ (Master)
                 const buckets = [0, 0, 0, 0, 0];
                 mistakes.forEach(m => {
                     const int = m.interval || 0;
@@ -2598,7 +2569,6 @@ lest: ～しないように
                     opt.text = `${round.name} (${round.words.length} words)`;
                     selector.appendChild(opt);
                 });
-                this.updateAudioToggleUI(); 
             }
 
             initSearch() {
@@ -2719,11 +2689,7 @@ lest: ～しないように
                 
                 const speakBtn = document.getElementById('speak-btn');
                 speakBtn.onclick = () => this.speak(q.w);
-                
-                // ★ Auto Audio Check
-                if (this.isAutoAudio) {
-                    setTimeout(() => { this.speak(q.w); }, 300);
-                }
+                setTimeout(() => { this.speak(q.w); }, 300);
                 
                 const container = document.getElementById('options-container');
                 container.innerHTML = ''; 
@@ -2801,6 +2767,7 @@ lest: ～しないように
                     window.recordLapTime(accuracy, totalTime, roundName, `${correct}/${this.rounds[this.currentRoundIndex].words.length}`, this.roundMaxStreak);
                 }
                 
+                // Fetch SRS (Update local cache from Pit Stop)
                 if (window.fetchSRSItems) window.fetchSRSItems();
                 if (window.incrementDailyLaps && !this.isPitStopMode) window.incrementDailyLaps();
 
@@ -2857,6 +2824,7 @@ lest: ～しないように
                 document.getElementById('result-screen').classList.add('hidden');
                 document.getElementById('champion-screen').classList.add('hidden');
                 document.getElementById('start-screen').classList.remove('hidden');
+                // Trigger refresh to check for new due items
                 if (window.fetchSRSItems) window.fetchSRSItems();
             }
         }
@@ -2903,7 +2871,14 @@ lest: ～しないように
         }
       });
 
-      logoutBtn.addEventListener('click', () => { signOut(auth); });
+      logoutBtn.addEventListener('click', () => { 
+        if(window.currentUser) {
+            // Clear local cache on logout for security
+            localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
+            localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
+        }
+        signOut(auth); 
+      });
 
       onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -2927,31 +2902,77 @@ lest: ～しないように
         }
       });
 
+      // ===============================================
+      // ★ OPTIMIZED TELEMETRY SYSTEM (LOCAL CACHE) ★
+      // ===============================================
+
       window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
-        try {
-            const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
-            // Telemetry requires ALL items to visualize garage status
-            const snapshot = await getDocs(mistakesRef);
-            
-            const allItems = [];
-            const dueItems = [];
-            const now = Timestamp.now();
-            
-            snapshot.forEach(doc => { 
-                const d = doc.data();
-                const item = { id: doc.id, ...d };
-                allItems.push(item);
-                if (d.nextReview <= now) dueItems.push(item);
-            });
+        
+        const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
+        const TIME_KEY = `srs_time_${window.currentUser.uid}`;
+        const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12 hours cache
 
-            // Store for Telemetry Graph
-            window.quiz.allMistakes = allItems;
+        const now = Date.now();
+        const lastFetch = parseInt(localStorage.getItem(TIME_KEY) || '0');
+        let allItems = [];
+
+        // 1. Try Loading from Local Cache (Pit Garage)
+        if (now - lastFetch < CACHE_DURATION && localStorage.getItem(CACHE_KEY)) {
+            console.log("🏎️ Paddock: Using Cached Telemetry (Zero Reads)");
+            const rawData = JSON.parse(localStorage.getItem(CACHE_KEY));
             
-            // Store for Pit Stop Queue
-            window.quiz.dueMistakes = dueItems;
-            window.quiz.updatePitStopButton(dueItems.length);
-        } catch (e) { console.error("SRS Fetch Error:", e); }
+            // Rehydrate objects (JSON strings -> Dates)
+            allItems = rawData.map(item => ({
+                ...item,
+                nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }, // Mock Firestore Timestamp
+                seconds: item.nextReviewSeconds 
+            }));
+
+        } else {
+            // 2. Fetch from Cloud (Factory) if cache is old or missing
+            console.log("📡 Paddock: Downloading Fresh Telemetry...");
+            try {
+                const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
+                const snapshot = await getDocs(mistakesRef);
+                
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    // Store seconds for JSON compatibility
+                    allItems.push({ 
+                        id: doc.id, 
+                        ...d,
+                        nextReviewSeconds: d.nextReview.seconds 
+                    });
+                });
+
+                // Save to Garage
+                localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
+                localStorage.setItem(TIME_KEY, now.toString());
+                
+                // Rehydrate for use
+                allItems = allItems.map(item => ({
+                    ...item,
+                    nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }
+                }));
+
+            } catch (e) { console.error("Telemetry Error:", e); }
+        }
+
+        // Filter Due Items
+        const dueItems = [];
+        const nowTs = Date.now() / 1000;
+
+        allItems.forEach(item => {
+            if (item.nextReviewSeconds <= nowTs) {
+                dueItems.push(item);
+            }
+        });
+
+        // Update Quiz Engine
+        window.quiz.allMistakes = allItems;
+        window.quiz.dueMistakes = dueItems;
+        window.quiz.updatePitStopButton(dueItems.length);
       };
 
       window.handleSRSUpdate = async (questionObj, isCorrect) => {
@@ -2985,6 +3006,7 @@ lest: ～しないように
         const nextDate = new Date();
         nextDate.setDate(now.getDate() + nextInterval);
 
+        // A. Send to Cloud (Async)
         await setDoc(targetRef, {
             word: questionObj.w,
             meaning: questionObj.meaning || questionObj.m,
@@ -2994,6 +3016,29 @@ lest: ～しないように
             easeFactor: nextEaseFactor,
             lastReviewed: Timestamp.fromDate(now)
         }, { merge: true });
+
+        // B. Update Local Cache Immediately (Active Suspension)
+        const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
+        let cachedData = JSON.parse(localStorage.getItem(CACHE_KEY) || '[]');
+        
+        const targetIndex = cachedData.findIndex(i => i.word === questionObj.w);
+        const newItemData = {
+            id: questionObj.docId || safeWordId,
+            word: questionObj.w,
+            meaning: questionObj.meaning || questionObj.m,
+            nextReviewSeconds: Math.floor(nextDate.getTime() / 1000), // Store as seconds
+            interval: nextInterval,
+            repetitions: nextRepetitions,
+            easeFactor: nextEaseFactor
+        };
+
+        if (targetIndex > -1) {
+            cachedData[targetIndex] = { ...cachedData[targetIndex], ...newItemData };
+        } else {
+            cachedData.push(newItemData);
+        }
+
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
       };
 
       window.recordLapTime = async (acc, time, round, score, streak) => {
