@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RB Hybrid GP">
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.jpg">
     <link rel="manifest" href="manifest.json">
 
     <title>RB Hybrid Learning System</title>
@@ -344,6 +344,20 @@
             <div id="accuracy-display" class="f1-font text-7xl font-bold mb-2 text-white glitch-text">95.0%</div>
             <p id="rank-text" class="f1-font text-sm mb-8 text-gray-400 font-mono">P1: MAX VERSTAPPEN</p>
             
+            <div id="pass-area" class="hidden mb-6 animate-slide-in">
+                <p class="text-[#39ff14] font-bold f1-font text-xl mb-2">LICENSE ACQUIRED</p>
+                <div class="bg-green-900/20 border border-green-500/50 p-4 rounded-xl">
+                    <p class="text-xs text-green-400 mb-2 uppercase tracking-widest">Secret Key</p>
+                    <button id="pass-btn" class="w-full bg-black text-white border border-gray-600 font-mono py-3 rounded-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2">
+                        <span>COPY LICENSE ID</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="fail-msg" class="hidden mb-6">
+                <p class="text-red-500 font-bold f1-font text-sm">LICENSE DENIED (Req: 90%)</p>
+            </div>
+
             <div class="bg-black/40 p-4 rounded-xl mb-8 text-left max-h-48 overflow-y-auto border border-gray-800" id="review-list"></div>
             
             <div class="grid grid-cols-2 gap-4">
@@ -354,11 +368,12 @@
     </div>
 
     <script>
-// ==========================================
-// 1. DATA CONFIGURATION (PLACEHOLDERS)
-// ==========================================
-const rawData = `
-follow: ～の後に続く、～に従う
+    // ==========================================
+    // DATA LOAD (Placeholders)
+    // ==========================================
+    // 単語データ
+    const rawData = `
+   follow: ～の後に続く、～に従う
 consider: ～を考慮する
 increase: 増える、～を増やす
 expect: ～を予期する
@@ -2385,753 +2400,748 @@ abruptly: 不意に
 conversely: 逆に
 predominantly: 主に
 lest: ～しないように
-`; // ★ここに単語データを貼り付けてください (例: apple: りんご)
+    `; 
 
-// 熟語データ
-const idiomData = [
- { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
-  { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
-  { id: 1217, japanese: "Aに電話をかける", prefix: "I'll (", suffix: ") tomorrow morning.", parts: ["give", "you", "a", "call"] },
-  { id: 1218, japanese: "〜を引き起こす", prefix: "The population decline will (", suffix: ") several problems.", parts: ["give", "rise", "to"] },
-  { id: 1219, japanese: "〜を産む", prefix: "My sister (", suffix: ") a baby girl this spring.", parts: ["gave", "birth", "to"] },
-  { id: 1220, japanese: "〜に注意を払う", prefix: "I (", suffix: ") what the others were saying.", parts: ["paid", "attention", "to"] },
-  { id: "1221-1", japanese: "〜を訪れる", prefix: "We (", suffix: ") the Hiroshima Peace Memorial Museum.", parts: ["paid", "a", "visit", "to"] },
-  { id: "1221-2", japanese: "〜を訪れる", prefix: "I (", suffix: ") in Wakayama last weekend.", parts: ["paid", "my", "grandparents", "a", "visit"] },
-  { id: 1222, japanese: "面目を失う", prefix: "If I fail, I will (", suffix: ").", parts: ["lose", "face"] },
-  { id: 1223, japanese: "かっとなる", prefix: "I apologize for (", suffix: ").", parts: ["losing", "my", "temper"] },
-  { id: 1224, japanese: "〜から目を離さない", prefix: "Can you (", suffix: ") for me?", parts: ["keep", "an", "eye", "on", "my", "bag"] },
-  { id: 1225, japanese: "規則正しい生活を送る", prefix: "Everyone in my family (", suffix: ").", parts: ["keeps", "regular", "hours"] },
-  { id: 1226, japanese: "成人になる", prefix: "When I (", suffix: "), I will be able to vote.", parts: ["come", "of", "age"] },
-  { id: 1227, japanese: "〜を受け入れる", prefix: "It took me a long time to (", suffix: ") my sister's death.", parts: ["come", "to", "terms", "with"] },
-  { id: 1228, japanese: "明るみに出る", prefix: "The leak of personal information (", suffix: ").", parts: ["came", "to", "light"] },
-  { id: 1229, japanese: "誕生する", prefix: "I want to know how the universe (", suffix: ").", parts: ["came", "into", "being"] },
-  { id: 1230, japanese: "ダイエット中だ", prefix: "No, thank you. I'm (", suffix: ").", parts: ["on", "a", "diet"] },
-  { id: 1231, japanese: "ストライキをする", prefix: "The workers (", suffix: ") for the first time in 20 years.", parts: ["went", "on", "strike"] },
-  { id: 1232, japanese: "実を結ぶ", prefix: "My efforts finally (", suffix: ").", parts: ["bore", "fruit"] },
-  { id: 1233, japanese: "〜を利用できる", prefix: "Students (", suffix: ") online resources for their research projects.", parts: ["have", "access", "to"] },
-  { id: 1234, japanese: "〜のあら探しをする", prefix: "He (", suffix: ") everything I do.", parts: ["finds", "fault", "with"] },
-  { id: 1235, japanese: "食器を洗う", prefix: "I'll (", suffix: ") after dinner.", parts: ["do", "the", "dishes"] },
-  { id: 1236, japanese: "締め切りに間に合わせる", prefix: "I'm working hard to (", suffix: ").", parts: ["meet", "the", "deadline"] },
-  { id: 1237, japanese: "〜に打ち勝つ", prefix: "My curiosity (", suffix: "), and I opened the box.", parts: ["got", "the", "better", "of", "me"] },
-  { id: 1238, japanese: "〜する危険を冒す", prefix: "If I don't study, I (", suffix: ") my exams.", parts: ["run", "the", "risk", "of", "failing"] },
-  { id: 1239, japanese: "遠回しに言う", prefix: "Don't (", suffix: "). Get to the point.", parts: ["beat", "around", "the", "bush"] },
-  { id: 1240, japanese: "〜をいらいらさせる", prefix: "Construction noise (", suffix: ").", parts: ["gets", "on", "my", "nerves"] },
-  { id: 1241, japanese: "ぱっと立ち上がる", prefix: "Ken (", suffix: ") when the teacher called his name.", parts: ["jumped", "to", "his", "feet"] },
-  { id: 1242, japanese: "約束を守る", prefix: "I trust you to (", suffix: ").", parts: ["keep", "your", "word"] },
-  { id: 1243, japanese: "約束を破る", prefix: "He always (", suffix: "), so I don't trust him.", parts: ["breaks", "his", "word"] },
-  { id: 1244, japanese: "Aを暗記する", prefix: "I have to (", suffix: ") for the math test.", parts: ["learn", "all", "these", "formulas", "by", "heart"] },
-  { id: 1245, japanese: "〜を実行する", prefix: "I want to (", suffix: ").", parts: ["put", "my", "idea(s)", "into", "practice"] },
-  { id: 1246, japanese: "ちょうど今", prefix: "I'm busy (", suffix: "). Can we talk later?", parts: ["right", "now"] },
-  { id: 1247, japanese: "すぐに", prefix: "Can you come (", suffix: ")?", parts: ["right", "away"] },
-  { id: 1248, japanese: "すぐに", prefix: "I have to leave (", suffix: ") to catch the bus.", parts: ["at", "once"] },
-  { id: 1249, japanese: "その場で", prefix: "I decided to join the team (", suffix: ").", parts: ["on", "the", "spot"] },
-  { id: 1250, japanese: "すぐに", prefix: "I'll be with you (", suffix: ").", parts: ["in", "a", "minute"] },
-  { id: 1251, japanese: "まもなく", prefix: "That law will be passed (", suffix: ").", parts: ["before", "long"] },
-  { id: 1252, japanese: "現在は", prefix: "(", suffix: "), the increase in social security costs is a big problem.", parts: ["At", "present"] },
-  { id: 1253, japanese: "過去に", prefix: "(", suffix: "), we used more plastic bags than we do today.", parts: ["In", "the", "past"] },
-  { id: 1254, japanese: "将来は", prefix: "This trend of online shopping will continue (", suffix: ").", parts: ["in", "the", "future"] },
-  { id: 1255, japanese: "当分の間", prefix: "Let's put this topic aside (", suffix: ").", parts: ["for", "the", "time", "being"] },
-  { id: 1256, japanese: "しばらくの間", prefix: "I haven't seen her (", suffix: ").", parts: ["for", "a", "while"] },
-  { id: 1257, japanese: "しばらくして", prefix: "(", suffix: "), I felt much better.", parts: ["After", "a", "while"] },
-  { id: 1258, japanese: "長い間", prefix: "I haven't been to the beach (", suffix: ").", parts: ["for", "ages"] },
-  { id: 1259, japanese: "永久に", prefix: "My father said he quit smoking (", suffix: ").", parts: ["for", "good"] },
-  { id: 1260, japanese: "これを最後に", prefix: "We need to settle this matter (", suffix: ").", parts: ["once", "and", "for", "all"] },
-  { id: 1261, japanese: "ずっと", prefix: "I realized that my keys were in the bag (", suffix: ").", parts: ["all", "along"] },
-  { id: 1262, japanese: "今までのところ", prefix: "(", suffix: "), five students have come together for this project.", parts: ["So", "far"] },
-  { id: 1263, japanese: "これまでのところ", prefix: "(", suffix: "), there is no information about the missing tourist.", parts: ["As", "yet"] },
-  { id: "1264-1", japanese: "時々", prefix: "We still text each other (", suffix: ").", parts: ["from", "time", "to", "time"] },
-  { id: "1264-2", japanese: "たまに", prefix: "Everyone makes mistakes (", suffix: ").", parts: ["once", "in", "a", "while"] },
-  { id: 1265, japanese: "断続的に", prefix: "It's been raining (", suffix: ") all day today.", parts: ["on", "and", "off"] },
-  { id: "1266-1", japanese: "一般的に", prefix: "(", suffix: "), summers in Japan are hot and humid.", parts: ["In", "general"] },
-  { id: "1266-2", japanese: "全体として", prefix: "(", suffix: "), I did well in my exams.", parts: ["On", "the", "whole"] },
-  { id: "1267-1", japanese: "概して", prefix: "(", suffix: "), I take the bus to school, but sometimes I walk.", parts: ["As", "a", "rule"] },
-  { id: "1267-2", japanese: "概して", prefix: "(", suffix: "), it rains a lot in June in Japan.", parts: ["By", "and", "large"] },
-  { id: 1268, japanese: "偶然に", prefix: "I met my old friend (", suffix: ") at the mall.", parts: ["by", "chance"] },
-  { id: 1269, japanese: "ひょっとして", prefix: "Are you Ms. Harris, (", suffix: ")?", parts: ["by", "any", "chance"] },
-  { id: 1270, japanese: "誤って", prefix: "I've deleted an important file (", suffix: ").", parts: ["by", "mistake"] },
-  { id: 1271, japanese: "人の手で", prefix: "These wooden bowls are crafted (", suffix: ").", parts: ["by", "hand"] },
-  { id: 1272, japanese: "生まれつき", prefix: "Cats are independent (", suffix: ").", parts: ["by", "nature"] },
-  { id: 1273, japanese: "生まれは", prefix: "Mari is Japanese (", suffix: "), but has lived in France for a long time.", parts: ["by", "birth"] },
-  { id: 1274, japanese: "海路で／空路で", prefix: "It is more environmentally friendly to ship goods (", suffix: ").", parts: ["by", "sea", "than", "by", "air"] },
-  { id: 1275, japanese: "徐々に", prefix: "(", suffix: "), our friendship grew stronger.", parts: ["By", "degrees"] },
-  { id: 1276, japanese: "ぜひとも", prefix: "(", suffix: "), please let us know what you think about the matter.", parts: ["By", "all", "means"] },
-  { id: 1277, japanese: "ところで", prefix: "(", suffix: "), have you read that book yet?", parts: ["By", "the", "way"] },
-  { id: 1278, japanese: "ついに", prefix: "(", suffix: "), the war ended.", parts: ["At", "last"] },
-  { id: 1279, japanese: "長々と", prefix: "He talked (", suffix: ") about his hobbies.", parts: ["at", "length"] },
-  { id: 1280, japanese: "最初は", prefix: "(", suffix: "), I could not follow their English, but gradually I began to understand what they were saying.", parts: ["At", "first"] },
-  { id: 1281, japanese: "直接", prefix: "I hope to see the Eiffel Tower (", suffix: ").", parts: ["first", "hand"] },
-  { id: 1282, japanese: "思いのままに", prefix: "The cat comes and goes (", suffix: ").", parts: ["at", "will"] },
-  { id: 1283, japanese: "どんな犠牲を払っても", prefix: "We must avoid war (", suffix: ").", parts: ["at", "all", "costs"] }
-];
+    // 熟語データ
+    const idiomData = [
+    { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
+    { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
+    { id: 1217, japanese: "Aに電話をかける", prefix: "I'll (", suffix: ") tomorrow morning.", parts: ["give", "you", "a", "call"] },
+    { id: 1218, japanese: "〜を引き起こす", prefix: "The population decline will (", suffix: ") several problems.", parts: ["give", "rise", "to"] },
+    { id: 1219, japanese: "〜を産む", prefix: "My sister (", suffix: ") a baby girl this spring.", parts: ["gave", "birth", "to"] },
+    { id: 1220, japanese: "〜に注意を払う", prefix: "I (", suffix: ") what the others were saying.", parts: ["paid", "attention", "to"] },
+    { id: "1221-1", japanese: "〜を訪れる", prefix: "We (", suffix: ") the Hiroshima Peace Memorial Museum.", parts: ["paid", "a", "visit", "to"] },
+    { id: "1221-2", japanese: "〜を訪れる", prefix: "I (", suffix: ") in Wakayama last weekend.", parts: ["paid", "my", "grandparents", "a", "visit"] },
+    { id: 1222, japanese: "面目を失う", prefix: "If I fail, I will (", suffix: ").", parts: ["lose", "face"] },
+    { id: 1223, japanese: "かっとなる", prefix: "I apologize for (", suffix: ").", parts: ["losing", "my", "temper"] },
+    { id: 1224, japanese: "〜から目を離さない", prefix: "Can you (", suffix: ") for me?", parts: ["keep", "an", "eye", "on", "my", "bag"] },
+    { id: 1225, japanese: "規則正しい生活を送る", prefix: "Everyone in my family (", suffix: ").", parts: ["keeps", "regular", "hours"] },
+    { id: 1226, japanese: "成人になる", prefix: "When I (", suffix: "), I will be able to vote.", parts: ["come", "of", "age"] },
+    { id: 1227, japanese: "〜を受け入れる", prefix: "It took me a long time to (", suffix: ") my sister's death.", parts: ["come", "to", "terms", "with"] },
+    { id: 1228, japanese: "明るみに出る", prefix: "The leak of personal information (", suffix: ").", parts: ["came", "to", "light"] },
+    { id: 1229, japanese: "誕生する", prefix: "I want to know how the universe (", suffix: ").", parts: ["came", "into", "being"] },
+    { id: 1230, japanese: "ダイエット中だ", prefix: "No, thank you. I'm (", suffix: ").", parts: ["on", "a", "diet"] },
+    { id: 1231, japanese: "ストライキをする", prefix: "The workers (", suffix: ") for the first time in 20 years.", parts: ["went", "on", "strike"] },
+    { id: 1232, japanese: "実を結ぶ", prefix: "My efforts finally (", suffix: ").", parts: ["bore", "fruit"] },
+    { id: 1233, japanese: "〜を利用できる", prefix: "Students (", suffix: ") online resources for their research projects.", parts: ["have", "access", "to"] },
+    { id: 1234, japanese: "〜のあら探しをする", prefix: "He (", suffix: ") everything I do.", parts: ["finds", "fault", "with"] },
+    { id: 1235, japanese: "食器を洗う", prefix: "I'll (", suffix: ") after dinner.", parts: ["do", "the", "dishes"] },
+    { id: 1236, japanese: "締め切りに間に合わせる", prefix: "I'm working hard to (", suffix: ").", parts: ["meet", "the", "deadline"] },
+    { id: 1237, japanese: "〜に打ち勝つ", prefix: "My curiosity (", suffix: "), and I opened the box.", parts: ["got", "the", "better", "of", "me"] },
+    { id: 1238, japanese: "〜する危険を冒す", prefix: "If I don't study, I (", suffix: ") my exams.", parts: ["run", "the", "risk", "of", "failing"] },
+    { id: 1239, japanese: "遠回しに言う", prefix: "Don't (", suffix: "). Get to the point.", parts: ["beat", "around", "the", "bush"] },
+    { id: 1240, japanese: "〜をいらいらさせる", prefix: "Construction noise (", suffix: ").", parts: ["gets", "on", "my", "nerves"] },
+    { id: 1241, japanese: "ぱっと立ち上がる", prefix: "Ken (", suffix: ") when the teacher called his name.", parts: ["jumped", "to", "his", "feet"] },
+    { id: 1242, japanese: "約束を守る", prefix: "I trust you to (", suffix: ").", parts: ["keep", "your", "word"] },
+    { id: 1243, japanese: "約束を破る", prefix: "He always (", suffix: "), so I don't trust him.", parts: ["breaks", "his", "word"] },
+    { id: 1244, japanese: "Aを暗記する", prefix: "I have to (", suffix: ") for the math test.", parts: ["learn", "all", "these", "formulas", "by", "heart"] },
+    { id: 1245, japanese: "〜を実行する", prefix: "I want to (", suffix: ").", parts: ["put", "my", "idea(s)", "into", "practice"] },
+    { id: 1246, japanese: "ちょうど今", prefix: "I'm busy (", suffix: "). Can we talk later?", parts: ["right", "now"] },
+    { id: 1247, japanese: "すぐに", prefix: "Can you come (", suffix: ")?", parts: ["right", "away"] },
+    { id: 1248, japanese: "すぐに", prefix: "I have to leave (", suffix: ") to catch the bus.", parts: ["at", "once"] },
+    { id: 1249, japanese: "その場で", prefix: "I decided to join the team (", suffix: ").", parts: ["on", "the", "spot"] },
+    { id: 1250, japanese: "すぐに", prefix: "I'll be with you (", suffix: ").", parts: ["in", "a", "minute"] },
+    { id: 1251, japanese: "まもなく", prefix: "That law will be passed (", suffix: ").", parts: ["before", "long"] },
+    { id: 1252, japanese: "現在は", prefix: "(", suffix: "), the increase in social security costs is a big problem.", parts: ["At", "present"] },
+    { id: 1253, japanese: "過去に", prefix: "(", suffix: "), we used more plastic bags than we do today.", parts: ["In", "the", "past"] },
+    { id: 1254, japanese: "将来は", prefix: "This trend of online shopping will continue (", suffix: ").", parts: ["in", "the", "future"] },
+    { id: 1255, japanese: "当分の間", prefix: "Let's put this topic aside (", suffix: ").", parts: ["for", "the", "time", "being"] },
+    { id: 1256, japanese: "しばらくの間", prefix: "I haven't seen her (", suffix: ").", parts: ["for", "a", "while"] },
+    { id: 1257, japanese: "しばらくして", prefix: "(", suffix: "), I felt much better.", parts: ["After", "a", "while"] },
+    { id: 1258, japanese: "長い間", prefix: "I haven't been to the beach (", suffix: ").", parts: ["for", "ages"] },
+    { id: 1259, japanese: "永久に", prefix: "My father said he quit smoking (", suffix: ").", parts: ["for", "good"] },
+    { id: 1260, japanese: "これを最後に", prefix: "We need to settle this matter (", suffix: ").", parts: ["once", "and", "for", "all"] },
+    { id: 1261, japanese: "ずっと", prefix: "I realized that my keys were in the bag (", suffix: ").", parts: ["all", "along"] },
+    { id: 1262, japanese: "今までのところ", prefix: "(", suffix: "), five students have come together for this project.", parts: ["So", "far"] },
+    { id: 1263, japanese: "これまでのところ", prefix: "(", suffix: "), there is no information about the missing tourist.", parts: ["As", "yet"] },
+    { id: "1264-1", japanese: "時々", prefix: "We still text each other (", suffix: ").", parts: ["from", "time", "to", "time"] },
+    { id: "1264-2", japanese: "たまに", prefix: "Everyone makes mistakes (", suffix: ").", parts: ["once", "in", "a", "while"] },
+    { id: 1265, japanese: "断続的に", prefix: "It's been raining (", suffix: ") all day today.", parts: ["on", "and", "off"] },
+    { id: "1266-1", japanese: "一般的に", prefix: "(", suffix: "), summers in Japan are hot and humid.", parts: ["In", "general"] },
+    { id: "1266-2", japanese: "全体として", prefix: "(", suffix: "), I did well in my exams.", parts: ["On", "the", "whole"] },
+    { id: "1267-1", japanese: "概して", prefix: "(", suffix: "), I take the bus to school, but sometimes I walk.", parts: ["As", "a", "rule"] },
+    { id: "1267-2", japanese: "概して", prefix: "(", suffix: "), it rains a lot in June in Japan.", parts: ["By", "and", "large"] },
+    { id: 1268, japanese: "偶然に", prefix: "I met my old friend (", suffix: ") at the mall.", parts: ["by", "chance"] },
+    { id: 1269, japanese: "ひょっとして", prefix: "Are you Ms. Harris, (", suffix: ")?", parts: ["by", "any", "chance"] },
+    { id: 1270, japanese: "誤って", prefix: "I've deleted an important file (", suffix: ").", parts: ["by", "mistake"] },
+    { id: 1271, japanese: "人の手で", prefix: "These wooden bowls are crafted (", suffix: ").", parts: ["by", "hand"] },
+    { id: 1272, japanese: "生まれつき", prefix: "Cats are independent (", suffix: ").", parts: ["by", "nature"] },
+    { id: 1273, japanese: "生まれは", prefix: "Mari is Japanese (", suffix: "), but has lived in France for a long time.", parts: ["by", "birth"] },
+    { id: 1274, japanese: "海路で／空路で", prefix: "It is more environmentally friendly to ship goods (", suffix: ").", parts: ["by", "sea", "than", "by", "air"] },
+    { id: 1275, japanese: "徐々に", prefix: "(", suffix: "), our friendship grew stronger.", parts: ["By", "degrees"] },
+    { id: 1276, japanese: "ぜひとも", prefix: "(", suffix: "), please let us know what you think about the matter.", parts: ["By", "all", "means"] },
+    { id: 1277, japanese: "ところで", prefix: "(", suffix: "), have you read that book yet?", parts: ["By", "the", "way"] },
+    { id: 1278, japanese: "ついに", prefix: "(", suffix: "), the war ended.", parts: ["At", "last"] },
+    { id: 1279, japanese: "長々と", prefix: "He talked (", suffix: ") about his hobbies.", parts: ["at", "length"] },
+    { id: 1280, japanese: "最初は", prefix: "(", suffix: "), I could not follow their English, but gradually I began to understand what they were saying.", parts: ["At", "first"] },
+    { id: 1281, japanese: "直接", prefix: "I hope to see the Eiffel Tower (", suffix: ").", parts: ["first", "hand"] },
+    { id: 1282, japanese: "思いのままに", prefix: "The cat comes and goes (", suffix: ").", parts: ["at", "will"] },
+    { id: 1283, japanese: "どんな犠牲を払っても", prefix: "We must avoid war (", suffix: ").", parts: ["at", "all", "costs"] }
+    ];
 
 // ==========================================
-// 2. MAIN LOGIC (UPDATED: PHASE 3 SPEED LOGIC)
+// MAIN LOGIC
 // ==========================================
+    document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
+    document.addEventListener('touchmove', function(event) { if (event.scale !== 1) { event.preventDefault(); } }, { passive: false });
 
-        document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
-        document.addEventListener('touchmove', function(event) { if (event.scale !== 1) { event.preventDefault(); } }, { passive: false });
-
-        class HybridQuiz {
-            constructor() {
-                this.mode = 'vocab'; 
-                this.wordsPerRound = 20; 
-                this.masterList = [];
-                this.vocabRounds = [];
-                this.currentRoundIndex = 0;
-                this.currentIdiomParts = [];
-                this.shuffledIdiomParts = [];
-                this.userAns = [];
-                this.isLocked = false;
-                this.questions = [];
-                this.currentIndex = 0;
-                this.missCount = 0;
-                this.missedWordsLog = [];
-                this.startTime = 0;
-                this.lapStartTime = 0; // ★ Task 8: Speed Logic
-                this.timerInterval = null;
-                this.currentStreak = 0;
-                this.dueMistakes = [];
-                this.allMistakes = []; 
-                this.isPitStopMode = false;
-                this.isReverseMode = false;
-                this.isInstantMode = false; // デフォルトはOFF
-                const instantCheck = document.getElementById('instant-mode');
-                if(instantCheck) {
-                    instantCheck.addEventListener('change', (e) => {
-                        this.isInstantMode = e.target.checked;
-                    });
-                }
-                this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
-                this.synth = window.speechSynthesis;
-                this.englishVoices = [];
-                if (this.synth) { this.synth.onvoiceschanged = () => this.loadVoices(); this.loadVoices(); }
-
-                const audioCheck = document.getElementById('audio-mode');
-                if(audioCheck) {
-                    audioCheck.checked = this.isAutoAudio;
-                    audioCheck.addEventListener('change', (e) => {
-                        this.isAutoAudio = e.target.checked;
-                        localStorage.setItem('vocab_auto_audio', this.isAutoAudio);
-                    });
-                }
-
-                this.parseData();
-                this.generateRounds();
-                this.initUI();
-                this.initSearch(); 
+    class HybridQuiz {
+        constructor() {
+            this.mode = 'vocab'; 
+            this.wordsPerRound = 20; 
+            this.masterList = [];
+            this.vocabRounds = [];
+            this.currentRoundIndex = 0;
+            this.currentIdiomParts = [];
+            this.shuffledIdiomParts = [];
+            this.userAns = [];
+            this.isLocked = false;
+            this.questions = [];
+            this.currentIndex = 0;
+            this.missCount = 0;
+            this.missedWordsLog = [];
+            this.startTime = 0;
+            this.lapStartTime = 0; 
+            this.timerInterval = null;
+            this.currentStreak = 0;
+            this.dueMistakes = [];
+            this.allMistakes = []; 
+            this.isPitStopMode = false;
+            this.isReverseMode = false;
+            this.isInstantMode = false; 
+            const instantCheck = document.getElementById('instant-mode');
+            if(instantCheck) {
+                instantCheck.addEventListener('change', (e) => {
+                    this.isInstantMode = e.target.checked;
+                });
             }
+            this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
+            this.synth = window.speechSynthesis;
+            this.englishVoices = [];
+            if (this.synth) { this.synth.onvoiceschanged = () => this.loadVoices(); this.loadVoices(); }
 
-            loadVoices() {
-                if(!this.synth) return;
-                
-                // 音声リストの読み込みを確実に行うためのリトライ処理
-                let attempts = 0;
-                const load = () => {
-                    const allVoices = this.synth.getVoices();
-                    // 英語（en-US, en-GBなど）を全て取得
-                    this.englishVoices = allVoices.filter(v => v.lang.startsWith('en'));
-                    
-                    if (this.englishVoices.length === 0 && attempts < 10) {
-                        // まだロードできていなければ、100ms待って再試行
-                        attempts++;
-                        setTimeout(load, 100);
-                    } else {
-                        console.log(`[TTS] Engine Ready: ${this.englishVoices.length} voices found.`);
-                    }
-                };
-                load();
-            }
-
-            speak(text) {
-                if (!this.synth || this.englishVoices.length === 0) {
-                    console.warn("[TTS] Engine warming up...");
-                    return; // 音声準備中なら何もしない（エラーを防ぐ）
-                }
-                
-                this.synth.cancel(); // 連打時の重複再生をカット
-                const utterance = new SpeechSynthesisUtterance(text);
-                
-                // ★ 優先ボイス選択ロジック (F1のような高精細な音声を狙う)
-                // 1. Google US English (Android/Chromeで最も高品質)
-                // 2. Samantha (iOSのSiriに近い声)
-                // 3. Microsoft Zira (Windowsの標準的な良い声)
-                const preferredVoice = this.englishVoices.find(v => v.name.includes('Google US English')) 
-                                    || this.englishVoices.find(v => v.name.includes('Samantha'))
-                                    || this.englishVoices.find(v => v.name.includes('Zira'))
-                                    || this.englishVoices[0]; // なければ最初の英語
-                
-                utterance.voice = preferredVoice;
-                utterance.rate = 1.1; // 聞き取りやすい高速ペース (1.3は少し速すぎたので調整)
-                utterance.pitch = 1.0;
-                
-                this.synth.speak(utterance);
-            }
-
-            parseData() {
-                if(!rawData.trim()) { this.masterList = []; return; }
-                const lines = rawData.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('[source'));
-                this.masterList = [];
-                lines.forEach(line => {
-                    let sep = -1;
-                    if (line.indexOf('\t') !== -1) sep = line.indexOf('\t');
-                    else if (line.indexOf(':') !== -1) sep = line.indexOf(':');
-                    else if (line.indexOf('：') !== -1) sep = line.indexOf('：');
-                    if (sep !== -1) {
-                        this.masterList.push({ w: line.substring(0, sep).trim(), m: line.substring(sep + 1).trim() });
-                    }
+            const audioCheck = document.getElementById('audio-mode');
+            if(audioCheck) {
+                audioCheck.checked = this.isAutoAudio;
+                audioCheck.addEventListener('change', (e) => {
+                    this.isAutoAudio = e.target.checked;
+                    localStorage.setItem('vocab_auto_audio', this.isAutoAudio);
                 });
             }
 
-            generateRounds() {
-                // Phase 1 Task 2: 習得済み単語の考慮 (後日実装可能だが、まずは空チェック)
-                const wordCopy = [...this.masterList]; 
-                this.vocabRounds = [];
-                let roundNum = 1;
-                let currentWordIndex = 1; 
-                while (wordCopy.length > 0) {
-                    const chunk = wordCopy.splice(0, this.wordsPerRound);
-                    if (chunk.length > 0) {
-                        this.vocabRounds.push({ id: roundNum, name: `ROUND ${roundNum} (No.${currentWordIndex} - ${currentWordIndex + chunk.length - 1})`, words: chunk });
-                        roundNum++;
-                        currentWordIndex += chunk.length;
-                    }
-                }
-            }
+            this.parseData();
+            this.generateRounds();
+            this.initUI();
+            this.initSearch(); 
+        }
 
-            initUI() {
-                const selector = document.getElementById('round-selector');
-                selector.innerHTML = '';
-                if(this.vocabRounds.length === 0) { selector.innerHTML = '<option>Load Data or Login</option>'; }
-                else {
-                    this.vocabRounds.forEach((round, index) => {
-                        const opt = document.createElement('option');
-                        opt.value = index;
-                        opt.text = round.name;
-                        selector.appendChild(opt);
-                    });
-                }
-                document.getElementById('idiom-count-display').innerText = idiomData.length;
-            }
-
-            initSearch() {
-                const input = document.getElementById('search-input');
-                const results = document.getElementById('search-results');
-                input.addEventListener('input', (e) => {
-                    const q = e.target.value.toLowerCase().trim();
-                    if (!q) { results.classList.add('hidden'); return; }
-                    const hits = this.masterList.map((item, index) => ({ ...item, i: index + 1 }))
-                        .filter(item => item.w.toLowerCase().includes(q) || item.m.toLowerCase().includes(q))
-                        .slice(0, 50);
-                    if (hits.length > 0) {
-                        results.classList.remove('hidden');
-                        results.innerHTML = hits.map(h => `
-                            <div onclick="quiz.speak('${h.w.replace(/'/g, "\\'")}')" class="p-3 border-b border-gray-800 active:bg-gray-800 cursor-pointer flex justify-between items-center group">
-                                <div class="text-left"><div class="flex items-baseline gap-2"><span class="text-[10px] text-yellow-500 font-mono opacity-70">No.${h.i}</span><span class="text-red-400 font-bold text-xs f1-font">${h.w}</span></div><span class="text-gray-400 text-[10px] pl-1">${h.m}</span></div>
-                                <button class="text-[8px] bg-gray-700 text-white px-2 py-1 rounded-full uppercase">Listen</button>
-                            </div>`).join('');
-                    } else {
-                        results.classList.remove('hidden');
-                        results.innerHTML = `<div class="p-3 text-gray-500 text-[10px] text-center">NO DATA</div>`;
-                    }
-                });
-                document.addEventListener('click', (e) => { if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('hidden'); });
-            }
-
-            createCustomRound() {
-                const s = parseInt(document.getElementById('custom-start').value) - 1;
-                const e = parseInt(document.getElementById('custom-end').value);
-                if(isNaN(s) || isNaN(e) || s < 0 || e > this.masterList.length || s >= e) { alert("Invalid Range"); return; }
-                const customWords = this.masterList.slice(s, e);
-                this.vocabRounds.unshift({ id: 'custom', name: `CUSTOM (No.${s+1}-${e})`, words: customWords });
-                this.initUI();
-                document.getElementById('round-selector').value = 0;
-            }
-            
-            setTireStrategy(count, type) {
-                this.wordsPerRound = count;
-                this.generateRounds();
-                this.initUI();
-                document.querySelectorAll('.tire-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById(`tire-${type}`).classList.add('active');
-            }
-
-            switchMode(newMode) {
-                this.mode = newMode;
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById(`mode-${newMode}`).classList.add('active');
-                
-                if (newMode === 'vocab') {
-                    document.getElementById('vocab-settings').classList.remove('hidden');
-                    document.getElementById('vocab-tools').classList.remove('hidden');
-                    document.getElementById('idiom-settings').classList.add('hidden');
-                } else {
-                    document.getElementById('vocab-settings').classList.add('hidden');
-                    document.getElementById('vocab-tools').classList.add('hidden');
-                    document.getElementById('idiom-settings').classList.remove('hidden');
-                }
-            }
-
-            start() {
-                this.currentIndex = 0;
-                this.missCount = 0;
-                this.missedWordsLog = [];
-                this.startTime = Date.now();
-                this.startTimer();
-                
-                document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('result-screen').classList.add('hidden');
-                document.getElementById('quiz-screen').classList.remove('hidden');
-                
-                document.getElementById('vocab-interface').classList.add('hidden');
-                document.getElementById('idiom-interface').classList.add('hidden');
-
-                if (this.mode === 'vocab') {
-                    this.startVocabMode();
-                } else {
-                    this.startIdiomMode();
-                }
-            }
-
-            startVocabMode() {
-                if(this.vocabRounds.length === 0) { alert("Data not loaded"); this.returnToGrid(); return; }
-                this.isPitStopMode = false;
-                document.getElementById('vocab-interface').classList.remove('hidden');
-                
-                const selector = document.getElementById('round-selector');
-                this.currentRoundIndex = parseInt(selector.value);
-                const selectedRound = this.vocabRounds[this.currentRoundIndex];
-                
-                this.isReverseMode = document.getElementById('reverse-mode').checked;
-                
-                document.getElementById('circuit-name').innerText = selectedRound.name + (this.isReverseMode ? " [REV]" : "");
-                document.getElementById('question-label').innerText = this.isReverseMode ? "TRANSLATE" : "MEANING";
-
-                this.questions = selectedRound.words.map(target => {
-                    const qText = this.isReverseMode ? target.m : target.w;
-                    const aText = this.isReverseMode ? target.w : target.m;
-                    const distractors = this.getDistractors(target, this.isReverseMode);
-                    const options = [aText, ...distractors].sort(() => Math.random() - 0.5);
-                    return { w: target.w, m: target.m, qText: qText, aText: aText, o: options };
-                });
-                this.questions.sort(() => Math.random() - 0.5);
-                this.showVocabQuestion();
-            }
-
-            startIdiomMode() {
-                if(idiomData.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
-                document.getElementById('idiom-interface').classList.remove('hidden');
-                document.getElementById('circuit-name').innerText = "IDIOM SORTING";
-                
-                this.questions = [...idiomData].sort(() => Math.random() - 0.5);
-                this.showIdiomQuestion();
-            }
-            
-           getDistractors(targetWord, isReverse) {
-                const distractors = [];
-                // データが少なすぎる場合の安全策
-                if (this.masterList.length < 4) return ["Option A", "Option B", "Option C"]; 
-
-                const targetString = isReverse ? targetWord.w : targetWord.m;
-                const targetLen = targetString.length;
-
-                // 1. 候補リストの作成 (自分自身を除く)
-                // 文字数が近い (±2文字以内) 単語を優先候補とする「Smart Pool」を作る
-                let smartPool = this.masterList.filter(item => {
-                    const str = isReverse ? item.w : item.m;
-                    // 自分自身は除外
-                    if (str === targetString) return false;
-                    // 文字数差が2以内なら候補に入れる
-                    return Math.abs(str.length - targetLen) <= 2;
-                });
-
-                // もしSmart Poolが少なすぎたら（データ不足など）、全体から補充する
-                if (smartPool.length < 10) {
-                    smartPool = this.masterList.filter(item => {
-                        const str = isReverse ? item.w : item.m;
-                        return str !== targetString;
-                    });
-                }
-
-                // 2. 候補からランダムに3つ選出
-                let attempts = 0;
-                while (distractors.length < 3 && attempts < 100) {
-                    const r = smartPool[Math.floor(Math.random() * smartPool.length)];
-                    const candidate = isReverse ? r.w : r.m;
-                    
-                    // 重複チェック
-                    if (!distractors.includes(candidate)) {
-                        distractors.push(candidate);
-                    }
+        loadVoices() {
+            if(!this.synth) return;
+            let attempts = 0;
+            const load = () => {
+                const allVoices = this.synth.getVoices();
+                this.englishVoices = allVoices.filter(v => v.lang.startsWith('en'));
+                if (this.englishVoices.length === 0 && attempts < 10) {
                     attempts++;
-                }
-                
-                // 万が一3つ揃わなかった場合の保険
-                while (distractors.length < 3) {
-                     distractors.push("---");
-                }
-
-                return distractors;
-            }
-
-            showVocabQuestion() {
-                const q = this.questions[this.currentIndex];
-                document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
-                
-                const targetDisplay = document.getElementById('target-word');
-                targetDisplay.innerText = q.qText;
-                targetDisplay.className = (this.isReverseMode && q.qText.length > 8) 
-                    ? "f1-font text-3xl font-bold text-white tracking-wide break-words px-2"
-                    : "f1-font text-5xl font-bold text-white tracking-wide drop-shadow-lg break-words px-2";
-
-                // ★ Phase 3 Task 8: Speed Logic Timer Start
-                this.lapStartTime = Date.now(); 
-
-                document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
-                document.getElementById('feedback').innerText = '';
-                
-                const speakBtn = document.getElementById('speak-btn');
-                speakBtn.onclick = () => this.speak(q.w);
-                if (this.isAutoAudio && !this.isReverseMode) setTimeout(() => this.speak(q.w), 200);
-
-                const container = document.getElementById('options-container');
-                container.innerHTML = ''; 
-                
-                // ★ 選択肢生成関数 (共通化)
-                const renderOptions = () => {
-                    container.innerHTML = '';
-                    q.o.forEach(opt => {
-                        const btn = document.createElement('button');
-                        const fontClass = this.isReverseMode ? "f1-font tracking-wider text-xl" : "text-lg";
-                        btn.className = `option-btn w-full text-left p-5 rounded-xl bg-white/5 border border-white/10 active:border-red-500 font-bold shadow-lg ${fontClass}`;
-                        btn.innerText = opt;
-                        btn.onclick = () => this.handleVocabAnswer(opt, q);
-                        container.appendChild(btn);
-                    });
-                };
-
-                // ★ DRSモード判定
-                if (this.isInstantMode) {
-                    // 即時展開 (DRS OPEN)
-                    renderOptions();
+                    setTimeout(load, 100);
                 } else {
-                    // 従来モード (VISUALIZEボタンを表示)
-                    const revealBtn = document.createElement('button');
-                    revealBtn.className = 'col-span-1 md:col-span-2 w-full h-24 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 f1-font text-lg uppercase tracking-widest active:border-yellow-500 active:text-yellow-500 transition-all flex flex-col items-center justify-center gap-1 animate-pulse';
-                    revealBtn.innerHTML = `<span>VISUALIZE MEANING</span><span class="text-[10px] text-gray-500 font-mono">TAP TO UNLOCK</span>`;
-                    revealBtn.onclick = () => { 
-                        renderOptions();
-                    };
-                    container.appendChild(revealBtn);
+                    console.log(`[TTS] Engine Ready: ${this.englishVoices.length} voices found.`);
                 }
+            };
+            load();
+        }
+
+        speak(text) {
+            if (!this.synth || this.englishVoices.length === 0) {
+                console.warn("[TTS] Engine warming up...");
+                return; 
             }
+            this.synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(text);
+            const preferredVoice = this.englishVoices.find(v => v.name.includes('Google US English')) 
+                                || this.englishVoices.find(v => v.name.includes('Samantha'))
+                                || this.englishVoices.find(v => v.name.includes('Zira'))
+                                || this.englishVoices[0]; 
+            utterance.voice = preferredVoice;
+            utterance.rate = 1.1; 
+            utterance.pitch = 1.0;
+            this.synth.speak(utterance);
+        }
 
-            handleVocabAnswer(selected, q) {
-                // ★ 修正1: 連打防止 (二重正解を防ぐ)
-                // ボタンを押した瞬間、全ての選択肢を無効化してクリックできないようにする
-                const btns = document.querySelectorAll('.option-btn');
-                // もし既に無効化されていたら処理を中断（ガード節）
-                if (btns.length > 0 && btns[0].disabled) return;
-                btns.forEach(b => b.disabled = true);
-
-                const feedback = document.getElementById('feedback');
-                
-                // タイム計測
-                const timeTaken = (Date.now() - this.lapStartTime) / 1000;
-                
-                const isCorrect = (selected === q.aText);
-
-                // SRS Update
-                if (window.handleSRSUpdate) {
-                    window.handleSRSUpdate({ ...q, timeTaken: timeTaken }, isCorrect);
+        parseData() {
+            if(!rawData.trim()) { this.masterList = []; return; }
+            const lines = rawData.split('\n').map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('[source'));
+            this.masterList = [];
+            lines.forEach(line => {
+                let sep = -1;
+                if (line.indexOf('\t') !== -1) sep = line.indexOf('\t');
+                else if (line.indexOf(':') !== -1) sep = line.indexOf(':');
+                else if (line.indexOf('：') !== -1) sep = line.indexOf('：');
+                if (sep !== -1) {
+                    this.masterList.push({ w: line.substring(0, sep).trim(), m: line.substring(sep + 1).trim() });
                 }
+            });
+        }
 
-                if (isCorrect) {
-                    if(this.isReverseMode) this.speak(q.w);
-                    
-                    // UX Feedback
-                    if (timeTaken < 1.2) {
-                        feedback.innerHTML = `<span class="text-[#39ff14] text-xs font-bold animate-pulse">🟣 PURPLE SECTOR (${timeTaken.toFixed(2)}s)</span>`;
-                    } else if (timeTaken > 5.0) {
-                        feedback.innerHTML = `<span class="text-yellow-500 text-xs font-bold">🟡 SLOW (${timeTaken.toFixed(2)}s)</span>`;
-                    }
-
-                    // 正解時も少し待ってから遷移（この間に連打されるのを防ぐ）
-                    setTimeout(() => {
-                        this.currentIndex++;
-                        if (this.currentIndex < this.questions.length) this.showVocabQuestion();
-                        else this.finish();
-                    }, 400); 
-
-                } else {
-                    this.missCount++;
-                    feedback.innerText = `WRONG: ${q.w} = ${q.m}`;
-                    feedback.className = "mt-4 text-center h-6 font-bold text-red-500 animate-pulse";
-                    if (!this.missedWordsLog.find(item => item.w === q.w)) this.missedWordsLog.push({ w: q.w, m: q.m });
-                    
-                    this.questions.push(q);
-                    // ボタンは冒頭で既に無効化されているので、ここでは何もしなくてOK
-                    
-                    setTimeout(() => { 
-                        this.currentIndex++; 
-                        this.showVocabQuestion(); 
-                    }, 1500);
+        generateRounds() {
+            const wordCopy = [...this.masterList]; 
+            this.vocabRounds = [];
+            let roundNum = 1;
+            let currentWordIndex = 1; 
+            while (wordCopy.length > 0) {
+                const chunk = wordCopy.splice(0, this.wordsPerRound);
+                if (chunk.length > 0) {
+                    this.vocabRounds.push({ id: roundNum, name: `ROUND ${roundNum} (No.${currentWordIndex} - ${currentWordIndex + chunk.length - 1})`, words: chunk });
+                    roundNum++;
+                    currentWordIndex += chunk.length;
                 }
-            }
-
-            // --- IDIOM ENGINE ---
-            showIdiomQuestion() {
-                const data = this.questions[this.currentIndex];
-                document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
-                document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
-                document.getElementById('feedback').innerHTML = "";
-                document.getElementById('idiom-next-btn').classList.add('hidden');
-                
-                document.getElementById('idiom-japanese').innerText = data.japanese;
-                document.getElementById('idiom-prefix').innerText = data.prefix;
-                document.getElementById('idiom-suffix').innerText = data.suffix;
-                
-                document.getElementById('answer-slot').classList.remove('correct-lane', 'wrong-lane');
-                document.getElementById('answer-slot').innerHTML = '';
-
-                this.userAns = [];
-                this.currentIdiomParts = [...data.parts];
-                this.shuffledIdiomParts = [...data.parts];
-                this.shuffle(this.shuffledIdiomParts);
-                
-                this.isLocked = false;
-                this.renderIdiomPool();
-            }
-
-            renderIdiomPool() {
-                const poolEl = document.getElementById('word-pool');
-                poolEl.innerHTML = '';
-                const remaining = this.getRemainingParts(this.shuffledIdiomParts, this.userAns);
-                
-                remaining.forEach((word) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'chip-btn chip-pool f1-font px-4 py-3 rounded-lg text-lg border border-gray-700 shadow-md active:bg-gray-700';
-                    btn.innerText = word;
-                    if(this.isLocked) btn.classList.add('locked');
-                    btn.onclick = () => { if(!this.isLocked) this.moveWordToSlot(word); };
-                    poolEl.appendChild(btn);
-                });
-            }
-
-            renderIdiomSlot() {
-                const slotEl = document.getElementById('answer-slot');
-                slotEl.innerHTML = '';
-                this.userAns.forEach((word, idx) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'chip-btn chip-slot f1-font px-3 py-2 rounded-md text-lg';
-                    btn.innerText = word;
-                    if(this.isLocked) btn.classList.add('locked');
-                    btn.onclick = () => { if(!this.isLocked) this.moveWordToPool(idx); };
-                    slotEl.appendChild(btn);
-                });
-                this.checkIdiomWin();
-            }
-
-            moveWordToSlot(word) {
-                this.userAns.push(word);
-                this.renderIdiomPool();
-                this.renderIdiomSlot();
-            }
-
-            moveWordToPool(idx) {
-                this.userAns.splice(idx, 1);
-                this.renderIdiomPool();
-                this.renderIdiomSlot();
-            }
-
-            getRemainingParts(allParts, usedParts) {
-                const pool = [...allParts];
-                const used = [...usedParts];
-                used.forEach(u => {
-                    const i = pool.indexOf(u);
-                    if (i > -1) pool.splice(i, 1);
-                });
-                return pool;
-            }
-
-            checkIdiomWin() {
-                const correctOrder = this.questions[this.currentIndex].parts;
-                const slotEl = document.getElementById('answer-slot');
-                if (this.userAns.length !== correctOrder.length) return;
-                const isCorrect = this.userAns.every((val, index) => val === correctOrder[index]);
-
-                if (isCorrect) {
-                    slotEl.classList.add('correct-lane');
-                    document.getElementById('feedback').innerHTML = "<span class='text-[#39ff14] text-lg'>✅ PURPLE SECTOR</span>";
-                    slotEl.querySelectorAll('.chip-btn').forEach(c => c.classList.add('chip-correct'));
-                    
-                    const nextBtn = document.getElementById('idiom-next-btn');
-                    nextBtn.classList.remove('hidden');
-                    nextBtn.onclick = () => {
-                        this.currentIndex++;
-                        if (this.currentIndex < this.questions.length) this.showIdiomQuestion();
-                        else this.finish();
-                    };
-                    
-                    if (window.handleSRSUpdate) {
-                        const q = this.questions[this.currentIndex];
-                        window.handleSRSUpdate({ w: q.japanese, m: q.parts.join(' '), docId: 'idiom_' + q.id }, true);
-                    }
-
-                } else {
-                    this.missCount++;
-                    const q = this.questions[this.currentIndex];
-                    if (!this.missedWordsLog.find(item => item.w === "Idiom Order")) {
-                        this.missedWordsLog.push({ w: "Idiom Order Error", m: q.japanese });
-                    }
-                    if (window.handleSRSUpdate) {
-                        window.handleSRSUpdate({ w: q.japanese, m: q.parts.join(' '), docId: 'idiom_' + q.id }, false);
-                    }
-
-                    this.isLocked = true;
-                    document.getElementById('feedback').innerHTML = "<span class='text-[#e10600]'>⚠️ CRASHED! RESETTING...</span>";
-                    slotEl.classList.add('wrong-lane', 'animate-shake');
-                    setTimeout(() => {
-                        slotEl.classList.remove('animate-shake', 'wrong-lane');
-                        document.getElementById('feedback').innerHTML = "";
-                        this.userAns = [];
-                        this.isLocked = false;
-                        this.renderIdiomPool();
-                        this.renderIdiomSlot();
-                    }, 800);
-                }
-            }
-
-            // --- COMMON UTILS ---
-            startTimer() {
-                if (this.timerInterval) clearInterval(this.timerInterval);
-                this.timerInterval = setInterval(() => { document.getElementById('timer').innerText = ((Date.now() - this.startTime) / 1000).toFixed(2) + 's'; }, 50);
-            }
-
-            shuffle(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-            }
-
-            finish() {
-                clearInterval(this.timerInterval);
-                document.getElementById('quiz-screen').classList.add('hidden');
-                document.getElementById('result-screen').classList.remove('hidden');
-                
-                const totalTime = (Date.now() - this.startTime) / 1000;
-                let accuracy = Math.max(0, 100 - (this.missCount * 5)); 
-                if(this.mode === 'idiom') accuracy = Math.max(0, 100 - (this.missCount * 10));
-
-                const accDisplay = document.getElementById('accuracy-display');
-                accDisplay.innerText = `${accuracy.toFixed(1)}%`;
-                accDisplay.style.color = accuracy >= 90 ? "#4ade80" : "#ef4444";
-                
-                document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
-                document.getElementById('result-title').innerText = "CHECKERED FLAG";
-                
-                const review = document.getElementById('review-list');
-                let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Lap Analysis</div>`;
-                if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
-                review.innerHTML = summaryHtml;
-                
-                const nextBtn = document.getElementById('next-round-btn');
-                if (this.mode === 'vocab' && !this.isPitStopMode && this.currentRoundIndex + 1 < this.vocabRounds.length) {
-                    nextBtn.classList.remove('hidden');
-                    nextBtn.onclick = () => { document.getElementById('round-selector').value = this.currentRoundIndex + 1; this.start(); };
-                } else { nextBtn.classList.add('hidden'); }
-                
-                if (window.fetchSRSItems) window.fetchSRSItems();
-                if (window.incrementDailyLaps) window.incrementDailyLaps(); 
-            }
-
-            returnToGrid() {
-                document.getElementById('result-screen').classList.add('hidden');
-                document.getElementById('start-screen').classList.remove('hidden');
-                if (window.fetchSRSItems) window.fetchSRSItems();
-            }
-            
-            updatePitStopButton(count) {
-                const text = document.getElementById('mistake-count-display');
-                const overlay = document.getElementById('pit-alert-overlay');
-                if (count > 0) {
-                    text.innerText = "CRITICAL"; text.classList.remove('text-green-500'); text.classList.add('text-red-500');
-                    overlay.classList.remove('hidden'); overlay.onclick = () => this.startPitStop();
-                } else {
-                    text.innerText = "OPTIMAL"; text.classList.add('text-green-500'); text.classList.remove('text-red-500');
-                    overlay.classList.add('hidden');
-                }
-            }
-            
-            startPitStop() {
-                if (!this.dueMistakes || this.dueMistakes.length === 0) return;
-                this.isPitStopMode = true; 
-                this.switchMode('vocab'); 
-                
-                this.questions = this.dueMistakes.map(item => {
-                    const word = item.word || item.w;
-                    const meaning = item.meaning || item.m;
-                    const targetWord = { w: word, m: meaning };
-                    
-                    const distractors = this.getDistractors(targetWord, false);
-                    const options = [targetWord.m, ...distractors].sort(() => Math.random() - 0.5);
-                    return { w: targetWord.w, m: targetWord.m, qText: targetWord.w, aText: targetWord.m, o: options, docId: item.id, interval: item.interval || 0, repetitions: item.repetitions || 0, easeFactor: item.easeFactor || 2.5 };
-                });
-                
-                this.questions.sort(() => Math.random() - 0.5);
-                this.currentIndex = 0; this.missCount = 0; this.missedWordsLog = [];
-                document.getElementById('circuit-name').innerText = "SRS PIT STOP";
-                document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('quiz-screen').classList.remove('hidden');
-                
-                document.getElementById('vocab-interface').classList.remove('hidden');
-                document.getElementById('idiom-interface').classList.add('hidden');
-
-                this.startTime = Date.now();
-                this.startTimer();
-                this.showVocabQuestion();
-            }
-            
-            openTelemetry() {
-                document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('telemetry-screen').classList.remove('hidden');
-                const mistakes = this.allMistakes || [];
-                const worstWords = [...mistakes].sort((a, b) => (a.easeFactor || 2.5) - (b.easeFactor || 2.5)).slice(0, 20);
-                const listContainer = document.getElementById('worst-words-list');
-                if (worstWords.length === 0) listContainer.innerHTML = `<div class="text-gray-500 text-xs italic">No degradation.</div>`;
-                else {
-                    listContainer.innerHTML = worstWords.map(item => `
-                        <div class="flex justify-between items-center bg-gray-900/40 p-3 rounded-lg border-l-2 border-red-500 mb-1">
-                            <span class="font-bold text-gray-200 text-xs f1-font">${item.word || item.w}</span>
-                            <span class="text-[10px] text-gray-500 font-mono">EF:${(item.easeFactor||2.5).toFixed(2)}</span>
-                        </div>`).join('');
-                }
-                const ctx = document.getElementById('weaknessRadarChart').getContext('2d');
-                if (this.telemetryChart) this.telemetryChart.destroy();
-                const buckets = [0, 0, 0, 0, 0];
-                mistakes.forEach(m => {
-                    const int = m.interval || 0;
-                    if (int <= 1) buckets[0]++; else if (int <= 6) buckets[1]++; else if (int <= 14) buckets[2]++; else if (int <= 30) buckets[3]++; else buckets[4]++;
-                });
-                this.telemetryChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels: ['1d', '2-6d', '2w', '1mo', 'Master'], datasets: [{ data: buckets, backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'], borderColor: '#333', borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
-                });
-            }
-            closeOverlay(id) {
-                document.getElementById(id).classList.add('hidden');
-                document.getElementById('start-screen').classList.remove('hidden');
             }
         }
 
-        window.quiz = new HybridQuiz();
+        initUI() {
+            const selector = document.getElementById('round-selector');
+            selector.innerHTML = '';
+            if(this.vocabRounds.length === 0) { selector.innerHTML = '<option>Load Data or Login</option>'; }
+            else {
+                this.vocabRounds.forEach((round, index) => {
+                    const opt = document.createElement('option');
+                    opt.value = index;
+                    opt.text = round.name;
+                    selector.appendChild(opt);
+                });
+            }
+            document.getElementById('idiom-count-display').innerText = idiomData.length;
+        }
+
+        initSearch() {
+            const input = document.getElementById('search-input');
+            const results = document.getElementById('search-results');
+            input.addEventListener('input', (e) => {
+                const q = e.target.value.toLowerCase().trim();
+                if (!q) { results.classList.add('hidden'); return; }
+                const hits = this.masterList.map((item, index) => ({ ...item, i: index + 1 }))
+                    .filter(item => item.w.toLowerCase().includes(q) || item.m.toLowerCase().includes(q))
+                    .slice(0, 50);
+                if (hits.length > 0) {
+                    results.classList.remove('hidden');
+                    results.innerHTML = hits.map(h => `
+                        <div onclick="quiz.speak('${h.w.replace(/'/g, "\\'")}')" class="p-3 border-b border-gray-800 active:bg-gray-800 cursor-pointer flex justify-between items-center group">
+                            <div class="text-left"><div class="flex items-baseline gap-2"><span class="text-[10px] text-yellow-500 font-mono opacity-70">No.${h.i}</span><span class="text-red-400 font-bold text-xs f1-font">${h.w}</span></div><span class="text-gray-400 text-[10px] pl-1">${h.m}</span></div>
+                            <button class="text-[8px] bg-gray-700 text-white px-2 py-1 rounded-full uppercase">Listen</button>
+                        </div>`).join('');
+                } else {
+                    results.classList.remove('hidden');
+                    results.innerHTML = `<div class="p-3 text-gray-500 text-[10px] text-center">NO DATA</div>`;
+                }
+            });
+            document.addEventListener('click', (e) => { if (!input.contains(e.target) && !results.contains(e.target)) results.classList.add('hidden'); });
+        }
+
+        createCustomRound() {
+            const s = parseInt(document.getElementById('custom-start').value) - 1;
+            const e = parseInt(document.getElementById('custom-end').value);
+            if(isNaN(s) || isNaN(e) || s < 0 || e > this.masterList.length || s >= e) { alert("Invalid Range"); return; }
+            const customWords = this.masterList.slice(s, e);
+            this.vocabRounds.unshift({ id: 'custom', name: `CUSTOM (No.${s+1}-${e})`, words: customWords });
+            this.initUI();
+            document.getElementById('round-selector').value = 0;
+        }
+        
+        setTireStrategy(count, type) {
+            this.wordsPerRound = count;
+            this.generateRounds();
+            this.initUI();
+            document.querySelectorAll('.tire-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tire-${type}`).classList.add('active');
+        }
+
+        switchMode(newMode) {
+            this.mode = newMode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`mode-${newMode}`).classList.add('active');
+            
+            if (newMode === 'vocab') {
+                document.getElementById('vocab-settings').classList.remove('hidden');
+                document.getElementById('vocab-tools').classList.remove('hidden');
+                document.getElementById('idiom-settings').classList.add('hidden');
+            } else {
+                document.getElementById('vocab-settings').classList.add('hidden');
+                document.getElementById('vocab-tools').classList.add('hidden');
+                document.getElementById('idiom-settings').classList.remove('hidden');
+            }
+        }
+
+        start() {
+            this.currentIndex = 0;
+            this.missCount = 0;
+            this.missedWordsLog = [];
+            this.startTime = Date.now();
+            this.startTimer();
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            document.getElementById('vocab-interface').classList.add('hidden');
+            document.getElementById('idiom-interface').classList.add('hidden');
+
+            if (this.mode === 'vocab') {
+                this.startVocabMode();
+            } else {
+                this.startIdiomMode();
+            }
+        }
+
+        startVocabMode() {
+            if(this.vocabRounds.length === 0) { alert("Data not loaded"); this.returnToGrid(); return; }
+            this.isPitStopMode = false;
+            document.getElementById('vocab-interface').classList.remove('hidden');
+            
+            const selector = document.getElementById('round-selector');
+            this.currentRoundIndex = parseInt(selector.value);
+            const selectedRound = this.vocabRounds[this.currentRoundIndex];
+            
+            this.isReverseMode = document.getElementById('reverse-mode').checked;
+            
+            document.getElementById('circuit-name').innerText = selectedRound.name + (this.isReverseMode ? " [REV]" : "");
+            document.getElementById('question-label').innerText = this.isReverseMode ? "TRANSLATE" : "MEANING";
+
+            this.questions = selectedRound.words.map(target => {
+                const qText = this.isReverseMode ? target.m : target.w;
+                const aText = this.isReverseMode ? target.w : target.m;
+                const distractors = this.getDistractors(target, this.isReverseMode);
+                const options = [aText, ...distractors].sort(() => Math.random() - 0.5);
+                return { w: target.w, m: target.m, qText: qText, aText: aText, o: options };
+            });
+            this.questions.sort(() => Math.random() - 0.5);
+            this.showVocabQuestion();
+        }
+
+        startIdiomMode() {
+            if(idiomData.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
+            document.getElementById('idiom-interface').classList.remove('hidden');
+            document.getElementById('circuit-name').innerText = "IDIOM SORTING";
+            
+            this.questions = [...idiomData].sort(() => Math.random() - 0.5);
+            this.showIdiomQuestion();
+        }
+        
+       getDistractors(targetWord, isReverse) {
+            const distractors = [];
+            if (this.masterList.length < 4) return ["Option A", "Option B", "Option C"]; 
+
+            const targetString = isReverse ? targetWord.w : targetWord.m;
+            const targetLen = targetString.length;
+
+            let smartPool = this.masterList.filter(item => {
+                const str = isReverse ? item.w : item.m;
+                if (str === targetString) return false;
+                return Math.abs(str.length - targetLen) <= 2;
+            });
+
+            if (smartPool.length < 10) {
+                smartPool = this.masterList.filter(item => {
+                    const str = isReverse ? item.w : item.m;
+                    return str !== targetString;
+                });
+            }
+
+            let attempts = 0;
+            while (distractors.length < 3 && attempts < 100) {
+                const r = smartPool[Math.floor(Math.random() * smartPool.length)];
+                const candidate = isReverse ? r.w : r.m;
+                if (!distractors.includes(candidate)) {
+                    distractors.push(candidate);
+                }
+                attempts++;
+            }
+            while (distractors.length < 3) distractors.push("---");
+            return distractors;
+        }
+
+        showVocabQuestion() {
+            const q = this.questions[this.currentIndex];
+            document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
+            
+            const targetDisplay = document.getElementById('target-word');
+            targetDisplay.innerText = q.qText;
+            targetDisplay.className = (this.isReverseMode && q.qText.length > 8) 
+                ? "f1-font text-3xl font-bold text-white tracking-wide break-words px-2"
+                : "f1-font text-5xl font-bold text-white tracking-wide drop-shadow-lg break-words px-2";
+
+            this.lapStartTime = Date.now(); 
+
+            document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
+            document.getElementById('feedback').innerText = '';
+            
+            const speakBtn = document.getElementById('speak-btn');
+            speakBtn.onclick = () => this.speak(q.w);
+            if (this.isAutoAudio && !this.isReverseMode) setTimeout(() => this.speak(q.w), 200);
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = ''; 
+            
+            const renderOptions = () => {
+                container.innerHTML = '';
+                q.o.forEach(opt => {
+                    const btn = document.createElement('button');
+                    const fontClass = this.isReverseMode ? "f1-font tracking-wider text-xl" : "text-lg";
+                    btn.className = `option-btn w-full text-left p-5 rounded-xl bg-white/5 border border-white/10 active:border-red-500 font-bold shadow-lg ${fontClass}`;
+                    btn.innerText = opt;
+                    btn.onclick = () => this.handleVocabAnswer(opt, q);
+                    container.appendChild(btn);
+                });
+            };
+
+            if (this.isInstantMode) {
+                renderOptions();
+            } else {
+                const revealBtn = document.createElement('button');
+                revealBtn.className = 'col-span-1 md:col-span-2 w-full h-24 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 f1-font text-lg uppercase tracking-widest active:border-yellow-500 active:text-yellow-500 transition-all flex flex-col items-center justify-center gap-1 animate-pulse';
+                revealBtn.innerHTML = `<span>VISUALIZE MEANING</span><span class="text-[10px] text-gray-500 font-mono">TAP TO UNLOCK</span>`;
+                revealBtn.onclick = () => { 
+                    renderOptions();
+                };
+                container.appendChild(revealBtn);
+            }
+        }
+
+        handleVocabAnswer(selected, q) {
+            const btns = document.querySelectorAll('.option-btn');
+            if (btns.length > 0 && btns[0].disabled) return;
+            btns.forEach(b => b.disabled = true);
+
+            const feedback = document.getElementById('feedback');
+            const timeTaken = (Date.now() - this.lapStartTime) / 1000;
+            const isCorrect = (selected === q.aText);
+
+            if (window.handleSRSUpdate) {
+                window.handleSRSUpdate({ ...q, timeTaken: timeTaken }, isCorrect);
+            }
+
+            if (isCorrect) {
+                if(this.isReverseMode) this.speak(q.w);
+                
+                if (timeTaken < 1.2) {
+                    feedback.innerHTML = `<span class="text-[#39ff14] text-xs font-bold animate-pulse">🟣 PURPLE SECTOR (${timeTaken.toFixed(2)}s)</span>`;
+                } else if (timeTaken > 5.0) {
+                    feedback.innerHTML = `<span class="text-yellow-500 text-xs font-bold">🟡 SLOW (${timeTaken.toFixed(2)}s)</span>`;
+                }
+
+                setTimeout(() => {
+                    this.currentIndex++;
+                    if (this.currentIndex < this.questions.length) this.showVocabQuestion();
+                    else this.finish();
+                }, 400); 
+
+            } else {
+                this.missCount++;
+                feedback.innerText = `WRONG: ${q.w} = ${q.m}`;
+                feedback.className = "mt-4 text-center h-6 font-bold text-red-500 animate-pulse";
+                if (!this.missedWordsLog.find(item => item.w === q.w)) this.missedWordsLog.push({ w: q.w, m: q.m });
+                
+                this.questions.push(q);
+                setTimeout(() => { 
+                    this.currentIndex++; 
+                    this.showVocabQuestion(); 
+                }, 1500);
+            }
+        }
+
+        // --- IDIOM ENGINE ---
+        showIdiomQuestion() {
+            const data = this.questions[this.currentIndex];
+            document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
+            document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
+            document.getElementById('feedback').innerHTML = "";
+            document.getElementById('idiom-next-btn').classList.add('hidden');
+            
+            document.getElementById('idiom-japanese').innerText = data.japanese;
+            document.getElementById('idiom-prefix').innerText = data.prefix;
+            document.getElementById('idiom-suffix').innerText = data.suffix;
+            
+            document.getElementById('answer-slot').classList.remove('correct-lane', 'wrong-lane');
+            document.getElementById('answer-slot').innerHTML = '';
+
+            this.userAns = [];
+            this.currentIdiomParts = [...data.parts];
+            this.shuffledIdiomParts = [...data.parts];
+            this.shuffle(this.shuffledIdiomParts);
+            
+            this.isLocked = false;
+            this.renderIdiomPool();
+        }
+
+        renderIdiomPool() {
+            const poolEl = document.getElementById('word-pool');
+            poolEl.innerHTML = '';
+            const remaining = this.getRemainingParts(this.shuffledIdiomParts, this.userAns);
+            
+            remaining.forEach((word) => {
+                const btn = document.createElement('button');
+                btn.className = 'chip-btn chip-pool f1-font px-4 py-3 rounded-lg text-lg border border-gray-700 shadow-md active:bg-gray-700';
+                btn.innerText = word;
+                if(this.isLocked) btn.classList.add('locked');
+                btn.onclick = () => { if(!this.isLocked) this.moveWordToSlot(word); };
+                poolEl.appendChild(btn);
+            });
+        }
+
+        renderIdiomSlot() {
+            const slotEl = document.getElementById('answer-slot');
+            slotEl.innerHTML = '';
+            this.userAns.forEach((word, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'chip-btn chip-slot f1-font px-3 py-2 rounded-md text-lg';
+                btn.innerText = word;
+                if(this.isLocked) btn.classList.add('locked');
+                btn.onclick = () => { if(!this.isLocked) this.moveWordToPool(idx); };
+                slotEl.appendChild(btn);
+            });
+            this.checkIdiomWin();
+        }
+
+        moveWordToSlot(word) {
+            this.userAns.push(word);
+            this.renderIdiomPool();
+            this.renderIdiomSlot();
+        }
+
+        moveWordToPool(idx) {
+            this.userAns.splice(idx, 1);
+            this.renderIdiomPool();
+            this.renderIdiomSlot();
+        }
+
+        getRemainingParts(allParts, usedParts) {
+            const pool = [...allParts];
+            const used = [...usedParts];
+            used.forEach(u => {
+                const i = pool.indexOf(u);
+                if (i > -1) pool.splice(i, 1);
+            });
+            return pool;
+        }
+
+        checkIdiomWin() {
+            const correctOrder = this.questions[this.currentIndex].parts;
+            const slotEl = document.getElementById('answer-slot');
+            if (this.userAns.length !== correctOrder.length) return;
+            const isCorrect = this.userAns.every((val, index) => val === correctOrder[index]);
+
+            if (isCorrect) {
+                slotEl.classList.add('correct-lane');
+                document.getElementById('feedback').innerHTML = "<span class='text-[#39ff14] text-lg'>✅ PURPLE SECTOR</span>";
+                slotEl.querySelectorAll('.chip-btn').forEach(c => c.classList.add('chip-correct'));
+                
+                const nextBtn = document.getElementById('idiom-next-btn');
+                nextBtn.classList.remove('hidden');
+                nextBtn.onclick = () => {
+                    this.currentIndex++;
+                    if (this.currentIndex < this.questions.length) this.showIdiomQuestion();
+                    else this.finish();
+                };
+                
+                if (window.handleSRSUpdate) {
+                    const q = this.questions[this.currentIndex];
+                    window.handleSRSUpdate({ w: q.japanese, m: q.parts.join(' '), docId: 'idiom_' + q.id }, true);
+                }
+
+            } else {
+                this.missCount++;
+                const q = this.questions[this.currentIndex];
+                if (!this.missedWordsLog.find(item => item.w === "Idiom Order")) {
+                    this.missedWordsLog.push({ w: "Idiom Order Error", m: q.japanese });
+                }
+                if (window.handleSRSUpdate) {
+                    window.handleSRSUpdate({ w: q.japanese, m: q.parts.join(' '), docId: 'idiom_' + q.id }, false);
+                }
+
+                this.isLocked = true;
+                document.getElementById('feedback').innerHTML = "<span class='text-[#e10600]'>⚠️ CRASHED! RESETTING...</span>";
+                slotEl.classList.add('wrong-lane', 'animate-shake');
+                setTimeout(() => {
+                    slotEl.classList.remove('animate-shake', 'wrong-lane');
+                    document.getElementById('feedback').innerHTML = "";
+                    this.userAns = [];
+                    this.isLocked = false;
+                    this.renderIdiomPool();
+                    this.renderIdiomSlot();
+                }, 800);
+            }
+        }
+
+        // --- COMMON UTILS ---
+        startTimer() {
+            if (this.timerInterval) clearInterval(this.timerInterval);
+            this.timerInterval = setInterval(() => { document.getElementById('timer').innerText = ((Date.now() - this.startTime) / 1000).toFixed(2) + 's'; }, 50);
+        }
+
+        shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        copyToClipboard(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.innerText = "AUTO-COPIED!";
+                btn.classList.remove("bg-black", "text-white");
+                btn.classList.add("bg-green-500", "text-black", "border", "border-green-400");
+                setTimeout(() => {
+                    btn.innerText = "COPY LICENSE ID";
+                    btn.classList.add("bg-black", "text-white");
+                    btn.classList.remove("bg-green-500", "text-black", "border", "border-green-400");
+                }, 3000);
+            }).catch(err => {
+                console.log("Copy failed", err);
+                btn.innerText = "COPY LICENSE ID";
+            });
+        }
+
+        finish() {
+            clearInterval(this.timerInterval);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const totalTime = (Date.now() - this.startTime) / 1000;
+            let accuracy = Math.max(0, 100 - (this.missCount * 5)); 
+            if(this.mode === 'idiom') accuracy = Math.max(0, 100 - (this.missCount * 10));
+
+            const accDisplay = document.getElementById('accuracy-display');
+            accDisplay.innerText = `${accuracy.toFixed(1)}%`;
+            
+            // ★ PASS / FAIL LOGIC ★
+            const passArea = document.getElementById('pass-area');
+            const failMsg = document.getElementById('fail-msg');
+            const passBtn = document.getElementById('pass-btn');
+            const licenseId = `barcelona`;
+
+            if (accuracy >= 90) {
+                // Pass Logic
+                accDisplay.style.color = "#4ade80"; // Green
+                passArea.classList.remove('hidden');
+                failMsg.classList.add('hidden');
+                
+                // Automatic Copy Attempt
+                this.copyToClipboard(licenseId, passBtn);
+                
+                // Manual Copy Listener
+                passBtn.onclick = () => this.copyToClipboard(licenseId, passBtn);
+
+            } else {
+                // Fail Logic
+                accDisplay.style.color = "#ef4444"; // Red
+                passArea.classList.add('hidden');
+                failMsg.classList.remove('hidden');
+            }
+
+            document.getElementById('rank-text').innerText = `Time: ${totalTime.toFixed(2)}s | Misses: ${this.missCount}`;
+            document.getElementById('result-title').innerText = "CHECKERED FLAG";
+            
+            const review = document.getElementById('review-list');
+            let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Lap Analysis</div>`;
+            if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
+            review.innerHTML = summaryHtml;
+            
+            const nextBtn = document.getElementById('next-round-btn');
+            if (this.mode === 'vocab' && !this.isPitStopMode && this.currentRoundIndex + 1 < this.vocabRounds.length) {
+                nextBtn.classList.remove('hidden');
+                nextBtn.onclick = () => { document.getElementById('round-selector').value = this.currentRoundIndex + 1; this.start(); };
+            } else { nextBtn.classList.add('hidden'); }
+            
+            if (window.fetchSRSItems) window.fetchSRSItems();
+            if (window.incrementDailyLaps) window.incrementDailyLaps(); 
+        }
+
+        returnToGrid() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            if (window.fetchSRSItems) window.fetchSRSItems();
+        }
+        
+        updatePitStopButton(count) {
+            const text = document.getElementById('mistake-count-display');
+            const overlay = document.getElementById('pit-alert-overlay');
+            if (count > 0) {
+                text.innerText = "CRITICAL"; text.classList.remove('text-green-500'); text.classList.add('text-red-500');
+                overlay.classList.remove('hidden'); overlay.onclick = () => this.startPitStop();
+            } else {
+                text.innerText = "OPTIMAL"; text.classList.add('text-green-500'); text.classList.remove('text-red-500');
+                overlay.classList.add('hidden');
+            }
+        }
+        
+        startPitStop() {
+            if (!this.dueMistakes || this.dueMistakes.length === 0) return;
+            this.isPitStopMode = true; 
+            this.switchMode('vocab'); 
+            
+            this.questions = this.dueMistakes.map(item => {
+                const word = item.word || item.w;
+                const meaning = item.meaning || item.m;
+                const targetWord = { w: word, m: meaning };
+                
+                const distractors = this.getDistractors(targetWord, false);
+                const options = [targetWord.m, ...distractors].sort(() => Math.random() - 0.5);
+                return { w: targetWord.w, m: targetWord.m, qText: targetWord.w, aText: targetWord.m, o: options, docId: item.id, interval: item.interval || 0, repetitions: item.repetitions || 0, easeFactor: item.easeFactor || 2.5 };
+            });
+            
+            this.questions.sort(() => Math.random() - 0.5);
+            this.currentIndex = 0; this.missCount = 0; this.missedWordsLog = [];
+            document.getElementById('circuit-name').innerText = "SRS PIT STOP";
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            document.getElementById('vocab-interface').classList.remove('hidden');
+            document.getElementById('idiom-interface').classList.add('hidden');
+
+            this.startTime = Date.now();
+            this.startTimer();
+            this.showVocabQuestion();
+        }
+        
+        openTelemetry() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('telemetry-screen').classList.remove('hidden');
+            const mistakes = this.allMistakes || [];
+            const worstWords = [...mistakes].sort((a, b) => (a.easeFactor || 2.5) - (b.easeFactor || 2.5)).slice(0, 20);
+            const listContainer = document.getElementById('worst-words-list');
+            if (worstWords.length === 0) listContainer.innerHTML = `<div class="text-gray-500 text-xs italic">No degradation.</div>`;
+            else {
+                listContainer.innerHTML = worstWords.map(item => `
+                    <div class="flex justify-between items-center bg-gray-900/40 p-3 rounded-lg border-l-2 border-red-500 mb-1">
+                        <span class="font-bold text-gray-200 text-xs f1-font">${item.word || item.w}</span>
+                        <span class="text-[10px] text-gray-500 font-mono">EF:${(item.easeFactor||2.5).toFixed(2)}</span>
+                    </div>`).join('');
+            }
+            const ctx = document.getElementById('weaknessRadarChart').getContext('2d');
+            if (this.telemetryChart) this.telemetryChart.destroy();
+            const buckets = [0, 0, 0, 0, 0];
+            mistakes.forEach(m => {
+                const int = m.interval || 0;
+                if (int <= 1) buckets[0]++; else if (int <= 6) buckets[1]++; else if (int <= 14) buckets[2]++; else if (int <= 30) buckets[3]++; else buckets[4]++;
+            });
+            this.telemetryChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: ['1d', '2-6d', '2w', '1mo', 'Master'], datasets: [{ data: buckets, backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'], borderColor: '#333', borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+            });
+        }
+        closeOverlay(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    }
+
+    window.quiz = new HybridQuiz();
     </script>
     
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
       import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-      import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, updateDoc, Timestamp, orderBy, limit, runTransaction, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { getFirestore, collection, addDoc, query, where, getDocs, doc, setDoc, updateDoc, Timestamp, orderBy, limit, runTransaction, onSnapshot, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyDg2EgiI-DMzmoT20zF4VJfm1MxtmhdJQQ",
@@ -3156,7 +3166,7 @@ const idiomData = [
       window.currentUser = null;
 
       // ---------------------------------------------------------
-      // 1. AUTH & PERSISTENCE (Phase 1 Fix)
+      // 1. AUTH & PERSISTENCE
       // ---------------------------------------------------------
       onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -3207,7 +3217,7 @@ const idiomData = [
       });
 
       // ---------------------------------------------------------
-      // 2. DATA SYNC (Phase 1 Fix)
+      // 2. DATA SYNC
       // ---------------------------------------------------------
       const statsRef = doc(db, "stats", "daily_global");
       onSnapshot(statsRef, (doc) => {
@@ -3233,6 +3243,7 @@ const idiomData = [
         let allItems = [];
         let loadedFromCache = false;
 
+        // --- Sector 1: Cache Read ---
         if (now - lastFetch < CACHE_DURATION && localStorage.getItem(CACHE_KEY)) {
             try {
                 const rawString = localStorage.getItem(CACHE_KEY);
@@ -3244,9 +3255,13 @@ const idiomData = [
                     }));
                     loadedFromCache = true;
                 }
-            } catch (e) { console.warn("Cache corrupted"); localStorage.removeItem(CACHE_KEY); }
+            } catch (e) { 
+                console.warn("Cache corrupted"); 
+                localStorage.removeItem(CACHE_KEY); 
+            }
         }
 
+        // --- Sector 2: Server Fetch ---
         if (!loadedFromCache) {
             try {
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
@@ -3274,7 +3289,7 @@ const idiomData = [
       };
 
       // ---------------------------------------------------------
-      // 3. SRS ALGORITHM v2.0 (Phase 3: Speed Logic)
+      // 3. SRS ALGORITHM v2.0 (Review Fix Applied)
       // ---------------------------------------------------------
       window.handleSRSUpdate = async (questionObj, isCorrect) => {
         if (!window.currentUser) return;
@@ -3290,9 +3305,7 @@ const idiomData = [
             easeFactor: questionObj.easeFactor || 2.5 
         };
         
-        // Timer Logic: Fallback to 3.0s if missing
         const timeTaken = questionObj.timeTaken || 3.0;
-        
         let nextInterval, nextRepetitions, nextEaseFactor;
 
         if (!isCorrect) {
@@ -3310,7 +3323,9 @@ const idiomData = [
             else if (timeTaken > 5.0) easeBonus = -0.15; // Slow
             else easeBonus = 0.1;                      // Normal
 
-            nextEaseFactor = Math.max(1.3, currentParams.easeFactor + easeBonus);
+            // 【Review Fix】Cap Ease Factor at 3.0
+            let rawEase = currentParams.easeFactor + easeBonus;
+            nextEaseFactor = Math.min(3.0, Math.max(1.3, rawEase));
 
             if (nextRepetitions === 1) nextInterval = 1; 
             else if (nextRepetitions === 2) nextInterval = 6; 
@@ -3334,10 +3349,15 @@ const idiomData = [
         .catch((e) => console.error("Telemetry Failed:", e));
       };
       
+      // 【Review Fix】Atomic Increment
       window.incrementDailyLaps = () => {
           const statsRef = doc(db, "stats", "daily_global");
           const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
-          setDoc(statsRef, { count: (parseInt(document.getElementById('daily-laps-display').innerText) || 0) + 1, date: todayStr }, { merge: true });
+          
+          setDoc(statsRef, { 
+              count: increment(1), 
+              date: todayStr 
+          }, { merge: true });
       };
     </script>
     
