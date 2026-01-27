@@ -2684,18 +2684,50 @@ const idiomData = [
                 this.showIdiomQuestion();
             }
             
-            getDistractors(targetWord, isReverse) {
+           getDistractors(targetWord, isReverse) {
                 const distractors = [];
-                let attempts = 0;
+                // データが少なすぎる場合の安全策
                 if (this.masterList.length < 4) return ["Option A", "Option B", "Option C"]; 
 
+                const targetString = isReverse ? targetWord.w : targetWord.m;
+                const targetLen = targetString.length;
+
+                // 1. 候補リストの作成 (自分自身を除く)
+                // 文字数が近い (±2文字以内) 単語を優先候補とする「Smart Pool」を作る
+                let smartPool = this.masterList.filter(item => {
+                    const str = isReverse ? item.w : item.m;
+                    // 自分自身は除外
+                    if (str === targetString) return false;
+                    // 文字数差が2以内なら候補に入れる
+                    return Math.abs(str.length - targetLen) <= 2;
+                });
+
+                // もしSmart Poolが少なすぎたら（データ不足など）、全体から補充する
+                if (smartPool.length < 10) {
+                    smartPool = this.masterList.filter(item => {
+                        const str = isReverse ? item.w : item.m;
+                        return str !== targetString;
+                    });
+                }
+
+                // 2. 候補からランダムに3つ選出
+                let attempts = 0;
                 while (distractors.length < 3 && attempts < 100) {
-                    const r = this.masterList[Math.floor(Math.random() * this.masterList.length)];
+                    const r = smartPool[Math.floor(Math.random() * smartPool.length)];
                     const candidate = isReverse ? r.w : r.m;
-                    const forbidden = isReverse ? targetWord.w : targetWord.m;
-                    if (candidate !== forbidden && !distractors.includes(candidate)) distractors.push(candidate);
+                    
+                    // 重複チェック
+                    if (!distractors.includes(candidate)) {
+                        distractors.push(candidate);
+                    }
                     attempts++;
                 }
+                
+                // 万が一3つ揃わなかった場合の保険
+                while (distractors.length < 3) {
+                     distractors.push("---");
+                }
+
                 return distractors;
             }
 
