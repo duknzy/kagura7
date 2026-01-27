@@ -236,6 +236,10 @@
                             <span class="text-xs font-bold text-gray-300 group-hover:text-green-400 transition-colors flex items-center gap-2"><span class="text-green-500">🔊</span> RACE ENGINEER</span>
                             <input type="checkbox" id="audio-mode" class="accent-f1 w-5 h-5 cursor-pointer" checked>
                         </label>
+                        <label class="flex items-center justify-between cursor-pointer group p-1">
+                            <span class="text-xs font-bold text-gray-300 group-hover:text-yellow-400 transition-colors flex items-center gap-2"><span class="text-yellow-400">⚡</span> INSTANT DRS</span>
+                            <input type="checkbox" id="instant-mode" class="accent-f1 w-5 h-5 cursor-pointer">
+                        </label>
                     </div>
                 </div>
 
@@ -2754,22 +2758,33 @@ const idiomData = [
                 const container = document.getElementById('options-container');
                 container.innerHTML = ''; 
                 
-                const revealBtn = document.createElement('button');
-                revealBtn.className = 'col-span-1 md:col-span-2 w-full h-24 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 f1-font text-lg uppercase tracking-widest active:border-yellow-500 active:text-yellow-500 transition-all flex flex-col items-center justify-center gap-1 animate-pulse';
-                revealBtn.innerHTML = `<span>VISUALIZE MEANING</span><span class="text-[10px] text-gray-500 font-mono">TAP TO UNLOCK</span>`;
-                revealBtn.onclick = () => { 
+                // ★ 選択肢生成関数 (共通化)
+                const renderOptions = () => {
                     container.innerHTML = '';
                     q.o.forEach(opt => {
                         const btn = document.createElement('button');
                         const fontClass = this.isReverseMode ? "f1-font tracking-wider text-xl" : "text-lg";
                         btn.className = `option-btn w-full text-left p-5 rounded-xl bg-white/5 border border-white/10 active:border-red-500 font-bold shadow-lg ${fontClass}`;
                         btn.innerText = opt;
-                        // Click Logic
                         btn.onclick = () => this.handleVocabAnswer(opt, q);
                         container.appendChild(btn);
                     });
                 };
-                container.appendChild(revealBtn);
+
+                // ★ DRSモード判定
+                if (this.isInstantMode) {
+                    // 即時展開 (DRS OPEN)
+                    renderOptions();
+                } else {
+                    // 従来モード (VISUALIZEボタンを表示)
+                    const revealBtn = document.createElement('button');
+                    revealBtn.className = 'col-span-1 md:col-span-2 w-full h-24 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 f1-font text-lg uppercase tracking-widest active:border-yellow-500 active:text-yellow-500 transition-all flex flex-col items-center justify-center gap-1 animate-pulse';
+                    revealBtn.innerHTML = `<span>VISUALIZE MEANING</span><span class="text-[10px] text-gray-500 font-mono">TAP TO UNLOCK</span>`;
+                    revealBtn.onclick = () => { 
+                        renderOptions();
+                    };
+                    container.appendChild(revealBtn);
+                }
             }
 
             handleVocabAnswer(selected, q) {
