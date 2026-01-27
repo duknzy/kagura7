@@ -145,20 +145,6 @@
         .tire-medium.active { border-color: #eab308; color: #eab308; } 
         .tire-hard.active { border-color: #f8fafc; color: #f8fafc; } 
 
-        /* SIMPLE PASS BOX */
-        .simple-pass-box {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid #444;
-            border-left: 4px solid var(--neon-green);
-            border-radius: 4px;
-            padding: 1.2rem;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.1);
-        }
-
         input, select { font-size: 16px !important; }
 
         @keyframes slideIn {
@@ -352,20 +338,6 @@
             <div id="accuracy-display" class="f1-font text-7xl font-bold mb-2 text-white glitch-text">95.0%</div>
             <p id="rank-text" class="f1-font text-sm mb-8 text-gray-400 font-mono">P1: MAX VERSTAPPEN</p>
             
-            <div id="pass-issue-area" class="hidden mb-8 transform transition-all hover:scale-105 cursor-pointer active:scale-95">
-                <div class="simple-pass-box">
-                    <div class="text-left">
-                        <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">SUPER LICENSE</div>
-                        <div id="license-id-display" class="f1-font text-2xl text-[#39ff14] font-bold tracking-widest">perfect</div>
-                    </div>
-                    <button id="copy-pass-btn" class="bg-gray-800 text-white text-[10px] px-6 py-3 rounded border border-gray-600 uppercase font-bold active:bg-white active:text-black">
-                        TAP TO COPY
-                    </button>
-                </div>
-            </div>
-
-            <div id="fail-message" class="hidden mb-6 p-4 border border-red-500 bg-red-900/20 text-red-500 font-bold text-xs uppercase tracking-widest">Session Stopped: Accuracy Too Low</div>
-            
             <div class="bg-black/40 p-4 rounded-xl mb-8 text-left max-h-48 overflow-y-auto border border-gray-800" id="review-list"></div>
             
             <div class="grid grid-cols-2 gap-4">
@@ -377,7 +349,7 @@
 
     <script>
 // ==========================================
-// 1. DATA CONFIGURATION (Full Loaded)
+// 1. DATA CONFIGURATION
 // ==========================================
 const rawData = `
 follow: ～の後に続く、～に従う
@@ -2407,18 +2379,83 @@ abruptly: 不意に
 conversely: 逆に
 predominantly: 主に
 lest: ～しないように
-`;
+`; // 単語データは空
 
-// 熟語モード用データ
+// 熟語モード用データ (提供されたファイルからクリーニング済み)
 const idiomData = [
-    { id: 1, japanese: "10分間休憩にしましょう", prefix: "Let's (", suffix: ")", parts: ["take", "a", "ten-minute", "break"] },
-    { id: 2, japanese: "彼はそのニュースに驚いたようだ", prefix: "He seems (", suffix: ") at the news.", parts: ["to", "have", "been", "surprised"] },
-    { id: 3, japanese: "できるだけ早く", prefix: "Please come (", suffix: ").", parts: ["as", "soon", "as", "possible"] },
-    { id: 4, japanese: "私はこの歌を聞くと必ず学生時代を思い出す", prefix: "I never hear this song (", suffix: ") of my school days.", parts: ["without", "being", "reminded"] },
-    { id: 5, japanese: "雨が降っていたにもかかわらず", prefix: "(", suffix: ") the rain, they went out.", parts: ["In", "spite", "of"] },
-    { id: 6, japanese: "彼女はプライドが高すぎてその仕事ができない", prefix: "She is (", suffix: ") to do the work.", parts: ["too", "proud"] },
-    { id: 7, japanese: "彼は始発列車に乗れるように早く起きた", prefix: "He got up early (", suffix: ") the first train.", parts: ["so", "as", "to", "catch"] },
-    { id: 8, japanese: "これは私が今まで読んだ中で最も面白い本だ", prefix: "This is (", suffix: ") I have ever read.", parts: ["the", "most", "interesting", "book"] }
+  { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
+  { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
+  { id: 1217, japanese: "Aに電話をかける", prefix: "I'll (", suffix: ") tomorrow morning.", parts: ["give", "you", "a", "call"] },
+  { id: 1218, japanese: "〜を引き起こす", prefix: "The population decline will (", suffix: ") several problems.", parts: ["give", "rise", "to"] },
+  { id: 1219, japanese: "〜を産む", prefix: "My sister (", suffix: ") a baby girl this spring.", parts: ["gave", "birth", "to"] },
+  { id: 1220, japanese: "〜に注意を払う", prefix: "I (", suffix: ") what the others were saying.", parts: ["paid", "attention", "to"] },
+  { id: "1221-1", japanese: "〜を訪れる", prefix: "We (", suffix: ") the Hiroshima Peace Memorial Museum.", parts: ["paid", "a", "visit", "to"] },
+  { id: "1221-2", japanese: "〜を訪れる", prefix: "I (", suffix: ") in Wakayama last weekend.", parts: ["paid", "my", "grandparents", "a", "visit"] },
+  { id: 1222, japanese: "面目を失う", prefix: "If I fail, I will (", suffix: ").", parts: ["lose", "face"] },
+  { id: 1223, japanese: "かっとなる", prefix: "I apologize for (", suffix: ").", parts: ["losing", "my", "temper"] },
+  { id: 1224, japanese: "〜から目を離さない", prefix: "Can you (", suffix: ") for me?", parts: ["keep", "an", "eye", "on", "my", "bag"] },
+  { id: 1225, japanese: "規則正しい生活を送る", prefix: "Everyone in my family (", suffix: ").", parts: ["keeps", "regular", "hours"] },
+  { id: 1226, japanese: "成人になる", prefix: "When I (", suffix: "), I will be able to vote.", parts: ["come", "of", "age"] },
+  { id: 1227, japanese: "〜を受け入れる", prefix: "It took me a long time to (", suffix: ") my sister's death.", parts: ["come", "to", "terms", "with"] },
+  { id: 1228, japanese: "明るみに出る", prefix: "The leak of personal information (", suffix: ").", parts: ["came", "to", "light"] },
+  { id: 1229, japanese: "誕生する", prefix: "I want to know how the universe (", suffix: ").", parts: ["came", "into", "being"] },
+  { id: 1230, japanese: "ダイエット中だ", prefix: "No, thank you. I'm (", suffix: ").", parts: ["on", "a", "diet"] },
+  { id: 1231, japanese: "ストライキをする", prefix: "The workers (", suffix: ") for the first time in 20 years.", parts: ["went", "on", "strike"] },
+  { id: 1232, japanese: "実を結ぶ", prefix: "My efforts finally (", suffix: ").", parts: ["bore", "fruit"] },
+  { id: 1233, japanese: "〜を利用できる", prefix: "Students (", suffix: ") online resources for their research projects.", parts: ["have", "access", "to"] },
+  { id: 1234, japanese: "〜のあら探しをする", prefix: "He (", suffix: ") everything I do.", parts: ["finds", "fault", "with"] },
+  { id: 1235, japanese: "食器を洗う", prefix: "I'll (", suffix: ") after dinner.", parts: ["do", "the", "dishes"] },
+  { id: 1236, japanese: "締め切りに間に合わせる", prefix: "I'm working hard to (", suffix: ").", parts: ["meet", "the", "deadline"] },
+  { id: 1237, japanese: "〜に打ち勝つ", prefix: "My curiosity (", suffix: "), and I opened the box.", parts: ["got", "the", "better", "of", "me"] },
+  { id: 1238, japanese: "〜する危険を冒す", prefix: "If I don't study, I (", suffix: ") my exams.", parts: ["run", "the", "risk", "of", "failing"] },
+  { id: 1239, japanese: "遠回しに言う", prefix: "Don't (", suffix: "). Get to the point.", parts: ["beat", "around", "the", "bush"] },
+  { id: 1240, japanese: "〜をいらいらさせる", prefix: "Construction noise (", suffix: ").", parts: ["gets", "on", "my", "nerves"] },
+  { id: 1241, japanese: "ぱっと立ち上がる", prefix: "Ken (", suffix: ") when the teacher called his name.", parts: ["jumped", "to", "his", "feet"] },
+  { id: 1242, japanese: "約束を守る", prefix: "I trust you to (", suffix: ").", parts: ["keep", "your", "word"] },
+  { id: 1243, japanese: "約束を破る", prefix: "He always (", suffix: "), so I don't trust him.", parts: ["breaks", "his", "word"] },
+  { id: 1244, japanese: "Aを暗記する", prefix: "I have to (", suffix: ") for the math test.", parts: ["learn", "all", "these", "formulas", "by", "heart"] },
+  { id: 1245, japanese: "〜を実行する", prefix: "I want to (", suffix: ").", parts: ["put", "my", "idea(s)", "into", "practice"] },
+  { id: 1246, japanese: "ちょうど今", prefix: "I'm busy (", suffix: "). Can we talk later?", parts: ["right", "now"] },
+  { id: 1247, japanese: "すぐに", prefix: "Can you come (", suffix: ")?", parts: ["right", "away"] },
+  { id: 1248, japanese: "すぐに", prefix: "I have to leave (", suffix: ") to catch the bus.", parts: ["at", "once"] },
+  { id: 1249, japanese: "その場で", prefix: "I decided to join the team (", suffix: ").", parts: ["on", "the", "spot"] },
+  { id: 1250, japanese: "すぐに", prefix: "I'll be with you (", suffix: ").", parts: ["in", "a", "minute"] },
+  { id: 1251, japanese: "まもなく", prefix: "That law will be passed (", suffix: ").", parts: ["before", "long"] },
+  { id: 1252, japanese: "現在は", prefix: "(", suffix: "), the increase in social security costs is a big problem.", parts: ["At", "present"] },
+  { id: 1253, japanese: "過去に", prefix: "(", suffix: "), we used more plastic bags than we do today.", parts: ["In", "the", "past"] },
+  { id: 1254, japanese: "将来は", prefix: "This trend of online shopping will continue (", suffix: ").", parts: ["in", "the", "future"] },
+  { id: 1255, japanese: "当分の間", prefix: "Let's put this topic aside (", suffix: ").", parts: ["for", "the", "time", "being"] },
+  { id: 1256, japanese: "しばらくの間", prefix: "I haven't seen her (", suffix: ").", parts: ["for", "a", "while"] },
+  { id: 1257, japanese: "しばらくして", prefix: "(", suffix: "), I felt much better.", parts: ["After", "a", "while"] },
+  { id: 1258, japanese: "長い間", prefix: "I haven't been to the beach (", suffix: ").", parts: ["for", "ages"] },
+  { id: 1259, japanese: "永久に", prefix: "My father said he quit smoking (", suffix: ").", parts: ["for", "good"] },
+  { id: 1260, japanese: "これを最後に", prefix: "We need to settle this matter (", suffix: ").", parts: ["once", "and", "for", "all"] },
+  { id: 1261, japanese: "ずっと", prefix: "I realized that my keys were in the bag (", suffix: ").", parts: ["all", "along"] },
+  { id: 1262, japanese: "今までのところ", prefix: "(", suffix: "), five students have come together for this project.", parts: ["So", "far"] },
+  { id: 1263, japanese: "これまでのところ", prefix: "(", suffix: "), there is no information about the missing tourist.", parts: ["As", "yet"] },
+  { id: "1264-1", japanese: "時々", prefix: "We still text each other (", suffix: ").", parts: ["from", "time", "to", "time"] },
+  { id: "1264-2", japanese: "たまに", prefix: "Everyone makes mistakes (", suffix: ").", parts: ["once", "in", "a", "while"] },
+  { id: 1265, japanese: "断続的に", prefix: "It's been raining (", suffix: ") all day today.", parts: ["on", "and", "off"] },
+  { id: "1266-1", japanese: "一般的に", prefix: "(", suffix: "), summers in Japan are hot and humid.", parts: ["In", "general"] },
+  { id: "1266-2", japanese: "全体として", prefix: "(", suffix: "), I did well in my exams.", parts: ["On", "the", "whole"] },
+  { id: "1267-1", japanese: "概して", prefix: "(", suffix: "), I take the bus to school, but sometimes I walk.", parts: ["As", "a", "rule"] },
+  { id: "1267-2", japanese: "概して", prefix: "(", suffix: "), it rains a lot in June in Japan.", parts: ["By", "and", "large"] },
+  { id: 1268, japanese: "偶然に", prefix: "I met my old friend (", suffix: ") at the mall.", parts: ["by", "chance"] },
+  { id: 1269, japanese: "ひょっとして", prefix: "Are you Ms. Harris, (", suffix: ")?", parts: ["by", "any", "chance"] },
+  { id: 1270, japanese: "誤って", prefix: "I've deleted an important file (", suffix: ").", parts: ["by", "mistake"] },
+  { id: 1271, japanese: "人の手で", prefix: "These wooden bowls are crafted (", suffix: ").", parts: ["by", "hand"] },
+  { id: 1272, japanese: "生まれつき", prefix: "Cats are independent (", suffix: ").", parts: ["by", "nature"] },
+  { id: 1273, japanese: "生まれは", prefix: "Mari is Japanese (", suffix: "), but has lived in France for a long time.", parts: ["by", "birth"] },
+  { id: 1274, japanese: "海路で／空路で", prefix: "It is more environmentally friendly to ship goods (", suffix: ").", parts: ["by", "sea", "than", "by", "air"] },
+  { id: 1275, japanese: "徐々に", prefix: "(", suffix: "), our friendship grew stronger.", parts: ["By", "degrees"] },
+  { id: 1276, japanese: "ぜひとも", prefix: "(", suffix: "), please let us know what you think about the matter.", parts: ["By", "all", "means"] },
+  { id: 1277, japanese: "ところで", prefix: "(", suffix: "), have you read that book yet?", parts: ["By", "the", "way"] },
+  { id: 1278, japanese: "ついに", prefix: "(", suffix: "), the war ended.", parts: ["At", "last"] },
+  { id: 1279, japanese: "長々と", prefix: "He talked (", suffix: ") about his hobbies.", parts: ["at", "length"] },
+  { id: 1280, japanese: "最初は", prefix: "(", suffix: "), I could not follow their English, but gradually I began to understand what they were saying.", parts: ["At", "first"] },
+  { id: 1281, japanese: "直接", prefix: "I hope to see the Eiffel Tower (", suffix: ").", parts: ["first", "hand"] },
+  { id: 1282, japanese: "思いのままに", prefix: "The cat comes and goes (", suffix: ").", parts: ["at", "will"] },
+  { id: 1283, japanese: "どんな犠牲を払っても", prefix: "We must avoid war (", suffix: ").", parts: ["at", "all", "costs"] }
 ];
 
 // ==========================================
@@ -2635,6 +2672,7 @@ const idiomData = [
             }
 
             startIdiomMode() {
+                if(idiomData.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
                 document.getElementById('idiom-interface').classList.remove('hidden');
                 document.getElementById('circuit-name').innerText = "IDIOM SORTING";
                 
@@ -2722,7 +2760,7 @@ const idiomData = [
             // --- IDIOM ENGINE ---
             showIdiomQuestion() {
                 const data = this.questions[this.currentIndex];
-                document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1}/${this.questions.length}`;
+                document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
                 document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
                 document.getElementById('feedback').innerHTML = "";
                 document.getElementById('idiom-next-btn').classList.add('hidden');
@@ -2812,11 +2850,22 @@ const idiomData = [
                         if (this.currentIndex < this.questions.length) this.showIdiomQuestion();
                         else this.finish();
                     };
+                    
+                    if (window.handleSRSUpdate) {
+                        const q = this.questions[this.currentIndex];
+                        window.handleSRSUpdate({ w: q.japanese, m: q.parts.join(' '), docId: 'idiom_' + q.id }, true);
+                    }
+
                 } else {
                     this.missCount++;
+                    const q = this.questions[this.currentIndex];
                     if (!this.missedWordsLog.find(item => item.w === "Idiom Order")) {
-                        this.missedWordsLog.push({ w: "Idiom Order Error", m: this.questions[this.currentIndex].japanese });
+                        this.missedWordsLog.push({ w: "Idiom Order Error", m: q.japanese });
                     }
+                    if (window.handleSRSUpdate) {
+                        window.handleSRSUpdate({ w: q.japanese, m: q.parts.join(' '), docId: 'idiom_' + q.id }, false);
+                    }
+
                     this.isLocked = true;
                     document.getElementById('feedback').innerHTML = "<span class='text-[#e10600]'>⚠️ CRASHED! RESETTING...</span>";
                     slotEl.classList.add('wrong-lane', 'animate-shake');
@@ -2914,7 +2963,6 @@ const idiomData = [
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('quiz-screen').classList.remove('hidden');
                 
-                // ★ 強制的にUIを表示させる
                 document.getElementById('vocab-interface').classList.remove('hidden');
                 document.getElementById('idiom-interface').classList.add('hidden');
 
