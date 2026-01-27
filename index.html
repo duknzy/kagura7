@@ -3052,8 +3052,10 @@ lest: ～しないように
             } else { nextBtn.classList.add('hidden'); }
             
             if (window.fetchSRSItems) window.fetchSRSItems();
-            if (window.incrementDailyLaps) window.incrementDailyLaps(); 
-        }
+            // 3055行目をこれに置き換え
+            if (window.incrementDailyLaps) {
+                window.incrementDailyLaps(accuracy, totalTime);
+            }
 
         returnToGrid() {
             document.getElementById('result-screen').classList.add('hidden');
@@ -3350,14 +3352,37 @@ lest: ～しないように
       };
       
       // 【Review Fix】Atomic Increment
-      window.incrementDailyLaps = () => {
-          const statsRef = doc(db, "stats", "daily_global");
+      // 統計更新 & リーダーボードへの記録追加
+      window.incrementDailyLaps = async (accuracy, time) => {
+          if (!window.currentUser) return;
+
           const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
           
+          // 1. デイリー統計のカウントアップ (statsコレクション)
+          // 友人からの指摘通り、increment(1)を使用して原子的に更新します 
+          const statsRef = doc(db, "stats", "daily_global");
           setDoc(statsRef, { 
               count: increment(1), 
               date: todayStr 
           }, { merge: true });
+
+          // 2. リーダーボードへの新規レコード追加 (leaderboardコレクション)
+          // これで leaderborad のドキュメント数と stats の数が一致するようになります
+          try {
+              const leaderboardRef = collection(db, "leaderboard");
+              await addDoc(leaderboardRef, {
+                  uid: window.currentUser.uid,
+                  displayName: window.currentUser.displayName || "RACING DRIVER",
+                  accuracy: accuracy,
+                  totalTime: time,
+                  mode: window.quiz.mode,
+                  timestamp: Timestamp.now(), // サーバー時刻で保存
+                  date: todayStr
+              });
+              console.log("Leaderboard Entry Secured.");
+          } catch (e) {
+              console.error("Leaderboard Error:", e);
+          }
       };
     </script>
     
