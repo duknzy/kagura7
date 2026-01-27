@@ -3065,44 +3065,6 @@ const idiomData = [
           }
       });
 
-      window.incrementDailyLaps = async () => {
-          const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
-          try {
-              await runTransaction(db, async (transaction) => {
-                  const sfDoc = await transaction.get(statsRef);
-                  if (!sfDoc.exists()) {
-                      transaction.set(statsRef, { date: todayStr, count: 1 });
-                  } else {
-                      const data = sfDoc.data();
-                      if (data.date !== todayStr) {
-                          transaction.update(statsRef, { date: todayStr, count: 1 });
-                      } else {
-                          transaction.update(statsRef, { count: data.count + 1 });
-                      }
-                  }
-              });
-          } catch (e) {
-              console.error("Stats Error:", e);
-          }
-      };
-
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            window.currentUser = user;
-            gateScreen.classList.add('hidden');
-            startScreen.classList.remove('hidden');
-            userNameSpan.textContent = user.displayName || "TEST DRIVER";
-            window.fetchSRSItems();
-        } else {
-            window.currentUser = null;
-            gateScreen.classList.remove('hidden');
-            startScreen.classList.add('hidden');
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.add('hidden');
-            loginStatus.innerText = "Waiting for connection...";
-        }
-      });
-
       window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
         const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
@@ -3114,32 +3076,32 @@ const idiomData = [
         let allItems = [];
         let loadedFromCache = false;
 
+        // --- Sector 1: キャッシュ読み込みトライアル ---
         if (now - lastFetch < CACHE_DURATION && localStorage.getItem(CACHE_KEY)) {
-    try {
-        const rawString = localStorage.getItem(CACHE_KEY);
-        // 空文字やnullのチェック
-        if (!rawString) throw new Error("Empty Cache");
-        
-        const rawData = JSON.parse(rawString);
-        
-        // データが配列かどうかの型チェックも追加する（徹底的にやるぞ）
-        if (!Array.isArray(rawData)) throw new Error("Invalid Data Format");
+            try {
+                const rawString = localStorage.getItem(CACHE_KEY);
+                if (!rawString) throw new Error("Empty Cache");
+                
+                const rawData = JSON.parse(rawString);
+                if (!Array.isArray(rawData)) throw new Error("Invalid Data Format");
 
-        allItems = rawData.map(item => ({ 
-            ...item, 
-            nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }, 
-            seconds: item.nextReviewSeconds 
-        }));
-        loadedFromCache = true;
-        
-    } catch (e) {
-        console.warn("⚠️ Telemetry Data Corrupted. Performing Emergency Reset.", e);
-        // 壊れたデータは即座に捨てろ。重りになるだけだ。
-        localStorage.removeItem(CACHE_KEY);
-        localStorage.removeItem(TIME_KEY);
-        allItems = []; // これで下のサーバーフェッチ処理へ流れる
-    }
-            if (!loadedFromCache) {
+                allItems = rawData.map(item => ({ 
+                    ...item, 
+                    nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }, 
+                    seconds: item.nextReviewSeconds 
+                }));
+                loadedFromCache = true; // 読み込み成功フラグ
+                
+            } catch (e) {
+                console.warn("⚠️ Telemetry Data Corrupted. Performing Emergency Reset.", e);
+                localStorage.removeItem(CACHE_KEY);
+                localStorage.removeItem(TIME_KEY);
+                allItems = [];
+            }
+        } // ★ ここで一旦キャッシュ確認ブロックを閉じる（これが抜けていた！）
+
+        // --- Sector 2: サーバー通信 (キャッシュだめならここへ) ---
+        if (!loadedFromCache) {
             try {
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
                 const snapshot = await getDocs(mistakesRef);
@@ -3147,12 +3109,16 @@ const idiomData = [
                     const d = doc.data();
                     allItems.push({ id: doc.id, ...d, nextReviewSeconds: d.nextReview.seconds });
                 });
+                // キャッシュ更新
                 localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
                 localStorage.setItem(TIME_KEY, now.toString());
+                
+                // 日付オブジェクトに変換
                 allItems = allItems.map(item => ({ ...item, nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } }));
             } catch (e) { console.error("Telemetry Error:", e); }
         }
 
+        // --- Sector 3: データ展開 ---
         // rawDataが空の場合、サーバーデータでマスターリストを埋める
         if (window.quiz.masterList.length === 0 && allItems.length > 0) {
             window.quiz.masterList = allItems.map(i => ({ w: i.word || i.w, m: i.meaning || i.m }));
