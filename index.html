@@ -7,10 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RB Hybrid GP">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5776/5776097.png">
+    <link rel="apple-touch-icon" href="icon.jpg">
+    <link rel="manifest" href="manifest.json">
 
     <title>RB Hybrid Learning System</title>
-    <link rel="manifest" href="manifest.json">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -350,7 +351,7 @@
 
     <script>
 // ==========================================
-// 1. DATA CONFIGURATION
+// 1. DATA CONFIGURATION (PLACEHOLDERS)
 // ==========================================
 const rawData = `
 follow: ～の後に続く、～に従う
@@ -2380,11 +2381,11 @@ abruptly: 不意に
 conversely: 逆に
 predominantly: 主に
 lest: ～しないように
-`; // 単語データは空
+`; // ★ここに単語データを貼り付けてください (例: apple: りんご)
 
-// 熟語モード用データ (提供されたファイルからクリーニング済み)
+// 熟語データ
 const idiomData = [
-  { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
+ { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
   { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
   { id: 1217, japanese: "Aに電話をかける", prefix: "I'll (", suffix: ") tomorrow morning.", parts: ["give", "you", "a", "call"] },
   { id: 1218, japanese: "〜を引き起こす", prefix: "The population decline will (", suffix: ") several problems.", parts: ["give", "rise", "to"] },
@@ -2460,7 +2461,7 @@ const idiomData = [
 ];
 
 // ==========================================
-// 2. MAIN LOGIC
+// 2. MAIN LOGIC (UPDATED: PHASE 3 SPEED LOGIC)
 // ==========================================
 
         document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
@@ -2482,6 +2483,7 @@ const idiomData = [
                 this.missCount = 0;
                 this.missedWordsLog = [];
                 this.startTime = 0;
+                this.lapStartTime = 0; // ★ Task 8: Speed Logic
                 this.timerInterval = null;
                 this.currentStreak = 0;
                 this.dueMistakes = [];
@@ -2530,6 +2532,7 @@ const idiomData = [
             }
 
             generateRounds() {
+                // Phase 1 Task 2: 習得済み単語の考慮 (後日実装可能だが、まずは空チェック)
                 const wordCopy = [...this.masterList]; 
                 this.vocabRounds = [];
                 let roundNum = 1;
@@ -2706,6 +2709,9 @@ const idiomData = [
                     ? "f1-font text-3xl font-bold text-white tracking-wide break-words px-2"
                     : "f1-font text-5xl font-bold text-white tracking-wide drop-shadow-lg break-words px-2";
 
+                // ★ Phase 3 Task 8: Speed Logic Timer Start
+                this.lapStartTime = Date.now(); 
+
                 document.getElementById('progress-fill').style.width = `${(this.currentIndex / this.questions.length) * 100}%`;
                 document.getElementById('feedback').innerText = '';
                 
@@ -2726,6 +2732,7 @@ const idiomData = [
                         const fontClass = this.isReverseMode ? "f1-font tracking-wider text-xl" : "text-lg";
                         btn.className = `option-btn w-full text-left p-5 rounded-xl bg-white/5 border border-white/10 active:border-red-500 font-bold shadow-lg ${fontClass}`;
                         btn.innerText = opt;
+                        // Click Logic
                         btn.onclick = () => this.handleVocabAnswer(opt, q);
                         container.appendChild(btn);
                     });
@@ -2736,15 +2743,33 @@ const idiomData = [
             handleVocabAnswer(selected, q) {
                 const feedback = document.getElementById('feedback');
                 
-                // ★ 修正: 正解・不正解にかかわらず、常にSRS更新関数を呼び出す
+                // ★ Phase 3 Task 8: Speed Calculation
+                const timeTaken = (Date.now() - this.lapStartTime) / 1000;
+                
                 const isCorrect = (selected === q.aText);
-                if (window.handleSRSUpdate) window.handleSRSUpdate(q, isCorrect);
+
+                // SRS Update with Speed Data
+                if (window.handleSRSUpdate) {
+                    window.handleSRSUpdate({ ...q, timeTaken: timeTaken }, isCorrect);
+                }
 
                 if (isCorrect) {
                     if(this.isReverseMode) this.speak(q.w);
+                    
+                    // ★ UX Feedback for Speed
+                    if (timeTaken < 1.2) {
+                        feedback.innerHTML = `<span class="text-[#39ff14] text-xs font-bold animate-pulse">🟣 PURPLE SECTOR (${timeTaken.toFixed(2)}s)</span>`;
+                    } else if (timeTaken > 5.0) {
+                        feedback.innerHTML = `<span class="text-yellow-500 text-xs font-bold">🟡 SLOW (${timeTaken.toFixed(2)}s)</span>`;
+                    }
+
                     this.currentIndex++;
-                    if (this.currentIndex < this.questions.length) this.showVocabQuestion();
-                    else this.finish();
+                    // 少し待ってから次へ (演出を見せるため)
+                    setTimeout(() => {
+                        if (this.currentIndex < this.questions.length) this.showVocabQuestion();
+                        else this.finish();
+                    }, 400); 
+
                 } else {
                     this.missCount++;
                     feedback.innerText = `WRONG: ${q.w} = ${q.m}`;
@@ -2754,7 +2779,11 @@ const idiomData = [
                     this.questions.push(q);
                     const btns = document.querySelectorAll('.option-btn');
                     btns.forEach(b => b.disabled = true);
-                    setTimeout(() => { this.currentIndex++; this.showVocabQuestion(); }, 1200);
+                    
+                    setTimeout(() => { 
+                        this.currentIndex++; 
+                        this.showVocabQuestion(); 
+                    }, 1500);
                 }
             }
 
@@ -3023,12 +3052,10 @@ const idiomData = [
         measurementId: "G-FC2LRFVFGF"
       };
 
-      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      // DOM Elements
       const gateScreen = document.getElementById('gate-screen');
       const startScreen = document.getElementById('start-screen');
       const loginStatus = document.getElementById('login-status');
@@ -3038,43 +3065,33 @@ const idiomData = [
       window.currentUser = null;
 
       // ---------------------------------------------------------
-      // 1. AUTHENTICATION & PERSISTENCE (修正点: 永続化ロジック)
+      // 1. AUTH & PERSISTENCE (Phase 1 Fix)
       // ---------------------------------------------------------
-      
-      // ログイン状態の監視（リロードしてもここが呼ばれる）
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-          // --- ログイン成功時 ---
           console.log("Authorized Driver:", user.displayName);
           window.currentUser = user;
-          
-          // UI更新: 接続中表示
           loginStatus.innerText = "Syncing Telemetry Data...";
           
-          // データの取得を待ってから画面遷移する (非同期制御)
           try {
-              await window.fetchSRSItems(); // データ取得完了まで待機
+              await window.fetchSRSItems();
               
-              // 画面遷移
               document.getElementById('user-name').innerText = user.displayName || "RACING DRIVER";
               gateScreen.classList.add('hidden');
               
-              // クイズ中やリザルト画面でなければスタート画面を表示
               const isQuizActive = !document.getElementById('quiz-screen').classList.contains('hidden');
               const isResultActive = !document.getElementById('result-screen').classList.contains('hidden');
               
               if (!isQuizActive && !isResultActive) {
                   startScreen.classList.remove('hidden');
               }
-              
           } catch (error) {
               console.error("Init Error:", error);
               loginStatus.innerText = "Data Sync Failed. Retrying...";
-              setTimeout(() => location.reload(), 3000); // エラー時はリロード
+              setTimeout(() => location.reload(), 3000);
           }
 
         } else {
-          // --- ログアウトまたは未ログイン時 ---
           window.currentUser = null;
           startScreen.classList.add('hidden');
           gateScreen.classList.remove('hidden');
@@ -3083,37 +3100,24 @@ const idiomData = [
         }
       });
 
-      // ログインボタン
       gateLoginBtn.addEventListener('click', async () => {
         loginStatus.innerText = "Connecting to Paddock...";
         const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-            // onAuthStateChanged が自動的に発火するので、ここでは何もしない
-        } catch (error) {
-            console.error(error);
-            loginStatus.innerText = "Access Denied.";
-        }
+        try { await signInWithPopup(auth, provider); } 
+        catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
       });
 
-      // ログアウトボタン
       logoutBtn.addEventListener('click', () => { 
         if(window.currentUser) {
-            // キャッシュクリア
             localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
             localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
         }
-        signOut(auth).then(() => {
-            alert("Signed Out Successfully");
-            location.reload(); // 確実にリセットするためにリロード
-        }); 
+        signOut(auth).then(() => { alert("Signed Out Successfully"); location.reload(); }); 
       });
 
       // ---------------------------------------------------------
-      // 2. DATA SYNC & LOGIC (修正点: データ結合とキャッシュ制御)
+      // 2. DATA SYNC (Phase 1 Fix)
       // ---------------------------------------------------------
-
-      // Daily Lap Counter (Realtime)
       const statsRef = doc(db, "stats", "daily_global");
       onSnapshot(statsRef, (doc) => {
           if (doc.exists()) {
@@ -3127,20 +3131,17 @@ const idiomData = [
           }
       });
 
-      // SRS Data Fetching System
       window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
-        
         const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
         const TIME_KEY = `srs_time_${window.currentUser.uid}`;
-        const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12時間キャッシュ
+        const CACHE_DURATION = 12 * 60 * 60 * 1000; 
 
         const now = Date.now();
         const lastFetch = parseInt(localStorage.getItem(TIME_KEY) || '0');
         let allItems = [];
         let loadedFromCache = false;
 
-        // A. キャッシュ読み込み
         if (now - lastFetch < CACHE_DURATION && localStorage.getItem(CACHE_KEY)) {
             try {
                 const rawString = localStorage.getItem(CACHE_KEY);
@@ -3148,117 +3149,88 @@ const idiomData = [
                     const rawData = JSON.parse(rawString);
                     allItems = rawData.map(item => ({ 
                         ...item, 
-                        nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } // Date復元
+                        nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } 
                     }));
-                    console.log(`Loaded ${allItems.length} items from Cache.`);
                     loadedFromCache = true;
                 }
-            } catch (e) {
-                console.warn("Cache corrupted, fetching fresh data.");
-                localStorage.removeItem(CACHE_KEY);
-            }
+            } catch (e) { console.warn("Cache corrupted"); localStorage.removeItem(CACHE_KEY); }
         }
 
-        // B. Firestoreから取得 (キャッシュがない場合)
         if (!loadedFromCache) {
             try {
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
                 const snapshot = await getDocs(mistakesRef);
-                
                 allItems = [];
                 snapshot.forEach(doc => {
                     const d = doc.data();
-                    // タイムスタンプを秒に変換して保存（シリアライズ用）
-                    allItems.push({ 
-                        id: doc.id, 
-                        ...d, 
-                        nextReviewSeconds: d.nextReview.seconds 
-                    });
+                    allItems.push({ id: doc.id, ...d, nextReviewSeconds: d.nextReview.seconds });
                 });
-                
-                // キャッシュ更新
                 localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
                 localStorage.setItem(TIME_KEY, now.toString());
-                
-                // Dateオブジェクトを復元してアプリ内で使えるようにする
-                allItems = allItems.map(item => ({ 
-                    ...item, 
-                    nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }
-                }));
-                console.log(`Fetched ${allItems.length} items from Cloud.`);
-                
-            } catch (e) { 
-                console.error("Telemetry Error:", e); 
-                throw e; // エラーを上に投げてリロードさせる
-            }
+                allItems = allItems.map(item => ({ ...item, nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } }));
+            } catch (e) { console.error("Telemetry Error:", e); throw e; }
         }
 
-        // C. データの選別 (Pit Stop判定)
         const dueItems = [];
         const nowTs = Date.now() / 1000;
-        
-        allItems.forEach(item => { 
-            // 復習期限が来ているものを抽出
-            if (item.nextReviewSeconds <= nowTs) dueItems.push(item); 
-        });
+        allItems.forEach(item => { if (item.nextReviewSeconds <= nowTs) dueItems.push(item); });
 
-        // アプリ本体(quizインスタンス)へデータを注入
         if(window.quiz) {
             window.quiz.allMistakes = allItems;
             window.quiz.dueMistakes = dueItems;
             window.quiz.updatePitStopButton(dueItems.length);
         }
       };
-        
+
       // ---------------------------------------------------------
-      // 3. SRS ALGORITHM (修正点: 厳格な正誤判定)
+      // 3. SRS ALGORITHM v2.0 (Phase 3: Speed Logic)
       // ---------------------------------------------------------
       window.handleSRSUpdate = async (questionObj, isCorrect) => {
         if (!window.currentUser) return;
         
         const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
         const now = new Date();
-        
-        // ID生成: docIdがあればそれを使う、なければ単語から生成
         const safeWordId = questionObj.docId || btoa(encodeURIComponent(questionObj.w)).replace(/\//g, '_').replace(/\+/g, '-');
         const targetRef = doc(mistakesRef, safeWordId);
         
-        // 現在のパラメータ（なければ初期値）
         const currentParams = { 
             interval: questionObj.interval || 0, 
             repetitions: questionObj.repetitions || 0, 
             easeFactor: questionObj.easeFactor || 2.5 
         };
         
+        // Timer Logic: Fallback to 3.0s if missing
+        const timeTaken = questionObj.timeTaken || 3.0;
+        
         let nextInterval, nextRepetitions, nextEaseFactor;
 
-        // ★★★ ロジックの厳格化 ★★★
         if (!isCorrect) {
-            // 不正解: 即リセット
+            // CRASH
             nextRepetitions = 0; 
-            nextInterval = 1; // 翌日に復習
-            nextEaseFactor = Math.max(1.3, currentParams.easeFactor - 0.2); // 難易度係数を下げる
+            nextInterval = 1; 
+            nextEaseFactor = Math.max(1.3, currentParams.easeFactor - 0.2); 
         } else {
-            // 正解: 間隔を伸ばす
+            // FINISH
             nextRepetitions = currentParams.repetitions + 1;
             
-            if (nextRepetitions === 1) {
-                nextInterval = 1; 
-            } else if (nextRepetitions === 2) {
-                nextInterval = 6; 
-            } else {
-                // 前回間隔 x 難易度係数
-                const calculatedInterval = Math.round(currentParams.interval * currentParams.easeFactor);
-                nextInterval = Math.max(1, calculatedInterval); // 最低でも1日は空ける
-            }
-            nextEaseFactor = currentParams.easeFactor + 0.1; // 少し簡単になったとみなす
+            // Speed Factor
+            let easeBonus = 0;
+            if (timeTaken < 1.2) easeBonus = 0.3;      // Fast
+            else if (timeTaken > 5.0) easeBonus = -0.15; // Slow
+            else easeBonus = 0.1;                      // Normal
+
+            nextEaseFactor = Math.max(1.3, currentParams.easeFactor + easeBonus);
+
+            if (nextRepetitions === 1) nextInterval = 1; 
+            else if (nextRepetitions === 2) nextInterval = 6; 
+            else nextInterval = Math.max(1, Math.round(currentParams.interval * nextEaseFactor));
+            
+            console.log(`[SRS] Time: ${timeTaken.toFixed(2)}s | EF: ${currentParams.easeFactor.toFixed(2)} -> ${nextEaseFactor.toFixed(2)}`);
         }
 
         const nextDate = new Date(); 
         nextDate.setDate(now.getDate() + nextInterval);
 
-        // Firestore更新 (Fire-and-Forget)
-        // ユーザーを待たせないため await はするが、UIブロックはしない
         setDoc(targetRef, { 
             word: questionObj.w, 
             meaning: questionObj.meaning || questionObj.m, 
@@ -3268,24 +3240,17 @@ const idiomData = [
             easeFactor: nextEaseFactor, 
             lastReviewed: Timestamp.fromDate(now) 
         }, { merge: true })
-        .then(() => {
-             // ローカルキャッシュも簡易更新して、次のFetchまでの整合性を保つ（Phase 2で詳細実装）
-             console.log(`Telemetry Updated: ${questionObj.w} -> Next: ${nextInterval} days`);
-        })
         .catch((e) => console.error("Telemetry Failed:", e));
       };
       
-      // グローバル関数として公開（アプリ本体から呼べるようにする）
       window.incrementDailyLaps = () => {
           const statsRef = doc(db, "stats", "daily_global");
           const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
           setDoc(statsRef, { count: (parseInt(document.getElementById('daily-laps-display').innerText) || 0) + 1, date: todayStr }, { merge: true });
       };
-
     </script>
-
+    
     <script>
-        // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
@@ -3294,6 +3259,5 @@ const idiomData = [
             });
         }
     </script>
-    
 </body>
 </html>
