@@ -2407,14 +2407,80 @@ lest: ～しないように
 
 // 熟語モード用データ
 const idiomData = [
-    { id: 1, japanese: "10分間休憩にしましょう", prefix: "Let's (", suffix: ")", parts: ["take", "a", "ten-minute", "break"] },
-    { id: 2, japanese: "彼はそのニュースに驚いたようだ", prefix: "He seems (", suffix: ") at the news.", parts: ["to", "have", "been", "surprised"] },
-    { id: 3, japanese: "できるだけ早く", prefix: "Please come (", suffix: ").", parts: ["as", "soon", "as", "possible"] },
-    { id: 4, japanese: "私はこの歌を聞くと必ず学生時代を思い出す", prefix: "I never hear this song (", suffix: ") of my school days.", parts: ["without", "being", "reminded"] },
-    { id: 5, japanese: "雨が降っていたにもかかわらず", prefix: "(", suffix: ") the rain, they went out.", parts: ["In", "spite", "of"] },
-    { id: 6, japanese: "彼女はプライドが高すぎてその仕事ができない", prefix: "She is (", suffix: ") to do the work.", parts: ["too", "proud"] },
-    { id: 7, japanese: "彼は始発列車に乗れるように早く起きた", prefix: "He got up early (", suffix: ") the first train.", parts: ["so", "as", "to", "catch"] },
-    { id: 8, japanese: "これは私が今まで読んだ中で最も面白い本だ", prefix: "This is (", suffix: ") I have ever read.", parts: ["the", "most", "interesting", "book"] }
+    const idiomData = [
+  [cite_start]{ id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] }, // [cite: 1]
+  [cite_start]{ id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] }, // [cite: 2]
+  [cite_start]{ id: 1217, japanese: "Aに電話をかける", prefix: "I'll (", suffix: ") tomorrow morning.", parts: ["give", "you", "a", "call"] }, // [cite: 3]
+  { id: 1218, japanese: "〜を引き起こす", prefix: "The population decline will (", suffix: ") several problems.", parts: ["give", "rise", "to"] },
+  [cite_start]{ id: 1219, japanese: "〜を産む", prefix: "My sister (", suffix: ") a baby girl this spring.", parts: ["gave", "birth", "to"] }, // [cite: 4]
+  [cite_start]{ id: 1220, japanese: "〜に注意を払う", prefix: "I (", suffix: ") what the others were saying.", parts: ["paid", "attention", "to"] }, // [cite: 5]
+  [cite_start]{ id: "1221-1", japanese: "〜を訪れる", prefix: "We (", suffix: ") the Hiroshima Peace Memorial Museum.", parts: ["paid", "a", "visit", "to"] }, // [cite: 6]
+  [cite_start]{ id: "1221-2", japanese: "〜を訪れる", prefix: "I (", suffix: ") in Wakayama last weekend.", parts: ["paid", "my", "grandparents", "a", "visit"] }, // [cite: 7]
+  [cite_start]{ id: 1222, japanese: "面目を失う", prefix: "If I fail, I will (", suffix: ").", parts: ["lose", "face"] }, // [cite: 8]
+  { id: 1223, japanese: "かっとなる", prefix: "I apologize for (", suffix: ").", parts: ["losing", "my", "temper"] },
+  [cite_start]{ id: 1224, japanese: "〜から目を離さない", prefix: "Can you (", suffix: ") for me?", parts: ["keep", "an", "eye", "on", "my", "bag"] }, // [cite: 9]
+  [cite_start]{ id: 1225, japanese: "規則正しい生活を送る", prefix: "Everyone in my family (", suffix: ").", parts: ["keeps", "regular", "hours"] }, // [cite: 10]
+  { id: 1226, japanese: "成人になる", prefix: "When I (", suffix: "), I will be able to vote.", parts: ["come", "of", "age"] },
+  [cite_start]{ id: 1227, japanese: "〜を受け入れる", prefix: "It took me a long time to (", suffix: ") my sister's death.", parts: ["come", "to", "terms", "with"] }, // [cite: 11]
+  [cite_start]{ id: 1228, japanese: "明るみに出る", prefix: "The leak of personal information (", suffix: ").", parts: ["came", "to", "light"] }, // [cite: 12]
+  [cite_start]{ id: 1229, japanese: "誕生する", prefix: "I want to know how the universe (", suffix: ").", parts: ["came", "into", "being"] }, // [cite: 13]
+  [cite_start]{ id: 1230, japanese: "ダイエット中だ", prefix: "No, thank you. I'm (", suffix: ").", parts: ["on", "a", "diet"] }, // [cite: 14]
+  { id: 1231, japanese: "ストライキをする", prefix: "The workers (", suffix: ") for the first time in 20 years.", parts: ["went", "on", "strike"] },
+  [cite_start]{ id: 1232, japanese: "実を結ぶ", prefix: "My efforts finally (", suffix: ").", parts: ["bore", "fruit"] }, // [cite: 15]
+  { id: 1233, japanese: "〜を利用できる", prefix: "Students (", suffix: ") online resources for their research projects.", parts: ["have", "access", "to"] },
+  [cite_start]{ id: 1234, japanese: "〜のあら探しをする", prefix: "He (", suffix: ") everything I do.", parts: ["finds", "fault", "with"] }, // [cite: 16]
+  { id: 1235, japanese: "食器を洗う", prefix: "I'll (", suffix: ") after dinner.", parts: ["do", "the", "dishes"] },
+  [cite_start]{ id: 1236, japanese: "締め切りに間に合わせる", prefix: "I'm working hard to (", suffix: ").", parts: ["meet", "the", "deadline"] }, // [cite: 17]
+  { id: 1237, japanese: "〜に打ち勝つ", prefix: "My curiosity (", suffix: "), and I opened the box.", parts: ["got", "the", "better", "of", "me"] },
+  [cite_start]{ id: 1238, japanese: "〜する危険を冒す", prefix: "If I don't study, I (", suffix: ") my exams.", parts: ["run", "the", "risk", "of", "failing"] }, // [cite: 18]
+  [cite_start]{ id: 1239, japanese: "遠回しに言う", prefix: "Don't (", suffix: "). Get to the point.", parts: ["beat", "around", "the", "bush"] }, // [cite: 19]
+  { id: 1240, japanese: "〜をいらいらさせる", prefix: "Construction noise (", suffix: ").", parts: ["gets", "on", "my", "nerves"] },
+  [cite_start]{ id: 1241, japanese: "ぱっと立ち上がる", prefix: "Ken (", suffix: ") when the teacher called his name.", parts: ["jumped", "to", "his", "feet"] }, // [cite: 20]
+  [cite_start]{ id: 1242, japanese: "約束を守る", prefix: "I trust you to (", suffix: ").", parts: ["keep", "your", "word"] }, // [cite: 21]
+  { id: 1243, japanese: "約束を破る", prefix: "He always (", suffix: "), so I don't trust him.", parts: ["breaks", "his", "word"] },
+  [cite_start]{ id: 1244, japanese: "Aを暗記する", prefix: "I have to (", suffix: ") for the math test.", parts: ["learn", "all", "these", "formulas", "by", "heart"] }, // [cite: 22]
+  [cite_start]{ id: 1245, japanese: "〜を実行する", prefix: "I want to (", suffix: ").", parts: ["put", "my", "idea(s)", "into", "practice"] }, // [cite: 23]
+  { id: 1246, japanese: "ちょうど今", prefix: "I'm busy (", suffix: "). Can we talk later?", parts: ["right", "now"] },
+  [cite_start]{ id: 1247, japanese: "すぐに", prefix: "Can you come (", suffix: ")?", parts: ["right", "away"] }, // [cite: 24]
+  { id: 1248, japanese: "すぐに", prefix: "I have to leave (", suffix: ") to catch the bus.", parts: ["at", "once"] },
+  [cite_start]{ id: 1249, japanese: "その場で", prefix: "I decided to join the team (", suffix: ").", parts: ["on", "the", "spot"] }, // [cite: 25]
+  { id: 1250, japanese: "すぐに", prefix: "I'll be with you (", suffix: ").", parts: ["in", "a", "minute"] },
+  [cite_start]{ id: 1251, japanese: "まもなく", prefix: "That law will be passed (", suffix: ").", parts: ["before", "long"] }, // [cite: 26]
+  { id: 1252, japanese: "現在は", prefix: "(", suffix: "), the increase in social security costs is a big problem.", parts: ["At", "present"] },
+  [cite_start]{ id: 1253, japanese: "過去に", prefix: "(", suffix: "), we used more plastic bags than we do today.", parts: ["In", "the", "past"] }, // [cite: 27]
+  [cite_start]{ id: 1254, japanese: "将来は", prefix: "This trend of online shopping will continue (", suffix: ").", parts: ["in", "the", "future"] }, // [cite: 28]
+  [cite_start]{ id: 1255, japanese: "当分の間", prefix: "Let's put this topic aside (", suffix: ").", parts: ["for", "the", "time", "being"] }, // [cite: 29]
+  [cite_start]{ id: 1256, japanese: "しばらくの間", prefix: "I haven't seen her (", suffix: ").", parts: ["for", "a", "while"] }, // [cite: 30]
+  { id: 1257, japanese: "しばらくして", prefix: "(", suffix: "), I felt much better.", parts: ["After", "a", "while"] },
+  [cite_start]{ id: 1258, japanese: "長い間", prefix: "I haven't been to the beach (", suffix: ").", parts: ["for", "ages"] }, // [cite: 31]
+  { id: 1259, japanese: "永久に", prefix: "My father said he quit smoking (", suffix: ").", parts: ["for", "good"] },
+  [cite_start]{ id: 1260, japanese: "これを最後に", prefix: "We need to settle this matter (", suffix: ").", parts: ["once", "and", "for", "all"] }, // [cite: 32]
+  [cite_start]{ id: 1261, japanese: "ずっと", prefix: "I realized that my keys were in the bag (", suffix: ").", parts: ["all", "along"] }, // [cite: 33]
+  [cite_start]{ id: 1262, japanese: "今までのところ", prefix: "(", suffix: "), five students have come together for this project.", parts: ["So", "far"] }, // [cite: 34]
+  [cite_start]{ id: 1263, japanese: "これまでのところ", prefix: "(", suffix: "), there is no information about the missing tourist.", parts: ["As", "yet"] }, // [cite: 35]
+  [cite_start]{ id: "1264-1", japanese: "時々", prefix: "We still text each other (", suffix: ").", parts: ["from", "time", "to", "time"] }, // [cite: 36]
+  { id: "1264-2", japanese: "たまに", prefix: "Everyone makes mistakes (", suffix: ").", parts: ["once", "in", "a", "while"] },
+  [cite_start]{ id: 1265, japanese: "断続的に", prefix: "It's been raining (", suffix: ") all day today.", parts: ["on", "and", "off"] }, // [cite: 37]
+  [cite_start]{ id: "1266-1", japanese: "一般的に", prefix: "(", suffix: "), summers in Japan are hot and humid.", parts: ["In", "general"] }, // [cite: 38]
+  [cite_start]{ id: "1266-2", japanese: "全体として", prefix: "(", suffix: "), I did well in my exams.", parts: ["On", "the", "whole"] }, // [cite: 39]
+  [cite_start]{ id: "1267-1", japanese: "概して", prefix: "(", suffix: "), I take the bus to school, but sometimes I walk.", parts: ["As", "a", "rule"] }, // [cite: 40]
+  [cite_start]{ id: "1267-2", japanese: "概して", prefix: "(", suffix: "), it rains a lot in June in Japan.", parts: ["By", "and", "large"] }, // [cite: 41]
+  [cite_start]{ id: 1268, japanese: "偶然に", prefix: "I met my old friend (", suffix: ") at the mall.", parts: ["by", "chance"] }, // [cite: 42]
+  [cite_start]{ id: 1269, japanese: "ひょっとして", prefix: "Are you Ms. Harris, (", suffix: ")?", parts: ["by", "any", "chance"] }, // [cite: 43]
+  [cite_start]{ id: 1270, japanese: "誤って", prefix: "I've deleted an important file (", suffix: ").", parts: ["by", "mistake"] }, // [cite: 44]
+  { id: 1271, japanese: "人の手で", prefix: "These wooden bowls are crafted (", suffix: ").", parts: ["by", "hand"] },
+  [cite_start]{ id: 1272, japanese: "生まれつき", prefix: "Cats are independent (", suffix: ").", parts: ["by", "nature"] }, // [cite: 45]
+  { id: 1273, japanese: "生まれは", prefix: "Mari is Japanese (", suffix: "), but has lived in France for a long time.", parts: ["by", "birth"] },
+  [cite_start]{ id: 1274, japanese: "海路で／空路で", prefix: "It is more environmentally friendly to ship goods (", suffix: ").", parts: ["by", "sea", "than", "by", "air"] }, // [cite: 46]
+  [cite_start]{ id: 1275, japanese: "徐々に", prefix: "(", suffix: "), our friendship grew stronger.", parts: ["By", "degrees"] }, // [cite: 47]
+  { id: 1276, japanese: "ぜひとも", prefix: "(", suffix: "), please let us know what you think about the matter.", parts: ["By", "all", "means"] },
+  [cite_start]{ id: 1277, japanese: "ところで", prefix: "(", suffix: "), have you read that book yet?", parts: ["By", "the", "way"] }, // [cite: 48]
+  { id: 1278, japanese: "ついに", prefix: "(", suffix: "), the war ended.", parts: ["At", "last"] },
+  [cite_start]{ id: 1279, japanese: "長々と", prefix: "He talked (", suffix: ") about his hobbies.", parts: ["at", "length"] }, // [cite: 49]
+  [cite_start]{ id: 1280, japanese: "最初は", prefix: "(", suffix: "), I could not follow their English, but gradually I began to understand what they were saying.", parts: ["At", "first"] }, // [cite: 50]
+  { id: 1281, japanese: "直接", prefix: "I hope to see the Eiffel Tower (", suffix: ").", parts: ["first", "hand"] },
+  [cite_start]{ id: 1282, japanese: "思いのままに", prefix: "The cat comes and goes (", suffix: ").", parts: ["at", "will"] }, // [cite: 51]
+  { id: 1283, japanese: "どんな犠牲を払っても", prefix: "We must avoid war (", suffix: ").", parts: ["at", "all", "costs"] }
 ];
 
 // ==========================================
@@ -3244,4 +3310,5 @@ const idiomData = [
     </script>
 </body>
 </html>
+
 
