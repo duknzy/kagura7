@@ -3022,37 +3022,98 @@ const idiomData = [
         measurementId: "G-FC2LRFVFGF"
       };
 
+      // Initialize Firebase
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
 
+      // DOM Elements
       const gateScreen = document.getElementById('gate-screen');
       const startScreen = document.getElementById('start-screen');
+      const loginStatus = document.getElementById('login-status');
       const gateLoginBtn = document.getElementById('gate-login-btn');
       const logoutBtn = document.getElementById('logout-btn');
-      const userNameSpan = document.getElementById('user-name');
-      const loginStatus = document.getElementById('login-status');
 
       window.currentUser = null;
 
+      // ---------------------------------------------------------
+      // 1. AUTHENTICATION & PERSISTENCE (修正点: 永続化ロジック)
+      // ---------------------------------------------------------
+      
+      // ログイン状態の監視（リロードしてもここが呼ばれる）
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // --- ログイン成功時 ---
+          console.log("Authorized Driver:", user.displayName);
+          window.currentUser = user;
+          
+          // UI更新: 接続中表示
+          loginStatus.innerText = "Syncing Telemetry Data...";
+          
+          // データの取得を待ってから画面遷移する (非同期制御)
+          try {
+              await window.fetchSRSItems(); // データ取得完了まで待機
+              
+              // 画面遷移
+              document.getElementById('user-name').innerText = user.displayName || "RACING DRIVER";
+              gateScreen.classList.add('hidden');
+              
+              // クイズ中やリザルト画面でなければスタート画面を表示
+              const isQuizActive = !document.getElementById('quiz-screen').classList.contains('hidden');
+              const isResultActive = !document.getElementById('result-screen').classList.contains('hidden');
+              
+              if (!isQuizActive && !isResultActive) {
+                  startScreen.classList.remove('hidden');
+              }
+              
+          } catch (error) {
+              console.error("Init Error:", error);
+              loginStatus.innerText = "Data Sync Failed. Retrying...";
+              setTimeout(() => location.reload(), 3000); // エラー時はリロード
+          }
+
+        } else {
+          // --- ログアウトまたは未ログイン時 ---
+          window.currentUser = null;
+          startScreen.classList.add('hidden');
+          gateScreen.classList.remove('hidden');
+          loginStatus.innerText = "System Standby...";
+          document.getElementById('user-name').innerText = "TEST DRIVER";
+        }
+      });
+
+      // ログインボタン
       gateLoginBtn.addEventListener('click', async () => {
         loginStatus.innerText = "Connecting to Paddock...";
         const provider = new GoogleAuthProvider();
-        try { await signInWithPopup(auth, provider); } 
-        catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
+        try {
+            await signInWithPopup(auth, provider);
+            // onAuthStateChanged が自動的に発火するので、ここでは何もしない
+        } catch (error) {
+            console.error(error);
+            loginStatus.innerText = "Access Denied.";
+        }
       });
 
+      // ログアウトボタン
       logoutBtn.addEventListener('click', () => { 
         if(window.currentUser) {
+            // キャッシュクリア
             localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
             localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
         }
-        signOut(auth); 
+        signOut(auth).then(() => {
+            alert("Signed Out Successfully");
+            location.reload(); // 確実にリセットするためにリロード
+        }); 
       });
 
-      // --- Daily Lap Counter ---
+      // ---------------------------------------------------------
+      // 2. DATA SYNC & LOGIC (修正点: データ結合とキャッシュ制御)
+      // ---------------------------------------------------------
+
+      // Daily Lap Counter (Realtime)
       const statsRef = doc(db, "stats", "daily_global");
-      
       onSnapshot(statsRef, (doc) => {
           if (doc.exists()) {
               const data = doc.data();
@@ -3065,87 +3126,103 @@ const idiomData = [
           }
       });
 
-    window.fetchSRSItems = async () => {
+      // SRS Data Fetching System
+      window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
+        
         const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
         const TIME_KEY = `srs_time_${window.currentUser.uid}`;
-        const CACHE_DURATION = 12 * 60 * 60 * 1000; 
+        const CACHE_DURATION = 12 * 60 * 60 * 1000; // 12時間キャッシュ
 
         const now = Date.now();
         const lastFetch = parseInt(localStorage.getItem(TIME_KEY) || '0');
         let allItems = [];
-        
-        // フラグ初期化
         let loadedFromCache = false;
 
-        // --- Sector 1: キャッシュ読み込みトライアル ---
+        // A. キャッシュ読み込み
         if (now - lastFetch < CACHE_DURATION && localStorage.getItem(CACHE_KEY)) {
             try {
                 const rawString = localStorage.getItem(CACHE_KEY);
-                if (!rawString) throw new Error("Empty Cache");
-                
-                const rawData = JSON.parse(rawString);
-                if (!Array.isArray(rawData)) throw new Error("Invalid Data Format");
-
-                allItems = rawData.map(item => ({ 
-                    ...item, 
-                    nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }, 
-                    seconds: item.nextReviewSeconds 
-                }));
-                loadedFromCache = true; // 読み込み成功フラグON
-                
+                if (rawString) {
+                    const rawData = JSON.parse(rawString);
+                    allItems = rawData.map(item => ({ 
+                        ...item, 
+                        nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } // Date復元
+                    }));
+                    console.log(`Loaded ${allItems.length} items from Cache.`);
+                    loadedFromCache = true;
+                }
             } catch (e) {
-                console.warn("⚠️ Telemetry Data Corrupted. Performing Emergency Reset.", e);
+                console.warn("Cache corrupted, fetching fresh data.");
                 localStorage.removeItem(CACHE_KEY);
-                localStorage.removeItem(TIME_KEY);
-                allItems = [];
             }
-        } // ★★★ ここに閉じカッコが必要だ！これでキャッシュ処理を終わらせる ★★★
+        }
 
-        // --- Sector 2: サーバー通信 (キャッシュが無かった、あるいは失敗した場合) ---
-        // if文が独立したので、キャッシュ期限切れでもここを通れるようになった
+        // B. Firestoreから取得 (キャッシュがない場合)
         if (!loadedFromCache) {
             try {
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
                 const snapshot = await getDocs(mistakesRef);
+                
+                allItems = [];
                 snapshot.forEach(doc => {
                     const d = doc.data();
-                    allItems.push({ id: doc.id, ...d, nextReviewSeconds: d.nextReview.seconds });
+                    // タイムスタンプを秒に変換して保存（シリアライズ用）
+                    allItems.push({ 
+                        id: doc.id, 
+                        ...d, 
+                        nextReviewSeconds: d.nextReview.seconds 
+                    });
                 });
                 
-                // データ取得成功時にキャッシュを更新
+                // キャッシュ更新
                 localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
                 localStorage.setItem(TIME_KEY, now.toString());
                 
-                // 日付オブジェクト生成
-                allItems = allItems.map(item => ({ ...item, nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } }));
-            } catch (e) { console.error("Telemetry Error:", e); }
+                // Dateオブジェクトを復元してアプリ内で使えるようにする
+                allItems = allItems.map(item => ({ 
+                    ...item, 
+                    nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }
+                }));
+                console.log(`Fetched ${allItems.length} items from Cloud.`);
+                
+            } catch (e) { 
+                console.error("Telemetry Error:", e); 
+                throw e; // エラーを上に投げてリロードさせる
+            }
         }
 
-        // --- Sector 3: マスターリストへの結合 ---
-        if (window.quiz.masterList.length === 0 && allItems.length > 0) {
-            window.quiz.masterList = allItems.map(i => ({ w: i.word || i.w, m: i.meaning || i.m }));
-            window.quiz.generateRounds();
-            window.quiz.initUI();
-        }
-
+        // C. データの選別 (Pit Stop判定)
         const dueItems = [];
         const nowTs = Date.now() / 1000;
-        allItems.forEach(item => { if (item.nextReviewSeconds <= nowTs) dueItems.push(item); });
+        
+        allItems.forEach(item => { 
+            // 復習期限が来ているものを抽出
+            if (item.nextReviewSeconds <= nowTs) dueItems.push(item); 
+        });
 
-        window.quiz.allMistakes = allItems;
-        window.quiz.dueMistakes = dueItems;
-        window.quiz.updatePitStopButton(dueItems.length);
+        // アプリ本体(quizインスタンス)へデータを注入
+        if(window.quiz) {
+            window.quiz.allMistakes = allItems;
+            window.quiz.dueMistakes = dueItems;
+            window.quiz.updatePitStopButton(dueItems.length);
+        }
       };
         
+      // ---------------------------------------------------------
+      // 3. SRS ALGORITHM (修正点: 厳格な正誤判定)
+      // ---------------------------------------------------------
       window.handleSRSUpdate = async (questionObj, isCorrect) => {
-        if (!window.currentUser) { console.warn("No user logged in."); return; }
+        if (!window.currentUser) return;
+        
         const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
         const now = new Date();
-        const safeWordId = btoa(encodeURIComponent(questionObj.w)).replace(/\//g, '_').replace(/\+/g, '-');
-        const targetRef = questionObj.docId ? doc(mistakesRef, questionObj.docId) : doc(mistakesRef, safeWordId);
         
-        // パラメータがない場合（新規学習）の初期値
+        // ID生成: docIdがあればそれを使う、なければ単語から生成
+        const safeWordId = questionObj.docId || btoa(encodeURIComponent(questionObj.w)).replace(/\//g, '_').replace(/\+/g, '-');
+        const targetRef = doc(mistakesRef, safeWordId);
+        
+        // 現在のパラメータ（なければ初期値）
         const currentParams = { 
             interval: questionObj.interval || 0, 
             repetitions: questionObj.repetitions || 0, 
@@ -3154,49 +3231,56 @@ const idiomData = [
         
         let nextInterval, nextRepetitions, nextEaseFactor;
 
+        // ★★★ ロジックの厳格化 ★★★
         if (!isCorrect) {
-            // 間違えたらリセット
+            // 不正解: 即リセット
             nextRepetitions = 0; 
-            nextInterval = 1; 
-            nextEaseFactor = Math.max(1.3, currentParams.easeFactor - 0.2);
+            nextInterval = 1; // 翌日に復習
+            nextEaseFactor = Math.max(1.3, currentParams.easeFactor - 0.2); // 難易度係数を下げる
         } else {
-        // 正解したら間隔を伸ばす
-        nextRepetitions = currentParams.repetitions + 1;
-        
-        if (nextRepetitions === 1) {
-            nextInterval = 1; 
-        } else if (nextRepetitions === 2) {
-            nextInterval = 6; 
-        } else {
-            // 【修正ポイント】
-            // 計算値が1未満になっても、必ず「1日」は空けるように Math.max(1, ...) を追加した。
-            // これで無限ループやスタック（ゾンビ単語化）を防ぐ。
-            const calculatedInterval = Math.round(currentParams.interval * currentParams.easeFactor);
-            nextInterval = Math.max(1, calculatedInterval); 
+            // 正解: 間隔を伸ばす
+            nextRepetitions = currentParams.repetitions + 1;
+            
+            if (nextRepetitions === 1) {
+                nextInterval = 1; 
+            } else if (nextRepetitions === 2) {
+                nextInterval = 6; 
+            } else {
+                // 前回間隔 x 難易度係数
+                const calculatedInterval = Math.round(currentParams.interval * currentParams.easeFactor);
+                nextInterval = Math.max(1, calculatedInterval); // 最低でも1日は空ける
+            }
+            nextEaseFactor = currentParams.easeFactor + 0.1; // 少し簡単になったとみなす
         }
-
-        nextEaseFactor = currentParams.easeFactor + 0.1;
-    }
 
         const nextDate = new Date(); 
         nextDate.setDate(now.getDate() + nextInterval);
 
-        try {
-            await setDoc(targetRef, { 
-                word: questionObj.w, 
-                meaning: questionObj.meaning || questionObj.m, 
-                nextReview: Timestamp.fromDate(nextDate), 
-                interval: nextInterval, 
-                repetitions: nextRepetitions, 
-                easeFactor: nextEaseFactor, 
-                lastReviewed: Timestamp.fromDate(now) 
-            }, { merge: true });
-            console.log("Telemetry Sent: " + questionObj.w);
-        } catch (e) {
-            console.error("Telemetry Failed:", e);
-            alert("Warning: Data save failed. Check permissions.");
-        }
+        // Firestore更新 (Fire-and-Forget)
+        // ユーザーを待たせないため await はするが、UIブロックはしない
+        setDoc(targetRef, { 
+            word: questionObj.w, 
+            meaning: questionObj.meaning || questionObj.m, 
+            nextReview: Timestamp.fromDate(nextDate), 
+            interval: nextInterval, 
+            repetitions: nextRepetitions, 
+            easeFactor: nextEaseFactor, 
+            lastReviewed: Timestamp.fromDate(now) 
+        }, { merge: true })
+        .then(() => {
+             // ローカルキャッシュも簡易更新して、次のFetchまでの整合性を保つ（Phase 2で詳細実装）
+             console.log(`Telemetry Updated: ${questionObj.w} -> Next: ${nextInterval} days`);
+        })
+        .catch((e) => console.error("Telemetry Failed:", e));
       };
+      
+      // グローバル関数として公開（アプリ本体から呼べるようにする）
+      window.incrementDailyLaps = () => {
+          const statsRef = doc(db, "stats", "daily_global");
+          const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
+          setDoc(statsRef, { count: (parseInt(document.getElementById('daily-laps-display').innerText) || 0) + 1, date: todayStr }, { merge: true });
+      };
+
     </script>
 </body>
 </html>
