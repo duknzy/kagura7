@@ -2741,14 +2741,21 @@ const idiomData = [
             }
 
             handleVocabAnswer(selected, q) {
+                // ★ 修正1: 連打防止 (二重正解を防ぐ)
+                // ボタンを押した瞬間、全ての選択肢を無効化してクリックできないようにする
+                const btns = document.querySelectorAll('.option-btn');
+                // もし既に無効化されていたら処理を中断（ガード節）
+                if (btns.length > 0 && btns[0].disabled) return;
+                btns.forEach(b => b.disabled = true);
+
                 const feedback = document.getElementById('feedback');
                 
-                // ★ Phase 3 Task 8: Speed Calculation
+                // タイム計測
                 const timeTaken = (Date.now() - this.lapStartTime) / 1000;
                 
                 const isCorrect = (selected === q.aText);
 
-                // SRS Update with Speed Data
+                // SRS Update
                 if (window.handleSRSUpdate) {
                     window.handleSRSUpdate({ ...q, timeTaken: timeTaken }, isCorrect);
                 }
@@ -2756,16 +2763,16 @@ const idiomData = [
                 if (isCorrect) {
                     if(this.isReverseMode) this.speak(q.w);
                     
-                    // ★ UX Feedback for Speed
+                    // UX Feedback
                     if (timeTaken < 1.2) {
                         feedback.innerHTML = `<span class="text-[#39ff14] text-xs font-bold animate-pulse">🟣 PURPLE SECTOR (${timeTaken.toFixed(2)}s)</span>`;
                     } else if (timeTaken > 5.0) {
                         feedback.innerHTML = `<span class="text-yellow-500 text-xs font-bold">🟡 SLOW (${timeTaken.toFixed(2)}s)</span>`;
                     }
 
-                    this.currentIndex++;
-                    // 少し待ってから次へ (演出を見せるため)
+                    // 正解時も少し待ってから遷移（この間に連打されるのを防ぐ）
                     setTimeout(() => {
+                        this.currentIndex++;
                         if (this.currentIndex < this.questions.length) this.showVocabQuestion();
                         else this.finish();
                     }, 400); 
@@ -2777,8 +2784,7 @@ const idiomData = [
                     if (!this.missedWordsLog.find(item => item.w === q.w)) this.missedWordsLog.push({ w: q.w, m: q.m });
                     
                     this.questions.push(q);
-                    const btns = document.querySelectorAll('.option-btn');
-                    btns.forEach(b => b.disabled = true);
+                    // ボタンは冒頭で既に無効化されているので、ここでは何もしなくてOK
                     
                     setTimeout(() => { 
                         this.currentIndex++; 
