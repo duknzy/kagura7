@@ -3065,7 +3065,7 @@ const idiomData = [
           }
       });
 
-      window.fetchSRSItems = async () => {
+    window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
         const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
         const TIME_KEY = `srs_time_${window.currentUser.uid}`;
@@ -3074,6 +3074,8 @@ const idiomData = [
         const now = Date.now();
         const lastFetch = parseInt(localStorage.getItem(TIME_KEY) || '0');
         let allItems = [];
+        
+        // フラグ初期化
         let loadedFromCache = false;
 
         // --- Sector 1: キャッシュ読み込みトライアル ---
@@ -3090,7 +3092,7 @@ const idiomData = [
                     nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) }, 
                     seconds: item.nextReviewSeconds 
                 }));
-                loadedFromCache = true; // 読み込み成功フラグ
+                loadedFromCache = true; // 読み込み成功フラグON
                 
             } catch (e) {
                 console.warn("⚠️ Telemetry Data Corrupted. Performing Emergency Reset.", e);
@@ -3098,9 +3100,10 @@ const idiomData = [
                 localStorage.removeItem(TIME_KEY);
                 allItems = [];
             }
-        } // ★ ここで一旦キャッシュ確認ブロックを閉じる（これが抜けていた！）
+        } // ★★★ ここに閉じカッコが必要だ！これでキャッシュ処理を終わらせる ★★★
 
-        // --- Sector 2: サーバー通信 (キャッシュだめならここへ) ---
+        // --- Sector 2: サーバー通信 (キャッシュが無かった、あるいは失敗した場合) ---
+        // if文が独立したので、キャッシュ期限切れでもここを通れるようになった
         if (!loadedFromCache) {
             try {
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
@@ -3109,17 +3112,17 @@ const idiomData = [
                     const d = doc.data();
                     allItems.push({ id: doc.id, ...d, nextReviewSeconds: d.nextReview.seconds });
                 });
-                // キャッシュ更新
+                
+                // データ取得成功時にキャッシュを更新
                 localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
                 localStorage.setItem(TIME_KEY, now.toString());
                 
-                // 日付オブジェクトに変換
+                // 日付オブジェクト生成
                 allItems = allItems.map(item => ({ ...item, nextReview: { toDate: () => new Date(item.nextReviewSeconds * 1000) } }));
             } catch (e) { console.error("Telemetry Error:", e); }
         }
 
-        // --- Sector 3: データ展開 ---
-        // rawDataが空の場合、サーバーデータでマスターリストを埋める
+        // --- Sector 3: マスターリストへの結合 ---
         if (window.quiz.masterList.length === 0 && allItems.length > 0) {
             window.quiz.masterList = allItems.map(i => ({ w: i.word || i.w, m: i.meaning || i.m }));
             window.quiz.generateRounds();
@@ -3134,7 +3137,7 @@ const idiomData = [
         window.quiz.dueMistakes = dueItems;
         window.quiz.updatePitStopButton(dueItems.length);
       };
-
+        
       window.handleSRSUpdate = async (questionObj, isCorrect) => {
         if (!window.currentUser) { console.warn("No user logged in."); return; }
         const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
