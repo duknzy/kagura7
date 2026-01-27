@@ -2494,6 +2494,13 @@ const idiomData = [
                 this.allMistakes = []; 
                 this.isPitStopMode = false;
                 this.isReverseMode = false;
+                this.isInstantMode = false; // デフォルトはOFF
+                const instantCheck = document.getElementById('instant-mode');
+                if(instantCheck) {
+                    instantCheck.addEventListener('change', (e) => {
+                        this.isInstantMode = e.target.checked;
+                    });
+                }
                 this.isAutoAudio = localStorage.getItem('vocab_auto_audio') !== 'false';
                 this.synth = window.speechSynthesis;
                 this.englishVoices = [];
