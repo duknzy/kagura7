@@ -3654,14 +3654,36 @@ lest: ～しないように
           }
       };
 
-      window.incrementDailyLaps = () => {
+      // ---------------------------------------------------------
+      // Daily Laps Logic (Global Transaction)
+      // ---------------------------------------------------------
+      window.incrementDailyLaps = async () => {
+          if (!window.currentUser) return; 
+          
           const statsRef = doc(db, "stats", "daily_global");
           const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
-          
-          setDoc(statsRef, { 
-              count: increment(1), 
-              date: todayStr 
-          }, { merge: true });
+
+          try {
+              await runTransaction(db, async (transaction) => {
+                  const sfDoc = await transaction.get(statsRef);
+                  
+                  if (!sfDoc.exists()) {
+                      transaction.set(statsRef, { count: 1, date: todayStr });
+                  } else {
+                      const data = sfDoc.data();
+                      if (data.date === todayStr) {
+                          // 今日なら+1
+                          transaction.update(statsRef, { count: increment(1) });
+                      } else {
+                          // 日付が古いならリセット
+                          transaction.set(statsRef, { count: 1, date: todayStr });
+                      }
+                  }
+              });
+              console.log("[Global Lap] Count Updated");
+          } catch (e) {
+              console.error("Lap Count Error:", e);
+          }
       };
     </script>
     
