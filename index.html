@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RB Hybrid GP">
-    <link rel="apple-touch-icon" href="icon.jpg">
+    <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
 
     <title>RB Hybrid Learning System</title>
@@ -2888,18 +2888,27 @@ lest: ～しないように
         switchMode(newMode) {
             this.mode = newMode;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`mode-${newMode}`).classList.add('active');
             
+            // 安全装置: ボタンが存在するか確認してからクラスを操作
+            const activeBtn = document.getElementById(`mode-${newMode}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            // 安全装置: 要素取得を変数に入れ、存在チェックを行う
+            const vocabSettings = document.getElementById('vocab-settings');
+            const vocabTools = document.getElementById('vocab-tools');
+            const idiomSettings = document.getElementById('idiom-settings');
+            const vocabStatus = document.getElementById('vocab-status-area');
+
             if (newMode === 'vocab') {
-                document.getElementById('vocab-settings').classList.remove('hidden');
-                document.getElementById('vocab-tools').classList.remove('hidden');
-                document.getElementById('idiom-settings').classList.add('hidden');
-                document.getElementById('vocab-status-area').classList.remove('hidden');
+                if (vocabSettings) vocabSettings.classList.remove('hidden');
+                if (vocabTools) vocabTools.classList.remove('hidden');
+                if (idiomSettings) idiomSettings.classList.add('hidden');
+                if (vocabStatus) vocabStatus.classList.remove('hidden');
             } else {
-                document.getElementById('vocab-settings').classList.add('hidden');
-                document.getElementById('vocab-tools').classList.add('hidden');
-                document.getElementById('idiom-settings').classList.remove('hidden');
-                document.getElementById('vocab-status-area').classList.add('hidden');
+                if (vocabSettings) vocabSettings.classList.add('hidden');
+                if (vocabTools) vocabTools.classList.add('hidden');
+                if (idiomSettings) idiomSettings.classList.remove('hidden');
+                if (vocabStatus) vocabStatus.classList.add('hidden');
             }
         }
 
