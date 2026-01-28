@@ -400,9 +400,9 @@
     // ==========================================
     // DATA LOAD (Placeholders)
     // ==========================================
-    // 単語データ
+    // 単語データ (ここにデータを貼り付けてくれ)
     const rawData = `
-follow: ～の後に続く、～に従う
+    follow: ～の後に続く、～に従う
 consider: ～を考慮する
 increase: 増える、～を増やす
 expect: ～を予期する
@@ -2431,7 +2431,7 @@ predominantly: 主に
 lest: ～しないように
     `; 
 
-    // 熟語データ
+    // 熟語データ（プレースホルダー）
     const idiomData = [
     { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
     { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
@@ -3146,10 +3146,16 @@ lest: ～しないように
         
         startPitStop() {
             if (!this.dueMistakes || this.dueMistakes.length === 0) return;
+            
+            // ★ Filter out idioms just in case they slipped in
+            const vocabDue = this.dueMistakes.filter(item => !item.id.startsWith('idiom_'));
+            
+            if (!vocabDue || vocabDue.length === 0) return;
+
             this.isPitStopMode = true; 
             this.switchMode('vocab'); 
             
-            this.questions = this.dueMistakes.map(item => {
+            this.questions = vocabDue.map(item => {
                 const word = item.word || item.w;
                 const meaning = item.meaning || item.m;
                 const targetWord = { w: word, m: meaning };
@@ -3483,7 +3489,14 @@ lest: ～しないように
 
         const dueItems = [];
         const nowTs = Date.now() / 1000;
-        allItems.forEach(item => { if (item.nextReviewSeconds <= nowTs) dueItems.push(item); });
+        
+        // ★ IDIOM EXCLUSION LOGIC (Filter out items starting with 'idiom_')
+        allItems.forEach(item => { 
+            // If item.id starts with 'idiom_', do not push to dueItems
+            if (item.nextReviewSeconds <= nowTs && !item.id.toString().startsWith('idiom_')) {
+                dueItems.push(item); 
+            }
+        });
 
         if(window.quiz) {
             window.quiz.allMistakes = allItems;
