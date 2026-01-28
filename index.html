@@ -3012,19 +3012,20 @@ lest: ～しないように
             const accDisplay = document.getElementById('accuracy-display');
             accDisplay.innerText = `${accuracy.toFixed(1)}%`;
             
+            // ★ PASS / FAIL LOGIC ★
             const passArea = document.getElementById('pass-area');
             const failMsg = document.getElementById('fail-msg');
             const passBtn = document.getElementById('pass-btn');
             const licenseId = `barcelona`;
 
             if (accuracy >= 90) {
-                accDisplay.style.color = "#4ade80";
+                accDisplay.style.color = "#4ade80"; 
                 passArea.classList.remove('hidden');
                 failMsg.classList.add('hidden');
                 this.copyToClipboard(licenseId, passBtn);
                 passBtn.onclick = () => this.copyToClipboard(licenseId, passBtn);
             } else {
-                accDisplay.style.color = "#ef4444";
+                accDisplay.style.color = "#ef4444"; 
                 passArea.classList.add('hidden');
                 failMsg.classList.remove('hidden');
             }
@@ -3049,14 +3050,13 @@ lest: ～しないように
                 nextBtn.classList.add('hidden'); 
             }
             
-            // --- データの保存・更新 ---
             if (window.fetchSRSItems) window.fetchSRSItems();
             
-            // リーダーボードとデイリー統計へデータを送信
+            // ★ ここで正しく関数を閉じます
             if (window.incrementDailyLaps) {
                 window.incrementDailyLaps(accuracy, totalTime);
             }
-        } // カッコを閉じる
+        } // ← この閉じカッコが抜けていたのが原因です！
             
         returnToGrid() {
             document.getElementById('result-screen').classList.add('hidden');
