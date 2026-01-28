@@ -3737,12 +3737,101 @@ lest: ～しないように
       const startScreen = document.getElementById('start-screen');
       const loginStatus = document.getElementById('login-status');
       const gateLoginBtn = document.getElementById('gate-login-btn');
-      const logoutBtn = document.getElementById('logout-btn');
+      
+      // ログアウトボタンが存在しない場合の対策（念の為）
+      const logoutBtn = document.getElementById('logout-btn') || document.createElement('button'); 
 
       window.currentUser = null;
+      
+      // ★ 修正ポイント1: リスナー解除用変数を定義
+      let unsubscribeStats = null;
+      const statsRef = doc(db, "stats", "daily_global");
 
       // ---------------------------------------------------------
-      // 1. AUTH & PERSISTENCE
+      // 1. AUTH & PERSISTENCE & SNAPSHOT CONTROL
+      // ---------------------------------------------------------
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          console.log("Authorized Driver:", user.displayName);
+          window.currentUser = user;
+          loginStatus.innerText = "Syncing Telemetry Data...";
+          
+          // ★ 修正ポイント2: ログイン確認後にデータ監視(onSnapshot)を開始
+          if (!unsubscribeStats) {
+              unsubscribeStats = onSnapshot(statsRef, (docSnap) => {
+                  if (docSnap.exists()) {
+                      const data = docSnap.data();
+                      const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
+                      if (data.date === todayStr) {
+                          const display = document.getElementById('daily-laps-display');
+                          if(display) display.innerText = data.count;
+                      } else {
+                          const display = document.getElementById('daily-laps-display');
+                          if(display) display.innerText = 0;
+                      }
+                  }
+              }, (error) => {
+                  console.warn("Stats sync warning:", error.message);
+              });
+          }
+
+          try {
+              await window.fetchSRSItems();
+              
+              const userNameDisplay = document.getElementById('user-name');
+              if(userNameDisplay) userNameDisplay.innerText = user.displayName || "RACING DRIVER";
+              
+              gateScreen.classList.add('hidden');
+              
+              const isQuizActive = !document.getElementById('quiz-screen').classList.contains('hidden');
+              const isResultActive = !document.getElementById('result-screen').classList.contains('hidden');
+              
+              if (!isQuizActive && !isResultActive) {
+                  startScreen.classList.remove('hidden');
+              }
+          } catch (error) {
+              console.error("Init Error:", error);
+              loginStatus.innerText = "Data Sync Failed. Retrying...";
+              setTimeout(() => location.reload(), 3000);
+          }
+
+        } else {
+          // ★ 修正ポイント3: ログアウト時にリスナーを停止
+          if (unsubscribeStats) {
+              unsubscribeStats();
+              unsubscribeStats = null;
+          }
+
+          window.currentUser = null;
+          startScreen.classList.add('hidden');
+          gateScreen.classList.remove('hidden');
+          loginStatus.innerText = "System Standby...";
+          
+          const userNameDisplay = document.getElementById('user-name');
+          if(userNameDisplay) userNameDisplay.innerText = "TEST DRIVER";
+        }
+      });
+
+      gateLoginBtn.addEventListener('click', async () => {
+        loginStatus.innerText = "Connecting to Paddock...";
+        const provider = new GoogleAuthProvider();
+        try { await signInWithPopup(auth, provider); } 
+        catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
+      });
+
+      // HTML内にログアウトボタンがある場合のみ動作
+      if(document.getElementById('logout-btn')) {
+          document.getElementById('logout-btn').addEventListener('click', () => { 
+            if(window.currentUser) {
+                localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
+                localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
+            }
+            signOut(auth).then(() => { alert("Signed Out Successfully"); location.reload(); }); 
+          });
+      }
+
+      // ---------------------------------------------------------
+      // 2. DATA FETCH (Legacy wrapper)
       // ---------------------------------------------------------
       window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
@@ -3779,9 +3868,11 @@ lest: ～しないように
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
                 const snapshot = await getDocs(mistakesRef);
                 allItems = [];
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    allItems.push({ id: doc.id, ...d, nextReviewSeconds: d.nextReview.seconds });
+                snapshot.forEach(docSnap => {
+                    const d = docSnap.data();
+                    // nextReviewがTimestamp型か確認して変換
+                    const nrSec = d.nextReview && d.nextReview.seconds ? d.nextReview.seconds : (Date.now()/1000);
+                    allItems.push({ id: docSnap.id, ...d, nextReviewSeconds: nrSec });
                 });
                 localStorage.setItem(CACHE_KEY, JSON.stringify(allItems));
                 localStorage.setItem(TIME_KEY, now.toString());
@@ -3792,9 +3883,7 @@ lest: ～しないように
         const dueItems = [];
         const nowTs = Date.now() / 1000;
         
-        // ★ IDIOM EXCLUSION LOGIC (Filter out items starting with 'idiom_')
         allItems.forEach(item => { 
-            // If item.id starts with 'idiom_', do not push to dueItems
             if (item.nextReviewSeconds <= nowTs && !item.id.toString().startsWith('idiom_')) {
                 dueItems.push(item); 
             }
@@ -3872,7 +3961,6 @@ lest: ～しないように
       // ---------------------------------------------------------
       window.saveRaceResult = async (data) => {
           if (!window.currentUser) return;
-          
           try {
               const leaderboardRef = collection(db, "leaderboard");
               const now = new Date();
@@ -3885,21 +3973,18 @@ lest: ～しないように
                   timestamp: Timestamp.now(), 
                   ...data                   
               };
-
               await addDoc(leaderboardRef, payload);
               console.log("[RACE CONTROL] Result saved to Leaderboard:", payload);
-              
           } catch (e) {
               console.error("[RACE CONTROL] Failed to save result:", e);
           }
       };
 
       // ---------------------------------------------------------
-      // 5. BOOKMARK TOGGLER (FIXED VERSION)
+      // 5. BOOKMARK TOGGLER
       // ---------------------------------------------------------
       window.toggleBookmark = async (safeWord, safeMeaning) => {
           if (!window.currentUser) { alert("Sign in required."); return; }
-          
           const word = decodeURIComponent(safeWord);
           const meaning = decodeURIComponent(safeMeaning);
 
@@ -3907,30 +3992,24 @@ lest: ～しないように
           const isCurrentlyBookmarked = currentItem && currentItem.bookmarked === true;
           const newValue = !isCurrentlyBookmarked;
 
-          // 1. Memory Update (UI即時反映)
           if (currentItem) {
               currentItem.bookmarked = newValue;
           } else {
               window.quiz.allMistakes.push({ 
                    word: word, meaning: meaning, bookmarked: newValue, 
                    interval: 0, repetitions: 0, easeFactor: 2.5,
-                   // 新規の場合はダミーの秒数を入れておく
                    nextReviewSeconds: Date.now() / 1000 
               });
-              // 新規作成したアイテムを再取得
               currentItem = window.quiz.allMistakes.find(m => m.word === word);
           }
           window.quiz.renderWordBook(); 
 
-          // 2. Prepare Data for Firestore
           const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
           const docId = btoa(encodeURIComponent(word)).replace(/\//g, '_').replace(/\+/g, '-');
           const targetRef = doc(mistakesRef, docId);
 
-          // ★ CRITICAL FIX: 関数を含まないクリーンなTimestampを生成する ★
           let safeNextReview = Timestamp.now();
           if (currentItem && currentItem.nextReviewSeconds) {
-              // キャッシュの秒数データから正規のTimestampを復元
               safeNextReview = Timestamp.fromDate(new Date(currentItem.nextReviewSeconds * 1000));
           }
 
@@ -3942,15 +4021,11 @@ lest: ～しないように
                   interval: currentItem ? (currentItem.interval || 0) : 0,
                   repetitions: currentItem ? (currentItem.repetitions || 0) : 0,
                   easeFactor: currentItem ? (currentItem.easeFactor || 2.5) : 2.5,
-                  // ここで修正済みの safeNextReview を使う
                   nextReview: safeNextReview
               }, { merge: true });
-              
               console.log(`[Flag] Saved: ${word}`);
-
           } catch(e) {
               console.error("Bookmark Error:", e);
-              // ロールバック
               if(currentItem) currentItem.bookmarked = !newValue;
               window.quiz.renderWordBook();
           }
@@ -3961,23 +4036,19 @@ lest: ～しないように
       // ---------------------------------------------------------
       window.incrementDailyLaps = async () => {
           if (!window.currentUser) return; 
-          
           const statsRef = doc(db, "stats", "daily_global");
           const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
 
           try {
               await runTransaction(db, async (transaction) => {
                   const sfDoc = await transaction.get(statsRef);
-                  
                   if (!sfDoc.exists()) {
                       transaction.set(statsRef, { count: 1, date: todayStr });
                   } else {
                       const data = sfDoc.data();
                       if (data.date === todayStr) {
-                          // 今日なら+1
                           transaction.update(statsRef, { count: increment(1) });
                       } else {
-                          // 日付が古いならリセット
                           transaction.set(statsRef, { count: 1, date: todayStr });
                       }
                   }
@@ -3987,73 +4058,6 @@ lest: ～しないように
               console.error("Lap Count Error:", e);
           }
       };
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          console.log("Authorized Driver:", user.displayName);
-          window.currentUser = user;
-          loginStatus.innerText = "Syncing Telemetry Data...";
-          
-          try {
-              await window.fetchSRSItems();
-              
-              document.getElementById('user-name').innerText = user.displayName || "RACING DRIVER";
-              gateScreen.classList.add('hidden');
-              
-              const isQuizActive = !document.getElementById('quiz-screen').classList.contains('hidden');
-              const isResultActive = !document.getElementById('result-screen').classList.contains('hidden');
-              
-              if (!isQuizActive && !isResultActive) {
-                  startScreen.classList.remove('hidden');
-              }
-          } catch (error) {
-              console.error("Init Error:", error);
-              loginStatus.innerText = "Data Sync Failed. Retrying...";
-              setTimeout(() => location.reload(), 3000);
-          }
-
-        } else {
-          window.currentUser = null;
-          startScreen.classList.add('hidden');
-          gateScreen.classList.remove('hidden');
-          loginStatus.innerText = "System Standby...";
-          document.getElementById('user-name').innerText = "TEST DRIVER";
-        }
-      });
-
-      gateLoginBtn.addEventListener('click', async () => {
-        loginStatus.innerText = "Connecting to Paddock...";
-        const provider = new GoogleAuthProvider();
-        try { await signInWithPopup(auth, provider); } 
-        catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
-      });
-
-      if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => { 
-        if(window.currentUser) {
-            localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
-            localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
-        }
-        signOut(auth).then(() => { alert("Signed Out Successfully"); location.reload(); }); 
-    });
-}
-
-      // ---------------------------------------------------------
-      // 2. DATA SYNC
-      // ---------------------------------------------------------
-      const statsRef = doc(db, "stats", "daily_global");
-      onSnapshot(statsRef, (doc) => {
-          if (doc.exists()) {
-              const data = doc.data();
-              const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
-              if (data.date === todayStr) {
-                  document.getElementById('daily-laps-display').innerText = data.count;
-              } else {
-                  document.getElementById('daily-laps-display').innerText = 0;
-              }
-          }
-      });
-
-      
     </script>
     
     <script>
