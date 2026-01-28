@@ -3744,70 +3744,6 @@ lest: ～しないように
       // ---------------------------------------------------------
       // 1. AUTH & PERSISTENCE
       // ---------------------------------------------------------
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          console.log("Authorized Driver:", user.displayName);
-          window.currentUser = user;
-          loginStatus.innerText = "Syncing Telemetry Data...";
-          
-          try {
-              await window.fetchSRSItems();
-              
-              document.getElementById('user-name').innerText = user.displayName || "RACING DRIVER";
-              gateScreen.classList.add('hidden');
-              
-              const isQuizActive = !document.getElementById('quiz-screen').classList.contains('hidden');
-              const isResultActive = !document.getElementById('result-screen').classList.contains('hidden');
-              
-              if (!isQuizActive && !isResultActive) {
-                  startScreen.classList.remove('hidden');
-              }
-          } catch (error) {
-              console.error("Init Error:", error);
-              loginStatus.innerText = "Data Sync Failed. Retrying...";
-              setTimeout(() => location.reload(), 3000);
-          }
-
-        } else {
-          window.currentUser = null;
-          startScreen.classList.add('hidden');
-          gateScreen.classList.remove('hidden');
-          loginStatus.innerText = "System Standby...";
-          document.getElementById('user-name').innerText = "TEST DRIVER";
-        }
-      });
-
-      gateLoginBtn.addEventListener('click', async () => {
-        loginStatus.innerText = "Connecting to Paddock...";
-        const provider = new GoogleAuthProvider();
-        try { await signInWithPopup(auth, provider); } 
-        catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
-      });
-
-      logoutBtn.addEventListener('click', () => { 
-        if(window.currentUser) {
-            localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
-            localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
-        }
-        signOut(auth).then(() => { alert("Signed Out Successfully"); location.reload(); }); 
-      });
-
-      // ---------------------------------------------------------
-      // 2. DATA SYNC
-      // ---------------------------------------------------------
-      const statsRef = doc(db, "stats", "daily_global");
-      onSnapshot(statsRef, (doc) => {
-          if (doc.exists()) {
-              const data = doc.data();
-              const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
-              if (data.date === todayStr) {
-                  document.getElementById('daily-laps-display').innerText = data.count;
-              } else {
-                  document.getElementById('daily-laps-display').innerText = 0;
-              }
-          }
-      });
-
       window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
         const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
@@ -4051,6 +3987,73 @@ lest: ～しないように
               console.error("Lap Count Error:", e);
           }
       };
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          console.log("Authorized Driver:", user.displayName);
+          window.currentUser = user;
+          loginStatus.innerText = "Syncing Telemetry Data...";
+          
+          try {
+              await window.fetchSRSItems();
+              
+              document.getElementById('user-name').innerText = user.displayName || "RACING DRIVER";
+              gateScreen.classList.add('hidden');
+              
+              const isQuizActive = !document.getElementById('quiz-screen').classList.contains('hidden');
+              const isResultActive = !document.getElementById('result-screen').classList.contains('hidden');
+              
+              if (!isQuizActive && !isResultActive) {
+                  startScreen.classList.remove('hidden');
+              }
+          } catch (error) {
+              console.error("Init Error:", error);
+              loginStatus.innerText = "Data Sync Failed. Retrying...";
+              setTimeout(() => location.reload(), 3000);
+          }
+
+        } else {
+          window.currentUser = null;
+          startScreen.classList.add('hidden');
+          gateScreen.classList.remove('hidden');
+          loginStatus.innerText = "System Standby...";
+          document.getElementById('user-name').innerText = "TEST DRIVER";
+        }
+      });
+
+      gateLoginBtn.addEventListener('click', async () => {
+        loginStatus.innerText = "Connecting to Paddock...";
+        const provider = new GoogleAuthProvider();
+        try { await signInWithPopup(auth, provider); } 
+        catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
+      });
+
+      if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => { 
+        if(window.currentUser) {
+            localStorage.removeItem(`srs_data_${window.currentUser.uid}`);
+            localStorage.removeItem(`srs_time_${window.currentUser.uid}`);
+        }
+        signOut(auth).then(() => { alert("Signed Out Successfully"); location.reload(); }); 
+    });
+}
+
+      // ---------------------------------------------------------
+      // 2. DATA SYNC
+      // ---------------------------------------------------------
+      const statsRef = doc(db, "stats", "daily_global");
+      onSnapshot(statsRef, (doc) => {
+          if (doc.exists()) {
+              const data = doc.data();
+              const todayStr = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }).split(' ')[0];
+              if (data.date === todayStr) {
+                  document.getElementById('daily-laps-display').innerText = data.count;
+              } else {
+                  document.getElementById('daily-laps-display').innerText = 0;
+              }
+          }
+      });
+
+      
     </script>
     
     <script>
