@@ -117,7 +117,7 @@
             box-shadow: 0 0 15px var(--neon-green); 
         }
         
-        /* Smaller chips for spelling mode */
+        /* Letter Chips for Spelling */
         .letter-chip {
             min-width: 40px;
             height: 45px;
@@ -181,6 +181,18 @@
         .wb-scroll::-webkit-scrollbar { width: 4px; }
         .wb-scroll::-webkit-scrollbar-track { background: #1a1a1a; }
         .wb-scroll::-webkit-scrollbar-thumb { background: #e10600; border-radius: 4px; }
+        
+        /* Accordion Transition */
+        .strategy-panel {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .strategy-panel.open {
+            max-height: 500px;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="carbon-bg">
@@ -188,7 +200,7 @@
     <div id="app" class="w-full max-w-2xl mx-auto flex flex-col justify-center">
         
         <div id="gate-screen" class="race-card p-8 rounded-2xl shadow-2xl text-center relative overflow-hidden animate-slide-in my-auto">
-            <h1 class="f1-font text-5xl mb-2 font-bold text-white tracking-wider">RB<span class="text-red-600">-27</span></h1>
+            <h1 class="f1-font text-5xl mb-2 font-bold text-white tracking-wider">RB<span class="text-red-600">-28</span></h1>
             <p class="text-gray-400 font-mono text-xs uppercase tracking-[0.4em] mb-12">Hybrid Learning System</p>
             <button id="gate-login-btn" class="w-full f1-font bg-white hover:bg-gray-200 text-black px-8 py-4 rounded-xl font-bold tracking-widest uppercase transition-all shadow-lg flex items-center justify-center gap-3 active:scale-95">
                 <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.16,22 12.25,22C17.6,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1V11.1Z" /></svg>
@@ -197,68 +209,128 @@
             <p id="login-status" class="mt-6 text-[10px] text-gray-600 font-mono">System Standby...</p>
         </div>
 
-        <div id="start-screen" class="hidden race-card p-6 rounded-2xl relative z-10 animate-slide-in my-auto">
+        <div id="start-screen" class="hidden race-card p-6 rounded-2xl relative z-10 animate-slide-in my-auto flex flex-col gap-4">
             
-            <div class="flex justify-between items-end mb-6 border-b border-gray-800 pb-4">
-                <div class="text-left">
-                    <div class="flex items-center gap-2 mb-1">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
+                <div>
+                    <div class="flex items-center gap-2">
                         <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <p class="text-[10px] text-gray-500 uppercase tracking-widest">Driver</p>
+                        <p id="user-name" class="f1-font text-sm text-gray-300 font-bold truncate max-w-[150px]">DRIVER</p>
                     </div>
-                    <p id="user-name" class="f1-font text-2xl text-white font-bold truncate max-w-[180px]">TEST DRIVER</p>
                 </div>
-                <button id="logout-btn" class="text-[10px] text-red-500 hover:text-white border border-red-900/50 hover:bg-red-600 px-3 py-1 rounded transition-colors uppercase tracking-wider">Sign Out</button>
+                <div class="text-right">
+                    <span class="text-[9px] text-gray-500 uppercase">Daily Laps</span>
+                    <span id="daily-laps-display" class="f1-font text-lg text-white font-bold ml-1">0</span>
+                </div>
             </div>
 
-            <div class="flex bg-black/40 p-1 rounded-xl mb-6 border border-gray-800">
-                <button onclick="quiz.switchMode('vocab')" id="mode-vocab" class="mode-btn active flex-1 py-3 text-xs font-bold uppercase tracking-widest f1-font">Vocab</button>
-                <button onclick="quiz.switchMode('idiom')" id="mode-idiom" class="mode-btn flex-1 py-3 text-xs font-bold uppercase tracking-widest f1-font">Idiom</button>
+            <div class="flex bg-black/40 p-1 rounded-xl border border-gray-800">
+                <button onclick="quiz.switchMode('vocab')" id="mode-vocab" class="mode-btn active flex-1 py-2 text-xs font-bold uppercase tracking-widest f1-font">Vocab</button>
+                <button onclick="quiz.switchMode('idiom')" id="mode-idiom" class="mode-btn flex-1 py-2 text-xs font-bold uppercase tracking-widest f1-font">Idiom</button>
             </div>
 
-            <div id="vocab-settings" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4 mb-2">
-                    <div class="bg-black/30 p-3 rounded-xl border border-gray-800 text-center">
-                        <p class="text-[9px] text-gray-500 uppercase mb-1">Daily Laps</p>
-                        <span id="daily-laps-display" class="f1-font text-2xl text-white font-bold">0</span>
+            <div id="idiom-settings" class="hidden">
+                <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800 text-center">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest">Total Idioms</p>
+                    <div class="f1-font text-3xl text-white font-bold" id="idiom-count-display">0</div>
+                </div>
+            </div>
+
+            <div id="vocab-status-area" class="grid grid-cols-2 gap-3">
+                <div id="tire-status-box" class="bg-black/30 p-3 rounded-xl border border-gray-800 text-center relative overflow-hidden group">
+                    <p class="text-[9px] text-gray-500 uppercase">Condition</p>
+                    <span id="mistake-count-display" class="f1-font text-lg text-green-500 font-bold">OPTIMAL</span>
+                    <div id="pit-alert-overlay" class="hidden absolute inset-0 bg-red-900/95 flex items-center justify-center cursor-pointer active:bg-red-800 transition-colors">
+                        <span class="f1-font text-white font-bold animate-pulse text-xs">PIT STOP REQ</span>
                     </div>
-                    <div id="tire-status-box" class="bg-black/30 p-3 rounded-xl border border-gray-800 text-center relative overflow-hidden">
-                        <p class="text-[9px] text-gray-500 uppercase mb-1">Condition</p>
-                        <span id="mistake-count-display" class="f1-font text-xl text-green-500 font-bold">OPTIMAL</span>
-                        <div id="pit-alert-overlay" class="hidden absolute inset-0 bg-red-900/95 flex items-center justify-center cursor-pointer active:bg-red-800 transition-colors">
-                            <span class="f1-font text-white font-bold animate-pulse text-xs">PIT STOP REQ</span>
+                </div>
+                <button onclick="quiz.openTelemetry()" class="bg-black/30 p-3 rounded-xl border border-gray-800 flex flex-col items-center justify-center hover:bg-gray-800 transition-colors">
+                    <span class="text-xl">📊</span>
+                    <span class="text-[8px] text-gray-400 uppercase mt-1">Telemetry</span>
+                </button>
+            </div>
+
+            <button onclick="quiz.start()" class="w-full f1-font bg-gradient-to-r from-red-600 to-red-700 active:from-red-700 active:to-red-800 text-white py-5 rounded-xl font-bold tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-lg shadow-red-900/30 text-xl border-b-4 border-red-900 mt-2">
+                Start Engine
+            </button>
+
+            <div class="text-center">
+                <p id="strategy-summary" class="text-[10px] text-gray-500 font-mono">Setup: Standard / Medium Tires</p>
+            </div>
+
+            <button onclick="quiz.toggleStrategyMenu()" id="strategy-toggle-btn" class="w-full bg-gray-900 hover:bg-gray-800 border border-gray-700 text-gray-400 py-3 rounded-xl font-bold text-xs uppercase flex items-center justify-center gap-2 transition-colors">
+                <span>⚙️</span> Race Strategy (Settings) <span>▼</span>
+            </button>
+
+            <div id="strategy-panel" class="strategy-panel bg-gray-900/30 rounded-xl border border-gray-800 mt-1">
+                <div class="p-4 space-y-4">
+                    
+                    <div class="flex border-b border-gray-700 pb-2 mb-2">
+                        <button onclick="quiz.switchStrategyTab('normal')" id="tab-normal" class="flex-1 text-xs font-bold text-white border-b-2 border-red-500 pb-1">NORMAL GP</button>
+                        <button onclick="quiz.switchStrategyTab('random')" id="tab-random" class="flex-1 text-xs font-bold text-gray-500 border-b-2 border-transparent pb-1">RANDOM GP</button>
+                    </div>
+
+                    <div id="strategy-normal" class="space-y-4">
+                        <div>
+                            <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-1">Circuit Selection</label>
+                            <div class="relative">
+                                <select id="round-selector" class="w-full bg-black/50 text-white p-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-sm appearance-none" onchange="quiz.updateSummary()"></select>
+                                <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500">▼</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] text-gray-500 uppercase">Custom:</span>
+                            <input type="number" id="custom-start" placeholder="1" class="w-14 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-sm font-mono">
+                            <span class="text-gray-500">-</span>
+                            <input type="number" id="custom-end" placeholder="50" class="w-14 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-sm font-mono">
+                            <button onclick="quiz.createCustomRound()" class="flex-1 bg-gray-800 active:bg-gray-700 text-white text-[9px] font-bold uppercase rounded-lg py-2 border border-gray-600">Set Range</button>
                         </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="text-gray-500 text-[10px] uppercase tracking-widest block mb-1 pl-1">Circuit Selection</label>
-                    <div class="relative">
-                        <select id="round-selector" class="w-full bg-black/50 text-white p-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-base appearance-none"></select>
-                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500">▼</div>
+                    <div id="strategy-random" class="hidden space-y-4">
+                        <p class="text-[10px] text-gray-400">Generate a random race from a specific range.</p>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1">
+                                <label class="text-[9px] text-gray-500 uppercase block">Range Start</label>
+                                <input type="number" id="rand-start" placeholder="1" class="w-full bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-sm font-mono">
+                            </div>
+                            <span class="text-gray-500 pt-4">-</span>
+                            <div class="flex-1">
+                                <label class="text-[9px] text-gray-500 uppercase block">Range End</label>
+                                <input type="number" id="rand-end" placeholder="Max" class="w-full bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-sm font-mono">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[9px] text-yellow-500 uppercase block font-bold">Qty (Laps)</label>
+                                <input type="number" id="rand-qty" placeholder="20" class="w-full bg-black text-white p-2 rounded-lg border border-yellow-600/50 focus:border-yellow-500 text-center text-sm font-mono">
+                            </div>
+                        </div>
+                        <button onclick="quiz.createRandomRound()" class="w-full bg-indigo-900/50 hover:bg-indigo-800 text-indigo-200 border border-indigo-700 py-3 rounded-lg font-bold text-xs uppercase flex items-center justify-center gap-2">
+                            <span>🎲</span> Create Random Grid
+                        </button>
                     </div>
-                </div>
 
-                <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-3 pl-1">Tire Compound (Length)</p>
-                    <div class="flex justify-between gap-2 mb-4">
-                        <button onclick="quiz.setTireStrategy(10, 'soft')" id="tire-soft" class="tire-btn tire-soft flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">🔴 Soft<br><span class="text-[10px] opacity-70">10 Qs</span></button>
-                        <button onclick="quiz.setTireStrategy(20, 'medium')" id="tire-medium" class="tire-btn tire-medium active flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">🟡 Med<br><span class="text-[10px] opacity-70">20 Qs</span></button>
-                        <button onclick="quiz.setTireStrategy(50, 'hard')" id="tire-hard" class="tire-btn tire-hard flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">⚪ Hard<br><span class="text-[10px] opacity-70">50 Qs</span></button>
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Tire Strategy (Base Qty)</p>
+                        <div class="flex justify-between gap-2">
+                            <button onclick="quiz.setTireStrategy(10, 'soft')" id="tire-soft" class="tire-btn tire-soft flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">🔴 S (10)</button>
+                            <button onclick="quiz.setTireStrategy(20, 'medium')" id="tire-medium" class="tire-btn tire-medium active flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">🟡 M (20)</button>
+                            <button onclick="quiz.setTireStrategy(50, 'hard')" id="tire-hard" class="tire-btn tire-hard flex-1 bg-black/40 text-gray-400 p-2 rounded-lg border border-gray-600 f1-font text-xs font-bold uppercase tracking-wider active:bg-gray-800">⚪ H (50)</button>
+                        </div>
                     </div>
-                    <div class="flex flex-col gap-3 border-t border-gray-800 pt-3">
+
+                    <div class="flex flex-col gap-3 border-t border-gray-700 pt-3">
                         <label class="flex items-center justify-between cursor-pointer group p-1">
                             <span class="text-xs font-bold text-gray-300 group-hover:text-cyan-400 transition-colors flex items-center gap-2"><span class="text-cyan-400">🔄</span> REVERSE GRID</span>
-                            <input type="checkbox" id="reverse-mode" class="accent-f1 w-5 h-5 cursor-pointer" onchange="quiz.toggleSpellingOption()">
+                            <input type="checkbox" id="reverse-mode" class="accent-f1 w-5 h-5 cursor-pointer" onchange="quiz.toggleSpellingOption(); quiz.updateSummary()">
                         </label>
                         <div id="spelling-option-container" class="hidden pl-4 border-l border-gray-700 ml-1">
                              <label class="flex items-center justify-between cursor-pointer group p-1">
                                 <span class="text-xs font-bold text-gray-400 group-hover:text-pink-400 transition-colors flex items-center gap-2">
                                     <span class="text-pink-500">🔠</span> MANUAL SHIFT (SPELL)
                                 </span>
-                                <input type="checkbox" id="spelling-mode" class="accent-f1 w-5 h-5 cursor-pointer">
+                                <input type="checkbox" id="spelling-mode" class="accent-f1 w-5 h-5 cursor-pointer" onchange="quiz.updateSummary()">
                             </label>
                         </div>
-
                         <label class="flex items-center justify-between cursor-pointer group p-1">
                             <span class="text-xs font-bold text-gray-300 group-hover:text-green-400 transition-colors flex items-center gap-2"><span class="text-green-500">🔊</span> RACE ENGINEER</span>
                             <input type="checkbox" id="audio-mode" class="accent-f1 w-5 h-5 cursor-pointer" checked>
@@ -268,48 +340,15 @@
                             <input type="checkbox" id="instant-mode" class="accent-f1 w-5 h-5 cursor-pointer">
                         </label>
                     </div>
-                </div>
 
-                <div class="pt-4 border-t border-gray-800">
-                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Garage Tools</p>
-                    <div class="mb-3 relative group">
-                        <input type="text" id="search-input" placeholder="Quick Scan (Search)..." class="w-full bg-black text-white p-3 pl-3 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-base transition-colors shadow-inner">
-                        <div id="search-results" class="hidden absolute bottom-full left-0 w-full mb-1 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-50"></div>
+                    <div class="pt-2 border-t border-gray-700">
+                        <input type="text" id="search-input" placeholder="Quick Scan (Search)..." class="w-full bg-black text-white p-2 rounded-lg border border-gray-700 focus:border-red-500 outline-none font-mono text-sm mb-2">
+                        <div id="search-results" class="hidden absolute left-4 right-4 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-50"></div>
+                        <button onclick="quiz.openWordBook()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600 py-2 rounded-lg font-bold transition-all uppercase text-xs flex items-center justify-center gap-2">
+                            <span>📁</span> DATA CENTER
+                        </button>
                     </div>
-                    
-                    <div class="flex items-center gap-2 mb-2">
-                        <input type="number" id="custom-start" placeholder="1" class="w-16 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-base font-mono">
-                        <span class="text-gray-500">-</span>
-                        <input type="number" id="custom-end" placeholder="50" class="w-16 bg-black text-white p-2 rounded-lg border border-gray-700 text-center text-base font-mono">
-                        <button onclick="quiz.createCustomRound()" class="flex-1 bg-gray-800 active:bg-gray-700 text-white text-[10px] font-bold uppercase rounded-lg py-2 border border-gray-600">Set Custom</button>
-                    </div>
-
-                    <button onclick="quiz.createRandomRound()" class="w-full bg-indigo-900/50 hover:bg-indigo-800 text-indigo-200 hover:text-white border border-indigo-700 py-3 rounded-xl font-bold transition-all uppercase text-xs flex items-center justify-center gap-2 mb-3 shadow-lg shadow-indigo-900/20">
-                        <span>🎲</span> Random GP (From Range)
-                    </button>
-
-                    <button onclick="quiz.openWordBook()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600 py-3 rounded-xl font-bold transition-all uppercase text-xs flex items-center justify-center gap-2">
-                        <span>📁</span> Component List (Word Book)
-                    </button>
                 </div>
-            </div>
-
-            <div id="idiom-settings" class="hidden space-y-4">
-                <div class="bg-gray-900/50 p-6 rounded-xl border border-gray-800 text-center">
-                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2">Total Idioms</p>
-                    <div class="f1-font text-5xl text-white font-bold" id="idiom-count-display">0</div>
-                    <p class="text-xs text-gray-500 mt-2">Sorting Challenge Mode</p>
-                </div>
-                <div class="bg-black/30 p-4 rounded-xl border border-gray-800 text-xs text-gray-400 leading-relaxed">
-                    <strong class="text-white block mb-1">INSTRUCTION:</strong>
-                    Arrange the shuffled chips to complete the sentence. Incorrect ordering will cause a temporary "Crash" penalty.
-                </div>
-            </div>
-
-            <button onclick="quiz.start()" class="mt-6 w-full f1-font bg-gradient-to-r from-red-600 to-red-700 active:from-red-700 active:to-red-800 text-white py-5 rounded-xl font-bold tracking-[0.2em] uppercase transition-all transform active:scale-95 shadow-lg shadow-red-900/30 text-xl border-b-4 border-red-900">Start Engine</button>
-            
-            <div id="vocab-tools" class="mt-4 pt-4 border-t border-gray-800">
-                <button onclick="quiz.openTelemetry()" class="w-full border border-gray-700 active:bg-gray-800 text-gray-400 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2"><span>📊</span> Telemetry Data</button>
             </div>
         </div>
         
@@ -379,6 +418,7 @@
                         </div>
                     <div id="spelling-pool" class="flex flex-wrap gap-2 justify-center w-full">
                         </div>
+                    <p class="text-[10px] text-gray-500 mt-4 uppercase">Tip: Tap slot to Undo</p>
                 </div>
             </div>
 
@@ -438,7 +478,7 @@
     // ==========================================
     // 単語データ
     const rawData = `
-follow: ～の後に続く、～に従う
+    follow: ～の後に続く、～に従う
 consider: ～を考慮する
 increase: 増える、～を増やす
 expect: ～を予期する
@@ -2465,11 +2505,11 @@ abruptly: 不意に
 conversely: 逆に
 predominantly: 主に
 lest: ～しないように
-`; 
+    `; 
 
     // 熟語データ（プレースホルダー）
     const idiomData = [
-  { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
+    { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
     { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
     { id: 1217, japanese: "Aに電話をかける", prefix: "I'll (", suffix: ") tomorrow morning.", parts: ["give", "you", "a", "call"] },
     { id: 1218, japanese: "〜を引き起こす", prefix: "The population decline will (", suffix: ") several problems.", parts: ["give", "rise", "to"] },
@@ -2578,8 +2618,9 @@ lest: ～しないように
             this.isPitStopMode = false;
             this.isReverseMode = false;
             this.isInstantMode = false; 
-            this.isSpellingMode = false; // NEW: Spelling Mode
+            this.isSpellingMode = false; 
             this.spellingAns = []; // User's built word
+            this.spellingPoolState = []; // Track used letters
 
             const instantCheck = document.getElementById('instant-mode');
             if(instantCheck) {
@@ -2695,10 +2736,61 @@ lest: ～しないように
                 const roundIdx = parseInt(lastPlayed);
                 if (!isNaN(roundIdx) && roundIdx < this.vocabRounds.length) {
                     selector.value = roundIdx;
-                    // Mark visually
                     const option = selector.options[roundIdx];
                     if (option) option.text = "◀ LAST ▶ " + option.text;
                 }
+            }
+            this.updateSummary();
+        }
+
+        updateSummary() {
+            const selector = document.getElementById('round-selector');
+            let roundName = "Custom / Random";
+            if (selector.selectedIndex >= 0) {
+                roundName = selector.options[selector.selectedIndex].text;
+            }
+            
+            const tire = this.wordsPerRound;
+            const rev = document.getElementById('reverse-mode').checked ? "REV" : "STD";
+            const spell = document.getElementById('spelling-mode').checked && document.getElementById('reverse-mode').checked ? "+MANUAL" : "";
+            
+            document.getElementById('strategy-summary').innerText = `${roundName} | ${tire} Qs | ${rev}${spell}`;
+        }
+
+        toggleStrategyMenu() {
+            const panel = document.getElementById('strategy-panel');
+            const btn = document.getElementById('strategy-toggle-btn');
+            if (panel.classList.contains('open')) {
+                panel.classList.remove('open');
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('bg-gray-900', 'text-gray-400');
+            } else {
+                panel.classList.add('open');
+                btn.classList.remove('bg-gray-900', 'text-gray-400');
+                btn.classList.add('bg-gray-800', 'text-white');
+            }
+        }
+
+        switchStrategyTab(tab) {
+            const normalDiv = document.getElementById('strategy-normal');
+            const randomDiv = document.getElementById('strategy-random');
+            const tabNorm = document.getElementById('tab-normal');
+            const tabRand = document.getElementById('tab-random');
+
+            if (tab === 'normal') {
+                normalDiv.classList.remove('hidden');
+                randomDiv.classList.add('hidden');
+                tabNorm.classList.add('text-white', 'border-red-500');
+                tabNorm.classList.remove('text-gray-500', 'border-transparent');
+                tabRand.classList.remove('text-white', 'border-red-500');
+                tabRand.classList.add('text-gray-500', 'border-transparent');
+            } else {
+                normalDiv.classList.add('hidden');
+                randomDiv.classList.remove('hidden');
+                tabRand.classList.add('text-white', 'border-red-500');
+                tabRand.classList.remove('text-gray-500', 'border-transparent');
+                tabNorm.classList.remove('text-white', 'border-red-500');
+                tabNorm.classList.add('text-gray-500', 'border-transparent');
             }
         }
 
@@ -2734,19 +2826,23 @@ lest: ～しないように
             this.vocabRounds.unshift({ id: 'custom', name: `CUSTOM (No.${s+1}-${e})`, words: customWords });
             this.initUI();
             document.getElementById('round-selector').value = 0;
+            this.updateSummary();
         }
 
-        // ★ NEW: Random GP Feature
+        // ★ NEW: Random GP Feature (Updated with Qty)
         createRandomRound() {
-            const sVal = document.getElementById('custom-start').value;
-            const eVal = document.getElementById('custom-end').value;
+            const sVal = document.getElementById('rand-start').value;
+            const eVal = document.getElementById('rand-end').value;
+            const qVal = document.getElementById('rand-qty').value;
             
             let s = parseInt(sVal) - 1;
             let e = parseInt(eVal);
+            let qty = parseInt(qVal);
 
-            // If empty, use full range
+            // Defaults
             if (isNaN(s)) s = 0;
             if (isNaN(e)) e = this.masterList.length;
+            if (isNaN(qty) || qty <= 0) qty = this.wordsPerRound; // Use tire setting if empty
 
             if (s < 0 || e > this.masterList.length || s >= e) { alert("Invalid Range for Random GP"); return; }
 
@@ -2756,14 +2852,16 @@ lest: ～しないように
             // Shuffle
             this.shuffle(rangePool);
             
-            // Pick N words (based on tire strategy)
-            const selectedWords = rangePool.slice(0, this.wordsPerRound);
+            // Pick Qty words
+            const selectedWords = rangePool.slice(0, qty);
             
             this.vocabRounds.unshift({ id: 'random', name: `🎲 RANDOM (Range: ${s+1}-${e})`, words: selectedWords });
             this.initUI();
             document.getElementById('round-selector').value = 0;
             
-            // Auto start for convenience
+            // Auto start & Close menu
+            this.updateSummary();
+            this.toggleStrategyMenu();
             this.start();
         }
         
@@ -2773,6 +2871,7 @@ lest: ～しないように
             this.initUI();
             document.querySelectorAll('.tire-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tire-${type}`).classList.add('active');
+            this.updateSummary();
         }
 
         toggleSpellingOption() {
@@ -2795,10 +2894,12 @@ lest: ～しないように
                 document.getElementById('vocab-settings').classList.remove('hidden');
                 document.getElementById('vocab-tools').classList.remove('hidden');
                 document.getElementById('idiom-settings').classList.add('hidden');
+                document.getElementById('vocab-status-area').classList.remove('hidden');
             } else {
                 document.getElementById('vocab-settings').classList.add('hidden');
                 document.getElementById('vocab-tools').classList.add('hidden');
                 document.getElementById('idiom-settings').classList.remove('hidden');
+                document.getElementById('vocab-status-area').classList.add('hidden');
             }
         }
 
@@ -2853,7 +2954,6 @@ lest: ～しないように
                 const qText = this.isReverseMode ? target.m : target.w;
                 const aText = this.isReverseMode ? target.w : target.m;
                 
-                // For spelling mode, target.w is the answer
                 const options = this.isSpellingMode 
                     ? [] // No options needed for spelling
                     : [aText, ...this.getDistractors(target, this.isReverseMode)].sort(() => Math.random() - 0.5);
@@ -2942,74 +3042,97 @@ lest: ～しないように
             }
         }
 
-        // ★ SPELLING MODE RENDERER
+        // ★ SPELLING MODE RENDERER (With Undo Support)
         renderSpellingInterface(q) {
             const slotsEl = document.getElementById('spelling-slots');
             const poolEl = document.getElementById('spelling-pool');
             
-            // Clean slate
-            slotsEl.innerHTML = '';
-            poolEl.innerHTML = '';
-            slotsEl.classList.remove('correct-lane', 'wrong-lane');
-            
-            this.spellingAns = [];
-            this.isLocked = false;
+            // Clean slate if fresh
+            if (this.spellingAns.length === 0) {
+                slotsEl.innerHTML = '';
+                poolEl.innerHTML = '';
+                slotsEl.classList.remove('correct-lane', 'wrong-lane');
+                this.isLocked = false;
+                
+                // Initialize state
+                const targetWord = q.w.trim();
+                const letters = targetWord.split('');
+                // Store original indices to handle duplicate letters correctly
+                this.spellingPoolState = letters.map((char, i) => ({ char, id: i, used: false })).sort(() => Math.random() - 0.5);
+            } else {
+                // Re-render based on state (for undo)
+                slotsEl.innerHTML = '';
+                poolEl.innerHTML = '';
+            }
 
-            // Prepare letters
-            // Normalize and split (remove special chars if simple spelling wanted, but for now keep as is)
-            const targetWord = q.w.trim();
-            const letters = targetWord.split('');
-            
-            // Shuffle
-            const shuffled = [...letters].sort(() => Math.random() - 0.5);
-            
-            // Render Slots (Placeholders)
-            letters.forEach(() => {
+            // Render Slots
+            const targetLen = q.w.trim().length;
+            for(let i=0; i<targetLen; i++) {
                 const slot = document.createElement('div');
-                slot.className = "w-8 h-10 border-b-2 border-gray-500 mx-1 flex items-center justify-center text-xl font-bold text-gray-400";
-                slot.innerText = "_";
+                const charObj = this.spellingAns[i]; // May be undefined if not filled
+                
+                if (charObj) {
+                    // Filled Slot
+                    slot.className = "w-8 h-10 border border-white bg-gray-800 rounded mx-1 flex items-center justify-center text-xl font-bold text-white cursor-pointer active:scale-95 transition-transform";
+                    slot.innerText = charObj.char;
+                    // UNDO ACTION: Click filled slot to return to pool
+                    slot.onclick = () => this.handleSpellingUndo(i, q);
+                } else {
+                    // Empty Slot
+                    slot.className = "w-8 h-10 border-b-2 border-gray-600 mx-1 flex items-center justify-center text-xl font-bold text-gray-600";
+                    slot.innerText = "_";
+                }
                 slotsEl.appendChild(slot);
-            });
+            }
 
             // Render Pool
-            shuffled.forEach((char, idx) => {
+            this.spellingPoolState.forEach((item) => {
                 const btn = document.createElement('button');
-                btn.className = "letter-chip bg-gray-800 text-white rounded shadow-md border border-gray-600 active:bg-gray-600";
-                btn.innerText = char;
-                btn.onclick = () => this.handleSpellingClick(char, btn, q);
+                btn.className = "letter-chip bg-gray-800 text-white rounded shadow-md border border-gray-600 active:bg-gray-600 transition-all";
+                btn.innerText = item.char;
+                
+                if (item.used) {
+                    btn.classList.add('opacity-0', 'pointer-events-none');
+                } else {
+                    btn.onclick = () => this.handleSpellingClick(item, q);
+                }
                 poolEl.appendChild(btn);
             });
         }
 
-        handleSpellingClick(char, btnElement, q) {
+        handleSpellingClick(item, q) {
             if (this.isLocked) return;
 
-            // Move char to answer
-            this.spellingAns.push(char);
-            btnElement.classList.add('opacity-0', 'pointer-events-none'); // Hide from pool visually
-
-            // Update Slots
-            const slotsEl = document.getElementById('spelling-slots');
-            const currentSlotIndex = this.spellingAns.length - 1;
-            const slot = slotsEl.children[currentSlotIndex];
+            // Mark as used
+            item.used = true;
+            this.spellingAns.push(item);
             
-            if (slot) {
-                slot.innerText = char;
-                slot.classList.remove('text-gray-400', 'border-gray-500');
-                slot.classList.add('text-white', 'border-white');
-                
-                // Click slot to undo (optional, simple logic: reset all on error)
-            }
+            // Re-render interface
+            this.renderSpellingInterface(q);
 
             // Check if full
-            if (this.spellingAns.length === q.w.length) {
+            if (this.spellingAns.length === q.w.trim().length) {
                 this.checkSpellingWin(q);
             }
         }
 
+        handleSpellingUndo(index, q) {
+            if (this.isLocked) return; // Prevent undo after win/loss determination
+
+            // Remove from answer
+            const removedItem = this.spellingAns.splice(index, 1)[0];
+            
+            // Mark as unused in pool state
+            const poolItem = this.spellingPoolState.find(p => p.id === removedItem.id);
+            if (poolItem) poolItem.used = false;
+
+            // Re-render interface
+            this.renderSpellingInterface(q);
+        }
+
         checkSpellingWin(q) {
-            const userWord = this.spellingAns.join('');
-            const targetWord = q.w;
+            const userWord = this.spellingAns.map(a => a.char).join('');
+            const targetWord = q.w.trim();
             const slotsEl = document.getElementById('spelling-slots');
 
             if (userWord === targetWord) {
@@ -3020,11 +3143,9 @@ lest: ～しないように
                 feedback.innerHTML = `<span class="text-[#39ff14] text-xs font-bold animate-pulse">🟣 PERFECT SHIFT</span>`;
                 this.speak(q.w);
                 
-                // Update stats
                 this.currentStreak++;
                 if (this.currentStreak > this.maxStreak) this.maxStreak = this.currentStreak;
                 
-                // SRS Update (Success)
                 const timeTaken = (Date.now() - this.lapStartTime) / 1000;
                 if (window.handleSRSUpdate) {
                     window.handleSRSUpdate({ ...q, timeTaken: timeTaken }, true);
@@ -3032,13 +3153,14 @@ lest: ～しないように
 
                 setTimeout(() => {
                     this.currentIndex++;
+                    this.spellingAns = []; // Reset for next
                     if (this.currentIndex < this.questions.length) this.showVocabQuestion();
                     else this.finish();
                 }, 600);
 
             } else {
                 // Wrong
-                this.isLocked = true;
+                this.isLocked = true; // Lock momentarily
                 this.missCount++;
                 this.currentStreak = 0;
                 
@@ -3047,18 +3169,19 @@ lest: ～しないように
 
                 if (!this.missedWordsLog.find(item => item.w === q.w)) this.missedWordsLog.push({ w: q.w, m: q.m });
                 
-                // SRS Update (Fail)
                 if (window.handleSRSUpdate) {
                     window.handleSRSUpdate({ ...q, timeTaken: 5.0 }, false);
                 }
 
                 setTimeout(() => {
-                    // Reset
                     this.isLocked = false;
                     slotsEl.classList.remove('wrong-lane', 'animate-shake');
                     document.getElementById('feedback').innerText = '';
+                    
+                    // Reset all for retry
                     this.spellingAns = [];
-                    this.renderSpellingInterface(q); // Re-render to reset pool
+                    this.spellingPoolState.forEach(p => p.used = false);
+                    this.renderSpellingInterface(q); 
                 }, 1000);
             }
         }
@@ -3394,7 +3517,7 @@ lest: ～しないように
             if (!this.dueMistakes || this.dueMistakes.length === 0) return;
             
             // ★ Filter out idioms just in case they slipped in
-            const vocabDue = this.dueMistakes.filter(item => !item.id.startsWith('idiom_'));
+            const vocabDue = this.dueMistakes.filter(item => !item.id.toString().startsWith('idiom_'));
             
             if (!vocabDue || vocabDue.length === 0) return;
 
