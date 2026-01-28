@@ -190,8 +190,10 @@
             overflow: hidden;
         }
         .strategy-panel.open {
-            max-height: 500px;
+            max-height: 80vh;      /* 画面の80%まで広がるように変更 */
+            overflow-y: auto;      /* 内容が溢れたらスクロールできるようにする */
             opacity: 1;
+            pointer-events: auto;  /* クリックを確実に受け付ける */
         }
     </style>
 </head>
