@@ -369,11 +369,11 @@
 
     <script>
     // ==========================================
-    // DATA LOAD (Placeholders)
+    // DATA LOAD (Data is Empty as requested)
     // ==========================================
-    // 単語データ
+    // 単語データ（ここにデータを貼り付けてください）
     const rawData = `
-   follow: ～の後に続く、～に従う
+follow: ～の後に続く、～に従う
 consider: ～を考慮する
 increase: 増える、～を増やす
 expect: ～を予期する
@@ -2400,9 +2400,9 @@ abruptly: 不意に
 conversely: 逆に
 predominantly: 主に
 lest: ～しないように
-    `; 
+`; 
 
-    // 熟語データ
+    // 熟語データ（動作確認用に残してありますが、10問区切りのテストが可能です）
     const idiomData = [
     { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
     { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
@@ -2491,6 +2491,7 @@ lest: ～しないように
             this.wordsPerRound = 20; 
             this.masterList = [];
             this.vocabRounds = [];
+            this.idiomRounds = []; // 【追加】熟語用のラウンド配列
             this.currentRoundIndex = 0;
             this.currentIdiomParts = [];
             this.shuffledIdiomParts = [];
@@ -2584,6 +2585,7 @@ lest: ～しないように
         }
 
         generateRounds() {
+            // 1. 単語ラウンドの生成
             const wordCopy = [...this.masterList]; 
             this.vocabRounds = [];
             let roundNum = 1;
@@ -2591,26 +2593,59 @@ lest: ～しないように
             while (wordCopy.length > 0) {
                 const chunk = wordCopy.splice(0, this.wordsPerRound);
                 if (chunk.length > 0) {
-                    this.vocabRounds.push({ id: roundNum, name: `ROUND ${roundNum} (No.${currentWordIndex} - ${currentWordIndex + chunk.length - 1})`, words: chunk });
+                    this.vocabRounds.push({ id: roundNum, name: `VOCAB ROUND ${roundNum} (${currentWordIndex}-${currentWordIndex + chunk.length - 1})`, words: chunk });
                     roundNum++;
                     currentWordIndex += chunk.length;
                 }
             }
+
+            // 2. 熟語ラウンドの生成（10問ずつ）
+            this.idiomRounds = [];
+            const idiomCopy = [...idiomData]; // 元データを破壊しないようコピー
+            let idiomRoundNum = 1;
+            const idiomPerRound = 10; // ★10問固定
+            
+            for (let i = 0; i < idiomData.length; i += idiomPerRound) {
+                const chunk = idiomData.slice(i, i + idiomPerRound);
+                this.idiomRounds.push({
+                    id: idiomRoundNum,
+                    name: `IDIOM ROUND ${idiomRoundNum} (No.${i + 1}-${Math.min(i + idiomPerRound, idiomData.length)})`,
+                    words: chunk // 熟語オブジェクトの配列
+                });
+                idiomRoundNum++;
+            }
         }
 
         initUI() {
+            this.updateRoundSelector(); // 初期化時にセレクターを更新
+            document.getElementById('idiom-count-display').innerText = idiomData.length;
+        }
+        
+        // 【追加】モードに応じてプルダウンの中身を切り替える関数
+        updateRoundSelector() {
             const selector = document.getElementById('round-selector');
             selector.innerHTML = '';
-            if(this.vocabRounds.length === 0) { selector.innerHTML = '<option>Load Data or Login</option>'; }
-            else {
-                this.vocabRounds.forEach((round, index) => {
+            
+            let targetRounds = [];
+            if (this.mode === 'vocab') {
+                targetRounds = this.vocabRounds;
+            } else {
+                targetRounds = this.idiomRounds;
+            }
+
+            if(targetRounds.length === 0) { 
+                const msg = this.mode === 'vocab' && this.masterList.length === 0 ? "No Data Loaded" : "No Rounds Available";
+                selector.innerHTML = `<option>${msg}</option>`; 
+            } else {
+                targetRounds.forEach((round, index) => {
                     const opt = document.createElement('option');
                     opt.value = index;
                     opt.text = round.name;
                     selector.appendChild(opt);
                 });
             }
-            document.getElementById('idiom-count-display').innerText = idiomData.length;
+            // リセット
+            selector.value = 0;
         }
 
         initSearch() {
@@ -2638,19 +2673,23 @@ lest: ～しないように
         }
 
         createCustomRound() {
+            // カスタムラウンド機能は単語モード専用（または拡張が必要）
+            if (this.mode !== 'vocab') { alert("Custom rounds are only for Vocab mode currently."); return; }
+            
             const s = parseInt(document.getElementById('custom-start').value) - 1;
             const e = parseInt(document.getElementById('custom-end').value);
             if(isNaN(s) || isNaN(e) || s < 0 || e > this.masterList.length || s >= e) { alert("Invalid Range"); return; }
             const customWords = this.masterList.slice(s, e);
             this.vocabRounds.unshift({ id: 'custom', name: `CUSTOM (No.${s+1}-${e})`, words: customWords });
-            this.initUI();
+            this.updateRoundSelector(); // リフレッシュ
             document.getElementById('round-selector').value = 0;
         }
         
         setTireStrategy(count, type) {
             this.wordsPerRound = count;
             this.generateRounds();
-            this.initUI();
+            // 現在のモードに合わせてUI更新
+            this.updateRoundSelector();
             document.querySelectorAll('.tire-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tire-${type}`).classList.add('active');
         }
@@ -2660,12 +2699,15 @@ lest: ～しないように
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`mode-${newMode}`).classList.add('active');
             
+            // プルダウンをモードに合わせて更新
+            this.updateRoundSelector();
+            
             if (newMode === 'vocab') {
                 document.getElementById('vocab-settings').classList.remove('hidden');
                 document.getElementById('vocab-tools').classList.remove('hidden');
                 document.getElementById('idiom-settings').classList.add('hidden');
             } else {
-                document.getElementById('vocab-settings').classList.add('hidden');
+                document.getElementById('vocab-settings').classList.add('hidden'); // タイヤ選択などは隠す（熟語は10問固定なので）
                 document.getElementById('vocab-tools').classList.add('hidden');
                 document.getElementById('idiom-settings').classList.remove('hidden');
             }
@@ -2718,11 +2760,18 @@ lest: ～しないように
         }
 
         startIdiomMode() {
-            if(idiomData.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
+            if(this.idiomRounds.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
             document.getElementById('idiom-interface').classList.remove('hidden');
-            document.getElementById('circuit-name').innerText = "IDIOM SORTING";
             
-            this.questions = [...idiomData].sort(() => Math.random() - 0.5);
+            // 【修正】プルダウンから選択されたラウンドを取得
+            const selector = document.getElementById('round-selector');
+            this.currentRoundIndex = parseInt(selector.value);
+            const selectedRound = this.idiomRounds[this.currentRoundIndex];
+
+            document.getElementById('circuit-name').innerText = selectedRound.name; // IDIOM ROUND X
+            
+            // 選択されたラウンドの10問だけをセット
+            this.questions = [...selectedRound.words].sort(() => Math.random() - 0.5);
             this.showIdiomQuestion();
         }
         
@@ -3019,13 +3068,13 @@ lest: ～しないように
             const licenseId = `barcelona`;
 
             if (accuracy >= 90) {
-                accDisplay.style.color = "#4ade80"; 
+                accDisplay.style.color = "#4ade80"; // Green
                 passArea.classList.remove('hidden');
                 failMsg.classList.add('hidden');
                 this.copyToClipboard(licenseId, passBtn);
                 passBtn.onclick = () => this.copyToClipboard(licenseId, passBtn);
             } else {
-                accDisplay.style.color = "#ef4444"; 
+                accDisplay.style.color = "#ef4444"; // Red
                 passArea.classList.add('hidden');
                 failMsg.classList.remove('hidden');
             }
@@ -3035,28 +3084,36 @@ lest: ～しないように
             
             const review = document.getElementById('review-list');
             let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Lap Analysis</div>`;
-            if (this.missedWordsLog.length > 0) { 
-                summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); 
-            } else { 
-                summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; 
-            }
+            if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
             review.innerHTML = summaryHtml;
             
             const nextBtn = document.getElementById('next-round-btn');
-            if (this.mode === 'vocab' && !this.isPitStopMode && this.currentRoundIndex + 1 < this.vocabRounds.length) {
+            
+            // 【修正】次のラウンドがある場合のみボタンを表示
+            let hasNextRound = false;
+            if (this.mode === 'vocab') {
+                hasNextRound = this.currentRoundIndex + 1 < this.vocabRounds.length;
+            } else {
+                hasNextRound = this.currentRoundIndex + 1 < this.idiomRounds.length;
+            }
+
+            if (!this.isPitStopMode && hasNextRound) {
                 nextBtn.classList.remove('hidden');
-                nextBtn.onclick = () => { document.getElementById('round-selector').value = this.currentRoundIndex + 1; this.start(); };
+                nextBtn.onclick = () => { 
+                    document.getElementById('round-selector').value = this.currentRoundIndex + 1; 
+                    this.start(); 
+                };
             } else { 
                 nextBtn.classList.add('hidden'); 
             }
             
             if (window.fetchSRSItems) window.fetchSRSItems();
             
-            // ★ ここで正しく関数を閉じます
+            // リーダーボードとデイリー統計へデータを送信
             if (window.incrementDailyLaps) {
                 window.incrementDailyLaps(accuracy, totalTime);
             }
-        } // ← この閉じカッコが抜けていたのが原因です！
+        } // カッコを閉じる
             
         returnToGrid() {
             document.getElementById('result-screen').classList.add('hidden');
