@@ -3012,27 +3012,19 @@ lest: ～しないように
             const accDisplay = document.getElementById('accuracy-display');
             accDisplay.innerText = `${accuracy.toFixed(1)}%`;
             
-            // ★ PASS / FAIL LOGIC ★
             const passArea = document.getElementById('pass-area');
             const failMsg = document.getElementById('fail-msg');
             const passBtn = document.getElementById('pass-btn');
             const licenseId = `barcelona`;
 
             if (accuracy >= 90) {
-                // Pass Logic
-                accDisplay.style.color = "#4ade80"; // Green
+                accDisplay.style.color = "#4ade80";
                 passArea.classList.remove('hidden');
                 failMsg.classList.add('hidden');
-                
-                // Automatic Copy Attempt
                 this.copyToClipboard(licenseId, passBtn);
-                
-                // Manual Copy Listener
                 passBtn.onclick = () => this.copyToClipboard(licenseId, passBtn);
-
             } else {
-                // Fail Logic
-                accDisplay.style.color = "#ef4444"; // Red
+                accDisplay.style.color = "#ef4444";
                 passArea.classList.add('hidden');
                 failMsg.classList.remove('hidden');
             }
@@ -3042,21 +3034,30 @@ lest: ～しないように
             
             const review = document.getElementById('review-list');
             let summaryHtml = `<div class="mb-4 font-bold text-white uppercase text-sm tracking-widest border-b border-gray-700 pb-2">Lap Analysis</div>`;
-            if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
+            if (this.missedWordsLog.length > 0) { 
+                summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); 
+            } else { 
+                summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; 
+            }
             review.innerHTML = summaryHtml;
             
             const nextBtn = document.getElementById('next-round-btn');
             if (this.mode === 'vocab' && !this.isPitStopMode && this.currentRoundIndex + 1 < this.vocabRounds.length) {
                 nextBtn.classList.remove('hidden');
                 nextBtn.onclick = () => { document.getElementById('round-selector').value = this.currentRoundIndex + 1; this.start(); };
-            } else { nextBtn.classList.add('hidden'); }
+            } else { 
+                nextBtn.classList.add('hidden'); 
+            }
             
+            // --- データの保存・更新 ---
             if (window.fetchSRSItems) window.fetchSRSItems();
-            // 3055行目をこれに置き換え
+            
+            // リーダーボードとデイリー統計へデータを送信
             if (window.incrementDailyLaps) {
                 window.incrementDailyLaps(accuracy, totalTime);
             }
-
+        } // カッコを閉じる
+            
         returnToGrid() {
             document.getElementById('result-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');
