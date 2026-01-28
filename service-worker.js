@@ -3,7 +3,7 @@ const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.jpg'
+  './icon.png'
 ];
 
 // 1. Install Event: 最小限のファイルをキャッシュ
