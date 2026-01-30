@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RB Hybrid GP">
@@ -16,8 +15,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' blob: data: gap:; style-src * 'self' 'unsafe-inline' blob: data: gap:; script-src * 'self' 'unsafe-eval' 'unsafe-inline' blob: data: gap:; object-src * 'self' blob: data: gap:; img-src * 'self' 'unsafe-inline' blob: data: gap:; connect-src 'self' * 'unsafe-inline' blob: data: gap:; frame-src * 'self' blob: data: gap:;">
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
         
@@ -28,29 +25,28 @@
             --neon-green: #39ff14;
         }
 
+        /* --- 背景設定：動画プレイヤー用 --- */
         html, body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden; 
-    background-color: transparent; /* 透明にする */
-    color: #e2e8f0;
-    font-family: 'Inter', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    touch-action: manipulation;
-    overscroll-behavior: none;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-}
+            height: 100%;
+            width: 100%;
+            overflow: hidden; 
+            background-color: transparent; /* 動画を透けさせるため透明化 */
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             padding-top: max(1rem, env(safe-area-inset-top));
             padding-bottom: max(1rem, env(safe-area-inset-bottom));
         }
 
-        .f1-font { font-family: 'Chakra Petch', sans-serif; }
-
-        /* 背景動画の設定 */
+        /* 動画プレイヤーの固定設定 */
         #bg-video {
             position: fixed;
             right: 0;
@@ -59,18 +55,18 @@
             min-height: 100%;
             width: auto;
             height: auto;
-            z-index: -1; /* 全ての要素の後ろに配置 */
-            object-fit: cover; /* 画面いっぱいにトリミング */
-            
-            /* 動画の上から少し暗くしたい場合はフィルタをかける */
-            filter: brightness(0.6); 
+            z-index: -1;        /* 最背面へ */
+            object-fit: cover;  /* 画面いっぱいに表示 */
+            filter: brightness(0.6); /* 少し暗くして文字を見やすくする */
         }
 
-        /* 既存の .carbon-bg から画像設定を消して、ただのコンテナにする */
+        /* 古い背景設定を無効化 */
         .carbon-bg {
-            background-image: none; /* 画像はオフにする */
-            background-color: var(--rb-navy); /* 動画読み込み前の保険 */
+            background-image: none;
+            background-color: transparent;
         }
+
+        .f1-font { font-family: 'Chakra Petch', sans-serif; }
 
         #app {
             height: 100%;
@@ -83,14 +79,11 @@
         }
         #app::-webkit-scrollbar { display: none; }
 
+        /* Race Card Design */
         .race-card {
-            /* ★重要：ここを 0.85 から 0.4 に変更した。これで透ける。 */
-            background: rgba(23, 28, 38, 0.4);
-            
-            /* すりガラス効果 */
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            
+            background: rgba(11, 14, 20, 0.3);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             border-top: 4px solid var(--f1-red);
@@ -102,6 +95,7 @@
             position: relative;
             overflow: hidden;
             touch-action: manipulation;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .option-btn:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
         .option-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
@@ -196,12 +190,10 @@
         
         .locked { opacity: 0.5; pointer-events: none; }
         
-        /* Word Book Scrollbar */
         .wb-scroll::-webkit-scrollbar { width: 4px; }
         .wb-scroll::-webkit-scrollbar-track { background: #1a1a1a; }
         .wb-scroll::-webkit-scrollbar-thumb { background: #e10600; border-radius: 4px; }
         
-        /* Accordion Transition */
         .strategy-panel {
             transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
             max-height: 0;
@@ -209,10 +201,10 @@
             overflow: hidden;
         }
         .strategy-panel.open {
-            max-height: 80vh;      /* 画面の80%まで広がるように変更 */
-            overflow-y: auto;      /* 内容が溢れたらスクロールできるようにする */
+            max-height: 80vh;
+            overflow-y: auto;
             opacity: 1;
-            pointer-events: auto;  /* クリックを確実に受け付ける */
+            pointer-events: auto;
         }
     </style>
 </head>
@@ -501,7 +493,6 @@
     // ==========================================
     // DATA LOAD (Placeholders)
     // ==========================================
-    // 単語データ
     const rawData = `
     follow: ～の後に続く、～に従う
 consider: ～を考慮する
@@ -2532,7 +2523,6 @@ predominantly: 主に
 lest: ～しないように
     `; 
 
-    // 熟語データ（プレースホルダー）
     const idiomData = [
     { id: 1215, japanese: "手間をかけて〜する", prefix: "We (", suffix: ") prepare for the school event.", parts: ["took", "the", "trouble", "to"] },
     { id: 1216, japanese: "〜を楽しむ", prefix: "We should not (", suffix: ") the misfortunes of others.", parts: ["take", "delight", "in"] },
@@ -2609,9 +2599,6 @@ lest: ～しないように
     { id: 1283, japanese: "どんな犠牲を払っても", prefix: "We must avoid war (", suffix: ").", parts: ["at", "all", "costs"] }
     ];
 
-// ==========================================
-// MAIN LOGIC
-// ==========================================
     document.addEventListener('dblclick', function(event) { event.preventDefault(); }, { passive: false });
     document.addEventListener('touchmove', function(event) { if (event.scale !== 1) { event.preventDefault(); } }, { passive: false });
 
@@ -2639,7 +2626,6 @@ lest: ～しないように
             this.allMistakes = []; 
             this.bookmarkedOnly = false; // WB Filter
 
-            // Feature Flags & States
             this.isPitStopMode = false;
             this.isReverseMode = false;
             this.isInstantMode = false; 
@@ -2667,7 +2653,6 @@ lest: ～しないように
                 });
             }
             
-            // WB Search & Filter Listeners
             document.getElementById('wb-search').addEventListener('input', () => this.renderWordBook());
             document.getElementById('wb-start').addEventListener('input', () => this.renderWordBook());
             document.getElementById('wb-end').addEventListener('input', () => this.renderWordBook());
@@ -2755,7 +2740,6 @@ lest: ～しないように
             }
             document.getElementById('idiom-count-display').innerText = idiomData.length;
 
-            // ★ Telemetry Recall: Resume Last Played Round
             const lastPlayed = localStorage.getItem('rb26_last_round');
             if (lastPlayed) {
                 const roundIdx = parseInt(lastPlayed);
@@ -2854,7 +2838,6 @@ lest: ～しないように
             this.updateSummary();
         }
 
-        // ★ NEW: Random GP Feature (Updated with Qty)
         createRandomRound() {
             const sVal = document.getElementById('rand-start').value;
             const eVal = document.getElementById('rand-end').value;
@@ -2864,27 +2847,22 @@ lest: ～しないように
             let e = parseInt(eVal);
             let qty = parseInt(qVal);
 
-            // Defaults
             if (isNaN(s)) s = 0;
             if (isNaN(e)) e = this.masterList.length;
-            if (isNaN(qty) || qty <= 0) qty = this.wordsPerRound; // Use tire setting if empty
+            if (isNaN(qty) || qty <= 0) qty = this.wordsPerRound; 
 
             if (s < 0 || e > this.masterList.length || s >= e) { alert("Invalid Range for Random GP"); return; }
 
-            // Extract range
             const rangePool = this.masterList.slice(s, e);
             
-            // Shuffle
             this.shuffle(rangePool);
             
-            // Pick Qty words
             const selectedWords = rangePool.slice(0, qty);
             
             this.vocabRounds.unshift({ id: 'random', name: `🎲 RANDOM (Range: ${s+1}-${e})`, words: selectedWords });
             this.initUI();
             document.getElementById('round-selector').value = 0;
             
-            // Auto start & Close menu
             this.updateSummary();
             this.toggleStrategyMenu();
             this.start();
@@ -2914,11 +2892,9 @@ lest: ～しないように
             this.mode = newMode;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             
-            // 安全装置: ボタンが存在するか確認してからクラスを操作
             const activeBtn = document.getElementById(`mode-${newMode}`);
             if (activeBtn) activeBtn.classList.add('active');
             
-            // 安全装置: 要素取得を変数に入れ、存在チェックを行う
             const vocabSettings = document.getElementById('vocab-settings');
             const vocabTools = document.getElementById('vocab-tools');
             const idiomSettings = document.getElementById('idiom-settings');
@@ -2969,7 +2945,6 @@ lest: ～しないように
             this.currentRoundIndex = parseInt(selector.value);
             const selectedRound = this.vocabRounds[this.currentRoundIndex];
             
-            // Save Last Played Round (Telemetry Recall)
             if (selectedRound.id !== 'custom' && selectedRound.id !== 'random') {
                 localStorage.setItem('rb26_last_round', this.currentRoundIndex);
             }
@@ -2989,7 +2964,7 @@ lest: ～しないように
                 const aText = this.isReverseMode ? target.w : target.m;
                 
                 const options = this.isSpellingMode 
-                    ? [] // No options needed for spelling
+                    ? [] 
                     : [aText, ...this.getDistractors(target, this.isReverseMode)].sort(() => Math.random() - 0.5);
                 
                 return { w: target.w, m: target.m, qText: qText, aText: aText, o: options };
@@ -3059,67 +3034,54 @@ lest: ～しないように
             speakBtn.onclick = () => this.speak(q.w);
             if (this.isAutoAudio && !this.isReverseMode && !this.isSpellingMode) setTimeout(() => this.speak(q.w), 200);
 
-            // UI Elements
             const stdContainer = document.getElementById('options-container');
             const spellContainer = document.getElementById('spelling-interface');
 
             if (this.isSpellingMode) {
-                // --- SPELLING MODE ---
                 stdContainer.classList.add('hidden');
                 spellContainer.classList.remove('hidden');
                 this.renderSpellingInterface(q);
             } else {
-                // --- STANDARD MODE ---
                 stdContainer.classList.remove('hidden');
                 spellContainer.classList.add('hidden');
                 this.renderStandardOptions(q, stdContainer);
             }
         }
 
-        // ★ SPELLING MODE RENDERER (With Undo Support)
         renderSpellingInterface(q) {
             const slotsEl = document.getElementById('spelling-slots');
             const poolEl = document.getElementById('spelling-pool');
             
-            // Clean slate if fresh
             if (this.spellingAns.length === 0) {
                 slotsEl.innerHTML = '';
                 poolEl.innerHTML = '';
                 slotsEl.classList.remove('correct-lane', 'wrong-lane');
                 this.isLocked = false;
                 
-                // Initialize state
                 const targetWord = q.w.trim();
                 const letters = targetWord.split('');
-                // Store original indices to handle duplicate letters correctly
                 this.spellingPoolState = letters.map((char, i) => ({ char, id: i, used: false })).sort(() => Math.random() - 0.5);
             } else {
-                // Re-render based on state (for undo)
                 slotsEl.innerHTML = '';
                 poolEl.innerHTML = '';
             }
 
-            // Render Slots
             const targetLen = q.w.trim().length;
             for(let i=0; i<targetLen; i++) {
                 const slot = document.createElement('div');
-                const charObj = this.spellingAns[i]; // May be undefined if not filled
+                const charObj = this.spellingAns[i]; 
                 
                 if (charObj) {
-                    // Filled Slot
                     slot.className = "w-8 h-10 border border-white bg-gray-800 rounded mx-1 flex items-center justify-center text-xl font-bold text-white cursor-pointer active:scale-95 transition-transform";
                     slot.innerText = charObj.char;
-                    // UNDO ACTION: Click filled slot to return to pool
                     slot.onclick = () => this.handleSpellingUndo(i, q);
                 } else {
-                    // Empty Slot
                     slot.className = "w-8 h-10 border-b-2 border-gray-600 mx-1 flex items-center justify-center text-xl font-bold text-gray-600";
                     slot.innerText = "_";
                 }
                 slotsEl.appendChild(slot);
             }
 
-            // Render Pool
             this.spellingPoolState.forEach((item) => {
                 const btn = document.createElement('button');
                 btn.className = "letter-chip bg-gray-800 text-white rounded shadow-md border border-gray-600 active:bg-gray-600 transition-all";
@@ -3136,31 +3098,19 @@ lest: ～しないように
 
         handleSpellingClick(item, q) {
             if (this.isLocked) return;
-
-            // Mark as used
             item.used = true;
             this.spellingAns.push(item);
-            
-            // Re-render interface
             this.renderSpellingInterface(q);
-
-            // Check if full
             if (this.spellingAns.length === q.w.trim().length) {
                 this.checkSpellingWin(q);
             }
         }
 
         handleSpellingUndo(index, q) {
-            if (this.isLocked) return; // Prevent undo after win/loss determination
-
-            // Remove from answer
+            if (this.isLocked) return; 
             const removedItem = this.spellingAns.splice(index, 1)[0];
-            
-            // Mark as unused in pool state
             const poolItem = this.spellingPoolState.find(p => p.id === removedItem.id);
             if (poolItem) poolItem.used = false;
-
-            // Re-render interface
             this.renderSpellingInterface(q);
         }
 
@@ -3170,7 +3120,6 @@ lest: ～しないように
             const slotsEl = document.getElementById('spelling-slots');
 
             if (userWord === targetWord) {
-                // Correct
                 this.isLocked = true;
                 slotsEl.classList.add('correct-lane');
                 const feedback = document.getElementById('feedback');
@@ -3187,14 +3136,13 @@ lest: ～しないように
 
                 setTimeout(() => {
                     this.currentIndex++;
-                    this.spellingAns = []; // Reset for next
+                    this.spellingAns = []; 
                     if (this.currentIndex < this.questions.length) this.showVocabQuestion();
                     else this.finish();
                 }, 600);
 
             } else {
-                // Wrong
-                this.isLocked = true; // Lock momentarily
+                this.isLocked = true; 
                 this.missCount++;
                 this.currentStreak = 0;
                 
@@ -3211,8 +3159,6 @@ lest: ～しないように
                     this.isLocked = false;
                     slotsEl.classList.remove('wrong-lane', 'animate-shake');
                     document.getElementById('feedback').innerText = '';
-                    
-                    // Reset all for retry
                     this.spellingAns = [];
                     this.spellingPoolState.forEach(p => p.used = false);
                     this.renderSpellingInterface(q); 
@@ -3297,7 +3243,6 @@ lest: ～しないように
             }
         }
 
-        // --- IDIOM ENGINE ---
         showIdiomQuestion() {
             const data = this.questions[this.currentIndex];
             document.getElementById('question-number').innerText = `LAP ${this.currentIndex + 1} / ${this.questions.length}`;
@@ -3379,7 +3324,6 @@ lest: ～しないように
             const isCorrect = this.userAns.every((val, index) => val === correctOrder[index]);
 
             if (isCorrect) {
-                // Streak Update (Idiom)
                 this.currentStreak++;
                 if (this.currentStreak > this.maxStreak) this.maxStreak = this.currentStreak;
 
@@ -3402,7 +3346,7 @@ lest: ～しないように
 
             } else {
                 this.missCount++;
-                this.currentStreak = 0; // Streak Reset
+                this.currentStreak = 0; 
 
                 const q = this.questions[this.currentIndex];
                 if (!this.missedWordsLog.find(item => item.w === "Idiom Order")) {
@@ -3426,7 +3370,6 @@ lest: ～しないように
             }
         }
 
-        // --- COMMON UTILS ---
         startTimer() {
             if (this.timerInterval) clearInterval(this.timerInterval);
             this.timerInterval = setInterval(() => { document.getElementById('timer').innerText = ((Date.now() - this.startTime) / 1000).toFixed(2) + 's'; }, 50);
@@ -3461,11 +3404,9 @@ lest: ～しないように
             document.getElementById('result-screen').classList.remove('hidden');
             
             const totalTime = (Date.now() - this.startTime) / 1000;
-            // 正答率計算
             let totalQs = this.questions.length;
             if (totalQs === 0) totalQs = 1; 
             
-            // シンプルな正答率計算 (正解数/総数)
             let correctCount = totalQs - this.missCount;
             if (correctCount < 0) correctCount = 0;
             let accuracy = (correctCount / totalQs) * 100;
@@ -3550,7 +3491,6 @@ lest: ～しないように
         startPitStop() {
             if (!this.dueMistakes || this.dueMistakes.length === 0) return;
             
-            // ★ Filter out idioms just in case they slipped in
             const vocabDue = this.dueMistakes.filter(item => !item.id.toString().startsWith('idiom_'));
             
             if (!vocabDue || vocabDue.length === 0) return;
@@ -3615,9 +3555,6 @@ lest: ～しないように
             document.getElementById('start-screen').classList.remove('hidden');
         }
 
-        // ==========================================
-        // NEW FEATURE: WORD BOOK (DATA CENTER)
-        // ==========================================
         openWordBook() {
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('wordbook-screen').classList.remove('hidden');
@@ -3645,7 +3582,6 @@ lest: ～しないように
 
             let dataSrc = this.masterList.length > 0 ? this.masterList : (this.allMistakes || []);
             
-            // Merge local master list with remote SRS data to get status
             let merged = dataSrc.map((item, idx) => {
                 const srs = this.allMistakes.find(m => m.word === item.w || m.w === item.w);
                 return {
@@ -3656,16 +3592,9 @@ lest: ～しないように
                 };
             });
 
-            // Filter
             const filtered = merged.filter(item => {
-                // 1. Text Search
                 const matchQ = item.w.toLowerCase().includes(query) || item.m.toLowerCase().includes(query);
-                
-                // 2. Bookmark Filter
                 const matchBook = this.bookmarkedOnly ? (item.srs && item.srs.bookmarked) : true;
-                
-                // 3. Range Filter
-                // item.id is 0-based index. User inputs 1-based index (e.g., No.1500)
                 const wordNum = item.id + 1;
                 const matchRange = (!startVal || wordNum >= startVal) && (!endVal || wordNum <= endVal);
 
@@ -3677,9 +3606,6 @@ lest: ～しないように
                 return;
             }
 
-            // Render Limits (Performance)
-            // If range is specified, we might want to show more, but let's keep a safety limit for now.
-            // But if user specified "1500-1600", that's 100 items, so it fits perfectly.
             const displayLimit = 100;
             const viewData = filtered.slice(0, displayLimit);
 
@@ -3687,8 +3613,7 @@ lest: ～しないように
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between bg-gray-900/50 p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors group";
                 
-                // Status Indicator
-                let statusColor = "bg-gray-700"; // No data
+                let statusColor = "bg-gray-700"; 
                 let statusText = "NEW";
                 if (item.srs) {
                     if (item.srs.interval > 14) { statusColor = "bg-green-500"; statusText = "OK"; }
@@ -3697,11 +3622,8 @@ lest: ～しないように
                 }
 
                 const isBookmarked = item.srs && item.srs.bookmarked;
-
-                // 特殊文字があっても壊れないようにエンコードして渡す
                 const safeW = encodeURIComponent(item.w);
                 const safeM = encodeURIComponent(item.m);
-                // エスケープ処理（念のため）
                 const displayW = item.w.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 const displayM = item.m.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -3740,7 +3662,6 @@ lest: ～しないように
     </script>
     
     <script>
-    // Register Service Worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./service-worker.js')
@@ -3748,7 +3669,7 @@ lest: ～しないように
                 .catch(err => console.log('[PWA] Service Worker Failed', err));
         });
     }
-</script>
+    </script>
     
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -3783,25 +3704,19 @@ lest: ～しないように
       const loginStatus = document.getElementById('login-status');
       const gateLoginBtn = document.getElementById('gate-login-btn');
       
-      // ログアウトボタンが存在しない場合の対策（念の為）
       const logoutBtn = document.getElementById('logout-btn') || document.createElement('button'); 
 
       window.currentUser = null;
       
-      // ★ 修正ポイント1: リスナー解除用変数を定義
       let unsubscribeStats = null;
       const statsRef = doc(db, "stats", "daily_global");
 
-      // ---------------------------------------------------------
-      // 1. AUTH & PERSISTENCE & SNAPSHOT CONTROL
-      // ---------------------------------------------------------
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           console.log("Authorized Driver:", user.displayName);
           window.currentUser = user;
           loginStatus.innerText = "Syncing Telemetry Data...";
           
-          // ★ 修正ポイント2: ログイン確認後にデータ監視(onSnapshot)を開始
           if (!unsubscribeStats) {
               unsubscribeStats = onSnapshot(statsRef, (docSnap) => {
                   if (docSnap.exists()) {
@@ -3841,7 +3756,6 @@ lest: ～しないように
           }
 
         } else {
-          // ★ 修正ポイント3: ログアウト時にリスナーを停止
           if (unsubscribeStats) {
               unsubscribeStats();
               unsubscribeStats = null;
@@ -3864,7 +3778,6 @@ lest: ～しないように
         catch (error) { console.error(error); loginStatus.innerText = "Access Denied."; }
       });
 
-      // HTML内にログアウトボタンがある場合のみ動作
       if(document.getElementById('logout-btn')) {
           document.getElementById('logout-btn').addEventListener('click', () => { 
             if(window.currentUser) {
@@ -3875,9 +3788,6 @@ lest: ～しないように
           });
       }
 
-      // ---------------------------------------------------------
-      // 2. DATA FETCH (Legacy wrapper)
-      // ---------------------------------------------------------
       window.fetchSRSItems = async () => {
         if (!window.currentUser) return;
         const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
@@ -3889,7 +3799,6 @@ lest: ～しないように
         let allItems = [];
         let loadedFromCache = false;
 
-        // --- Sector 1: Cache Read ---
         if (now - lastFetch < CACHE_DURATION && localStorage.getItem(CACHE_KEY)) {
             try {
                 const rawString = localStorage.getItem(CACHE_KEY);
@@ -3907,7 +3816,6 @@ lest: ～しないように
             }
         }
 
-        // --- Sector 2: Server Fetch ---
         if (!loadedFromCache) {
             try {
                 const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
@@ -3915,7 +3823,6 @@ lest: ～しないように
                 allItems = [];
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    // nextReviewがTimestamp型か確認して変換
                     const nrSec = d.nextReview && d.nextReview.seconds ? d.nextReview.seconds : (Date.now()/1000);
                     allItems.push({ id: docSnap.id, ...d, nextReviewSeconds: nrSec });
                 });
@@ -3941,22 +3848,14 @@ lest: ～しないように
         }
       };
 
-      // ---------------------------------------------------------
-      // 3. SRS ALGORITHM v2.0
-      // ---------------------------------------------------------
-      // ---------------------------------------------------------
-      // 3. SRS ALGORITHM v2.1 (Cache Sync Fix)
-      // ---------------------------------------------------------
       window.handleSRSUpdate = async (questionObj, isCorrect) => {
         if (!window.currentUser) return;
         
-        // 1. Setup Firestore Refs
         const mistakesRef = collection(db, "users", window.currentUser.uid, "mistakes");
         const now = new Date();
         const safeWordId = questionObj.docId || btoa(encodeURIComponent(questionObj.w)).replace(/\//g, '_').replace(/\+/g, '-');
         const targetRef = doc(mistakesRef, safeWordId);
         
-        // 2. Calculate Next Interval
         const currentParams = { 
             interval: questionObj.interval || 0, 
             repetitions: questionObj.repetitions || 0, 
@@ -3967,15 +3866,12 @@ lest: ～しないように
         let nextInterval, nextRepetitions, nextEaseFactor;
 
         if (!isCorrect) {
-            // CRASH (Reset)
             nextRepetitions = 0; 
             nextInterval = 1; 
             nextEaseFactor = Math.max(1.3, currentParams.easeFactor - 0.2); 
         } else {
-            // FINISH (Progress)
             nextRepetitions = currentParams.repetitions + 1;
             
-            // Speed Bonus
             let easeBonus = 0;
             if (timeTaken < 1.2) easeBonus = 0.3;
             else if (timeTaken > 5.0) easeBonus = -0.15;
@@ -3991,12 +3887,10 @@ lest: ～しないように
 
         const nextDate = new Date(); 
         nextDate.setDate(now.getDate() + nextInterval);
-        // ★重要: キャッシュ更新用にUNIX時間を計算
         const nextReviewSeconds = Math.floor(nextDate.getTime() / 1000);
 
         console.log(`[SRS] Time: ${timeTaken.toFixed(2)}s | Next: ${nextInterval} days`);
 
-        // 3. FIRESTORE UPDATE (Server Side)
         setDoc(targetRef, { 
             word: questionObj.w, 
             meaning: questionObj.meaning || questionObj.m, 
@@ -4008,44 +3902,36 @@ lest: ～しないように
         }, { merge: true })
         .catch((e) => console.error("Telemetry Failed:", e));
 
-        // 4. ★ LOCAL CACHE UPDATE (Client Side Fix) ★
-        // ここで手元のデータも強制的に書き換えることで、リロードなしで反映させる
         try {
             const CACHE_KEY = `srs_data_${window.currentUser.uid}`;
             const rawString = localStorage.getItem(CACHE_KEY);
             let localData = [];
             if (rawString) localData = JSON.parse(rawString);
 
-            // キャッシュ内の該当アイテムを探す
             const index = localData.findIndex(item => item.word === questionObj.w || item.id === safeWordId);
             
             const newItemState = {
                 id: safeWordId,
                 word: questionObj.w,
                 meaning: questionObj.meaning || questionObj.m,
-                nextReviewSeconds: nextReviewSeconds, // 次回日時の更新
+                nextReviewSeconds: nextReviewSeconds, 
                 interval: nextInterval,
                 repetitions: nextRepetitions,
                 easeFactor: nextEaseFactor
             };
 
             if (index !== -1) {
-                // 既存データの更新（ブックマーク情報などを維持するためマージ）
                 localData[index] = { ...localData[index], ...newItemState };
             } else {
-                // 新規データの場合
                 localData.push(newItemState);
             }
 
-            // LocalStorageに保存
             localStorage.setItem(CACHE_KEY, JSON.stringify(localData));
 
-            // ★ メモリ上のデータも即時更新 (UIのボタン表示用)
             if(window.quiz && window.quiz.allMistakes) {
                 const memIndex = window.quiz.allMistakes.findIndex(m => m.id === safeWordId || m.word === questionObj.w);
                 
                 if(memIndex !== -1) {
-                     // メモリ内のデータを更新
                      window.quiz.allMistakes[memIndex] = { 
                          ...window.quiz.allMistakes[memIndex], 
                          ...newItemState,
@@ -4053,7 +3939,6 @@ lest: ～しないように
                      };
                 }
                 
-                // 「Due（要復習）」リストを再計算してボタンの表示を更新
                 const nowTs = Date.now() / 1000;
                 window.quiz.dueMistakes = window.quiz.allMistakes.filter(item => 
                     item.nextReviewSeconds <= nowTs && !item.id.toString().startsWith('idiom_')
@@ -4066,44 +3951,35 @@ lest: ～しないように
         }
       };
       
-      // ---------------------------------------------------------
-      // 4. LEADERBOARD RECORDER
-      // ---------------------------------------------------------
       window.saveRaceResult = async (data) => {
-    if (!window.currentUser) return;
-    try {
-        const now = new Date();
-        // ドキュメント名に使用する時刻フォーマット (例: 2026-01-29_154240-123)
-        const docId = now.getFullYear() + "-" +
-            ("0" + (now.getMonth() + 1)).slice(-2) + "-" +
-            ("0" + now.getDate()).slice(-2) + "_" +
-            ("0" + now.getHours()).slice(-2) +
-            ("0" + now.getMinutes()).slice(-2) +
-            ("0" + now.getSeconds()).slice(-2) + "-" +
-            ("00" + now.getMilliseconds()).slice(-4);
+        if (!window.currentUser) return;
+        try {
+            const now = new Date();
+            const docId = now.getFullYear() + "-" +
+                ("0" + (now.getMonth() + 1)).slice(-2) + "-" +
+                ("0" + now.getDate()).slice(-2) + "_" +
+                ("0" + now.getHours()).slice(-2) +
+                ("0" + now.getMinutes()).slice(-2) +
+                ("0" + now.getSeconds()).slice(-2) + "-" +
+                ("00" + now.getMilliseconds()).slice(-4);
 
-        // collection() ではなく doc() でパスと名前を直接指定する
-        const leaderboardDocRef = doc(db, "leaderboard", docId);
+            const leaderboardDocRef = doc(db, "leaderboard", docId);
 
-        const payload = {
-            uid: window.currentUser.uid,
-            driver: window.currentUser.displayName || "Unknown Driver",
-            date: now.toLocaleString('ja-JP'),
-            timestamp: Timestamp.now(), 
-            ...data                   
-        };
+            const payload = {
+                uid: window.currentUser.uid,
+                driver: window.currentUser.displayName || "Unknown Driver",
+                date: now.toLocaleString('ja-JP'),
+                timestamp: Timestamp.now(), 
+                ...data                   
+            };
 
-        // setDoc を使って指定した docId で保存
-        await setDoc(leaderboardDocRef, payload);
-        
-        console.log(`[RACE CONTROL] Result Logged as: ${docId}`);
-    } catch (e) {
-        console.error("[RACE CONTROL] Failed to save result:", e);
-    }
-};
-      // ---------------------------------------------------------
-      // 5. BOOKMARK TOGGLER
-      // ---------------------------------------------------------
+            await setDoc(leaderboardDocRef, payload);
+            console.log(`[RACE CONTROL] Result Logged as: ${docId}`);
+        } catch (e) {
+            console.error("[RACE CONTROL] Failed to save result:", e);
+        }
+      };
+
       window.toggleBookmark = async (safeWord, safeMeaning) => {
           if (!window.currentUser) { alert("Sign in required."); return; }
           const word = decodeURIComponent(safeWord);
@@ -4152,9 +4028,6 @@ lest: ～しないように
           }
       };
 
-      // ---------------------------------------------------------
-      // Daily Laps Logic (Global Transaction)
-      // ---------------------------------------------------------
       window.incrementDailyLaps = async () => {
           if (!window.currentUser) return; 
           const statsRef = doc(db, "stats", "daily_global");
@@ -4179,16 +4052,6 @@ lest: ～しないように
               console.error("Lap Count Error:", e);
           }
       };
-    </script>
-    
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('Service Worker Registered!', reg.scope))
-                    .catch(err => console.error('Service Worker Failed:', err));
-            });
-        }
     </script>
 </body>
 </html>
