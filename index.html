@@ -2994,7 +2994,33 @@ lest: ～しないように
                 localStorage.setItem('rb26_last_round', this.currentRoundIndex);
             }
 
-            startIdiomMode() {
+            // ★ここで startVocabMode の残りの処理を行う
+            this.isReverseMode = document.getElementById('reverse-mode').checked;
+            this.isSpellingMode = document.getElementById('spelling-mode').checked && this.isReverseMode;
+            
+            let modeTitle = "";
+            if (this.isSpellingMode) modeTitle = " [MANUAL SHIFT]";
+            else if (this.isReverseMode) modeTitle = " [REV]";
+
+            document.getElementById('circuit-name').innerText = selectedRound.name + modeTitle;
+            document.getElementById('question-label').innerText = this.isReverseMode ? "TRANSLATE" : "MEANING";
+
+            this.questions = selectedRound.words.map(target => {
+                const qText = this.isReverseMode ? target.m : target.w;
+                const aText = this.isReverseMode ? target.w : target.m;
+                
+                const options = this.isSpellingMode 
+                    ? [] 
+                    : [aText, ...this.getDistractors(target, this.isReverseMode)].sort(() => Math.random() - 0.5);
+                
+                return { w: target.w, m: target.m, qText: qText, aText: aText, o: options };
+            });
+            this.questions.sort(() => Math.random() - 0.5);
+            this.showVocabQuestion();
+        }
+
+        // ★ここで startVocabMode を閉じてから、startIdiomMode を定義する
+        startIdiomMode() {
             if(idiomData.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
             
             // ピットストップモードなどを解除
