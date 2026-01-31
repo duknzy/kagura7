@@ -208,6 +208,18 @@
                 min-height: 100vh; /* 画面いっぱいに伸ばす */
             }
         }
+        /* ... 既存のCSSの最後あたりに追加 ... */
+
+        /* ★PC・横画面(iPadなど)でパネルを常時展開する設定 */
+        @media (min-width: 768px) {
+            .strategy-panel-mobile {
+                max-height: none !important;
+                opacity: 1 !important;
+                overflow: visible !important;
+            }
+        }
+
+        
     </style>
 </head>
 <body class="carbon-bg text-sm md:text-base">
@@ -3213,7 +3225,7 @@ lest: ～しないように
                  renderBtns();
              } else {
                  const revealBtn = document.createElement('button');
-                 revealBtn.className = 'col-span-1 md:col-span-2 w-full h-32 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 f1-font text-2xl uppercase tracking-widest hover:border-yellow-500 hover:text-yellow-500 transition-all flex flex-col items-center justify-center gap-2 animate-pulse';
+                 revealBtn.className = 'col-span-2 w-full h-32 bg-gray-900/50 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 f1-font text-2xl uppercase tracking-widest hover:border-yellow-500 hover:text-yellow-500 transition-all flex flex-col items-center justify-center gap-2 animate-pulse';
                  revealBtn.innerHTML = `<span>VISUALIZE MEANING</span><span class="text-xs text-gray-500 font-mono">TAP TO UNLOCK</span>`;
                  revealBtn.onclick = () => { 
                      renderBtns();
