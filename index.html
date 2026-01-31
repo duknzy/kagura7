@@ -3517,11 +3517,33 @@ lest: ～しないように
              if (this.missedWordsLog.length > 0) { summaryHtml += this.missedWordsLog.map(item => `<div class="mb-2 text-sm p-2 bg-red-900/10 border border-red-900/30 rounded"><span class="font-bold text-white block">${item.w}</span><span class="text-gray-400">${item.m}</span></div>`).join(''); } else { summaryHtml += '<p class="text-green-500 font-bold">Perfect Lap. No Issues Detected.</p>'; }
              review.innerHTML = summaryHtml;
              
-             const nextBtn = document.getElementById('next-round-btn');
-             if (this.mode === 'vocab' && !this.isPitStopMode && this.currentRoundIndex + 1 < this.vocabRounds.length) {
-                 nextBtn.classList.remove('hidden');
-                 nextBtn.onclick = () => { document.getElementById('round-selector').value = this.currentRoundIndex + 1; this.start(); };
-             } else { nextBtn.classList.add('hidden'); }
+            const nextBtn = document.getElementById('next-round-btn');
+            const currentRound = this.vocabRounds[this.currentRoundIndex];
+
+            // ★ここを修正：ランダムモードなら「同じ条件で再戦」、通常モードなら「次のラウンド」
+            if (this.mode === 'vocab' && !this.isPitStopMode) {
+                if (currentRound && currentRound.id === 'random') {
+                    // ランダムモードの場合
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.innerText = "AGAIN (SAME SETUP)"; // ボタンの文字を変えてやる
+                    nextBtn.onclick = () => { 
+                        // createRandomRoundを実行すれば、入力欄の値を使って新しい問題を作ってスタートしてくれる
+                        this.createRandomRound(); 
+                    };
+                } else if (this.currentRoundIndex + 1 < this.vocabRounds.length) {
+                    // 通常モードの場合
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.innerText = "NEXT SECTOR"; // 通常の文字に戻す
+                    nextBtn.onclick = () => { 
+                        document.getElementById('round-selector').value = this.currentRoundIndex + 1; 
+                        this.start(); 
+                    };
+                } else {
+                    nextBtn.classList.add('hidden');
+                }
+            } else { 
+                nextBtn.classList.add('hidden'); 
+            }
              
              if (window.fetchSRSItems) window.fetchSRSItems();
              if (window.incrementDailyLaps) window.incrementDailyLaps(); 
