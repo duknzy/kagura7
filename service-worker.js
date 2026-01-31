@@ -1,11 +1,11 @@
-const CACHE_NAME = 'rb-hybrid-v4-video-cache';
+const CACHE_NAME = 'rb-hybrid-v5-video-cache'; // バージョンを上げてキャッシュを強制更新させる
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
   './icon.png',
-  './verstappen.png',
-  './f1.mp4'
+  './verstappen.avif',  // .png から .avif に修正
+  './test.mp4'          // .f1.mp4 から test.mp4 に修正
 ];
 
 self.addEventListener('install', (event) => {
@@ -17,6 +17,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
+/* --- ここから下は変更なしだが、念のため記載 --- */
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('firestore.googleapis.com') || 
       event.request.url.includes('googleapis.com')) {
@@ -35,6 +36,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keyList) => {
       return Promise.all(keyList.map((key) => {
         if (key !== CACHE_NAME) {
+          // 古いバージョンのキャッシュ（v4以前）を削除してゴミ掃除
           return caches.delete(key);
         }
       }));
