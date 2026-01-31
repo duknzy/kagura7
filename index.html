@@ -201,15 +201,11 @@
         }
 
         /* Desktop Layout Fixes */
-        @media (min-width: 768px) {
-            .strategy-panel-mobile {
-                max-height: none !important;
-                opacity: 1 !important;
-                overflow: visible !important;
-            }
-            /* Hide the toggle button on desktop since panel is always visible */
-            #strategy-toggle-btn {
-                display: none;
+        @media only screen and (max-width: 768px) {
+            .carbon-bg {
+                /* スマホでは固定を解除しないとバグることがあるから scroll に変更している */
+                background-attachment: scroll; 
+                min-height: 100vh; /* 画面いっぱいに伸ばす */
             }
         }
     </style>
