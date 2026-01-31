@@ -2994,6 +2994,20 @@ lest: ～しないように
                 localStorage.setItem('rb26_last_round', this.currentRoundIndex);
             }
 
+            startIdiomMode() {
+            if(idiomData.length === 0) { alert("No idiom data found."); this.returnToGrid(); return; }
+            
+            // ピットストップモードなどを解除
+            this.isPitStopMode = false;
+            
+            document.getElementById('idiom-interface').classList.remove('hidden');
+            document.getElementById('circuit-name').innerText = "IDIOM SORTING";
+            
+            // データをシャッフルしてセット
+            this.questions = [...idiomData].sort(() => Math.random() - 0.5);
+            this.showIdiomQuestion();
+        }
+
             this.isReverseMode = document.getElementById('reverse-mode').checked;
             this.isSpellingMode = document.getElementById('spelling-mode').checked && this.isReverseMode;
             
